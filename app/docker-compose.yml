@@ -1,0 +1,53 @@
+services:
+  workout:
+    restart: always
+    image: workout:latest
+    network_mode: host
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DATABASE: ${POSTGRES_DATABASE}
+      POSTGRES_POOL_SIZE: ${POSTGRES_POOL_SIZE}
+      HTTP_HEADER_LOG: ${HTTP_HEADER_LOG}
+      HTTP_BODY_LOG: ${HTTP_BODY_LOG}
+      HTTP_HOST: ${HTTP_HOST}
+      HTTP_PORT: ${HTTP_PORT}
+      REDIS_SERVER_URI: ${REDIS_SERVER_URI}
+      ACCESS_TOKEN_SECRET_KEY: ${ACCESS_TOKEN_SECRET_KEY}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_TOKEN_EXPIRATION: ${JWT_TOKEN_EXPIRATION}
+      ADMIN_USER_TOKEN: ${ADMIN_USER_TOKEN}
+      PASSWORD_SALT: ${PASSWORD_SALT}
+      APP_ENV: ${APP_ENV}
+  postgres:
+    restart: always
+    image: postgres:12
+    command: -c max_connections=10
+    ports:
+      - ${POSTGRES_PORT}:5432
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DATABASE}
+    volumes:
+      - ./tables.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    restart: always
+    image: redis:6.2.6
+    ports:
+      - "6379:6379"
+    environment:
+      - DEBUG=false
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
