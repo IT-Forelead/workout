@@ -1,18 +1,33 @@
 package workout.utils
 
-import com.itforelead.workout.domain.custom.refinements.{EmailAddress, FileName, Password, Tel}
-import com.itforelead.workout.domain.{Gender, Role}
+import com.itforelead.workout.domain.Role
+import com.itforelead.workout.domain.custom.refinements._
 import org.http4s.MediaType
 import org.scalacheck.Gen._
 import org.scalacheck.{Arbitrary, Gen}
-import Generators.{nonEmptyStringGen, numberGen}
+import workout.utils.Generators.{nonEmptyStringGen, numberGen}
 
 import java.time.LocalDateTime
 
 object Arbitraries {
 
-  implicit lazy val arbGender: Arbitrary[Gender] = Arbitrary(oneOf(Gender.genders))
-  implicit lazy val arbRole: Arbitrary[Role]     = Arbitrary(oneOf(Role.roles))
+  implicit lazy val arbRole: Arbitrary[Role] = Arbitrary(oneOf(Role.roles))
+
+  implicit lazy val arbFilePath: Arbitrary[FilePath] = Arbitrary(
+    for {
+      s0 <- uuid
+      s1 <- uuid
+      s2 <- oneOf("png","jpg","jpeg","bmp")
+    } yield FilePath.unsafeFrom(s"$s0/$s1.$s2")
+  )
+
+  implicit lazy val arbFullname: Arbitrary[FullName] = Arbitrary(
+    for {
+      s0 <- nonEmptyStringGen(3, 12)
+      s1 <- nonEmptyStringGen(3, 12)
+    } yield FullName.unsafeFrom(s"$s0 $s1")
+  )
+
   implicit lazy val arbLocalDateTime: Arbitrary[LocalDateTime] = Arbitrary(
     for {
       year   <- Gen.choose(1800, 2100)

@@ -8,8 +8,8 @@ import eu.timepit.refined.auto.autoUnwrap
 import tsec.passwordhashers.jca.SCrypt
 import com.itforelead.workout.domain._
 import com.itforelead.workout.domain.User._
-import com.itforelead.workout.domain.custom.exception.{EmailInUse, InvalidPassword, UserNotFound}
-import com.itforelead.workout.domain.custom.refinements.EmailAddress
+import com.itforelead.workout.domain.custom.exception.{InvalidPassword, PhoneInUse, UserNotFound}
+import com.itforelead.workout.domain.custom.refinements.Tel
 import com.itforelead.workout.security.Tokens
 import com.itforelead.workout.services.redis.RedisClient
 import com.itforelead.workout.types.TokenExpiration
@@ -17,7 +17,7 @@ import com.itforelead.workout.types.TokenExpiration
 trait Auth[F[_]] {
   def newUser(userParam: CreateUser): F[JwtToken]
   def login(credentials: Credentials): F[JwtToken]
-  def logout(token: JwtToken, email: EmailAddress): F[Unit]
+  def logout(token: JwtToken, phone: Tel): F[Unit]
 }
 
 object Auth {
@@ -32,38 +32,38 @@ object Auth {
       private val TokenExpiration = tokenExpiration.value
 
       override def newUser(userParam: CreateUser): F[JwtToken] =
-        users.find(userParam.email).flatMap {
+        users.find(userParam.phoneNumber).flatMap {
           case Some(_) =>
-            EmailInUse(userParam.email).raiseError[F, JwtToken]
+            PhoneInUse(userParam.phoneNumber).raiseError[F, JwtToken]
           case None =>
             for {
               hash <- SCrypt.hashpw[F](userParam.password)
               user <- users.create(userParam, hash)
               t    <- tokens.create
               _    <- redis.put(t.value, user, TokenExpiration)
-              _    <- redis.put(user.email, t.value, TokenExpiration)
+              _    <- redis.put(user.phoneNumber, t.value, TokenExpiration)
             } yield t
         }
 
       def login(credentials: Credentials): F[JwtToken] =
-        users.find(credentials.email).flatMap {
+        users.find(credentials.phone).flatMap {
           case None =>
-            UserNotFound(credentials.email).raiseError[F, JwtToken]
+            UserNotFound(credentials.phone).raiseError[F, JwtToken]
           case Some(user) if !SCrypt.checkpwUnsafe(credentials.password, user.password) =>
-            InvalidPassword(credentials.email).raiseError[F, JwtToken]
+            InvalidPassword(credentials.phone).raiseError[F, JwtToken]
           case Some(userWithPass) =>
-            redis.get(credentials.email).flatMap {
+            redis.get(credentials.phone).flatMap {
               case Some(t) => JwtToken(t).pure[F]
               case None =>
                 tokens.create.flatTap { t =>
                   redis.put(t.value, userWithPass.user, TokenExpiration) *>
-                    redis.put(credentials.email, t.value, TokenExpiration)
+                    redis.put(credentials.phone, t.value, TokenExpiration)
                 }
             }
         }
 
-      def logout(token: JwtToken, email: EmailAddress): F[Unit] =
-        redis.del(token.show, email)
+      def logout(token: JwtToken, phone: Tel): F[Unit] =
+        redis.del(token.show, phone)
 
     }
 }

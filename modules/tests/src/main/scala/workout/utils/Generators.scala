@@ -38,14 +38,17 @@ object Generators {
     idGen(UserId.apply)
 
   val usernameGen: Gen[UserName] =
-    arbitrary[NonEmptyString].map(UserName.apply)
+    arbitrary[FullName].map(UserName.apply)
 
   val phoneGen: Gen[Tel] = arbitrary[Tel]
 
   val timestampGen: Gen[LocalDateTime] = arbitrary[LocalDateTime]
-  val dateGen: Gen[LocalDate]          = timestampGen.map(_.toLocalDate)
+
+  val dateGen: Gen[LocalDate] = timestampGen.map(_.toLocalDate)
 
   val passwordGen: Gen[Password] = arbitrary[Password]
+
+  val filePathGen: Gen[FilePath] = arbitrary[FilePath]
 
   val booleanGen: Gen[Boolean] = arbitrary[Boolean]
 
@@ -53,30 +56,31 @@ object Generators {
 
   val filenameGen: Gen[FileName] = arbitrary[FileName]
 
-  val genderGen: Gen[Gender] = arbitrary[Gender]
-
   val roleGen: Gen[Role] = arbitrary[Role]
 
   val userGen: Gen[User] =
     for {
       i <- userIdGen
       n <- usernameGen
-      e <- emailGen
-      g <- genderGen
+      p <- phoneGen
+      b <- timestampGen
+      f <- filePathGen
       r <- roleGen
-    } yield User(i, n, e, g, r)
+    } yield User(i, n, p, b, f, r)
 
   val userCredentialGen: Gen[Credentials] =
     for {
-      e <- emailGen
+      e <- phoneGen
       p <- passwordGen
     } yield Credentials(e, p)
 
   val createUserGen: Gen[CreateUser] =
     for {
-      u <- usernameGen
-      e <- emailGen
-      g <- genderGen
-      p <- passwordGen
-    } yield CreateUser(u, e, g, p)
+      n <- usernameGen
+      p <- phoneGen
+      b <- timestampGen
+      f <- filePathGen
+      r <- roleGen
+      ps <- passwordGen
+    } yield CreateUser(n, p, b, f, r , ps)
 }

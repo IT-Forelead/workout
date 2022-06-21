@@ -1,24 +1,36 @@
 package com.itforelead.workout.domain
 
+import com.itforelead.workout.domain.custom.refinements.{FilePath, Password, Tel}
+import com.itforelead.workout.domain.types._
 import derevo.cats._
 import derevo.circe.magnolia.{decoder, encoder}
 import derevo.derive
 import tsec.passwordhashers.PasswordHash
 import tsec.passwordhashers.jca.SCrypt
-import com.itforelead.workout.domain.custom.refinements.{EmailAddress, Password}
-import types._
 import io.circe.refined._
 import eu.timepit.refined.cats._
 
+import java.time.LocalDateTime
+
 @derive(decoder, encoder, show)
-case class User(id: UserId, name: UserName, email: EmailAddress, gender: Gender, role: Role)
+case class User(
+  id: UserId,
+  fullname: UserName,
+  phoneNumber: Tel,
+  birthday: LocalDateTime,
+  userPicture: FilePath,
+  role: Role
+)
+
 object User {
 
   @derive(decoder, encoder, show)
   case class CreateUser(
-    name: UserName,
-    email: EmailAddress,
-    gender: Gender,
+    fullname: UserName,
+    phoneNumber: Tel,
+    birthday: LocalDateTime,
+    userPicture: FilePath,
+    role: Role,
     password: Password
   )
 
