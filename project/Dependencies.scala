@@ -19,6 +19,7 @@ object Dependencies {
     val derevo        = "0.13.0"
     val monocle       = "3.1.0"
     val tsec          = "0.4.0"
+    val squants       = "1.8.3"
     val catsRetry     = "3.1.0"
 
     val weaver        = "0.7.11"
@@ -63,6 +64,8 @@ object Dependencies {
 
     val refinedType = refined("refined")
     val refinedCats = refined("refined-cats")
+    val squants     = "org.typelevel" %% "squants" % Versions.squants
+
 
     val redis4catsEffects  = "dev.profunktor" %% "redis4cats-effects"  % Versions.redis4cats
     val redis4catsLog4cats = "dev.profunktor" %% "redis4cats-log4cats" % Versions.redis4cats
@@ -112,7 +115,8 @@ object Dependencies {
         redis4catsLog4cats,
         http4sJwtAuth,
         newtype,
-        monocleCore
+        monocleCore,
+        squants
       )
 
   val testLibraries: Seq[ModuleID] = Seq(

@@ -1,17 +1,16 @@
 package com.itforelead.workout.services
 
-import com.itforelead.workout.domain.custom.refinements.{EmailAddress, FilePath, FullName, Tel, UrlAddress}
+import com.itforelead.workout.domain.custom.refinements.{FilePath, FullName, Tel, UrlAddress}
 import com.itforelead.workout.domain.types._
 import com.itforelead.workout.domain.Role
 import com.itforelead.workout.types.IsUUID
-import eu.timepit.refined.types.string.NonEmptyString
 import skunk.Codec
 import skunk.codec.all._
 import skunk.data.{Arr, Type}
 import tsec.passwordhashers.PasswordHash
 import tsec.passwordhashers.jca.SCrypt
 import eu.timepit.refined.auto.autoUnwrap
-import eu.timepit.refined.string.Url
+import squants.Money
 
 import java.util.UUID
 import scala.util.Try
@@ -36,6 +35,10 @@ package object sql {
   val url: Codec[UrlAddress] = varchar.imap[UrlAddress](UrlAddress.unsafeFrom)(_.value)
 
   val role: Codec[Role] = `enum`[Role](_.value, Role.find, Type("role"))
+
+  val price: Codec[Money] = numeric.imap[Money](money => UZS(money))(_.amount)
+
+  val duration: Codec[Duration] = int2.imap[Duration](duration => Duration(Short.box(duration)))(_.value)
 
   val filePath: Codec[FilePath] = varchar.imap[FilePath](FilePath.unsafeFrom)(_.value)
 }

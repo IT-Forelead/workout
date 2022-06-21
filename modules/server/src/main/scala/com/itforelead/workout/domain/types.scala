@@ -9,16 +9,26 @@ import io.estatico.newtype.macros.newtype
 import com.itforelead.workout.types.uuid
 import io.circe.refined._
 import eu.timepit.refined.cats._
+import squants.market.Currency
 
 import java.util.UUID
 import javax.crypto.Cipher
 
 object types {
+
+  object UZS extends Currency("UZS", "Uzbek sum", "SUM", 2)
+
   @derive(decoder, encoder, show)
   @newtype case class UserName(value: FullName)
 
   @derive(decoder, encoder, eqv, show, uuid)
   @newtype case class UserId(value: UUID)
+
+  @derive(decoder, encoder, eqv, show, uuid)
+  @newtype case class Duration(value: Short)
+
+  @derive(decoder, encoder, eqv, show, uuid)
+  @newtype case class PaymentId(value: UUID)
 
   @derive(decoder, encoder, eqv, show)
   @newtype case class EncryptedPassword(value: String)

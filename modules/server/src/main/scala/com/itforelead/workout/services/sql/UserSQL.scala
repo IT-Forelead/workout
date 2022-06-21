@@ -27,7 +27,7 @@ object UserSQL {
     }
 
   val selectUser: Query[Tel, User ~ PasswordHash[SCrypt]] =
-    sql"""SELECT * FROM users WHERE tel = $tel""".query(decoder)
+    sql"""SELECT * FROM users WHERE phone = $phone""".query(decoder)
 
   val insertUser: Query[UserId ~ CreateUser ~ PasswordHash[SCrypt], User ~ PasswordHash[SCrypt]] =
     sql"""INSERT INTO users VALUES ($encoder) returning *""".query(decoder)
