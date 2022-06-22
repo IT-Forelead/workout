@@ -9,6 +9,10 @@ import eu.timepit.refined.types.string.NonEmptyString
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 import Arbitraries._
+import com.itforelead.workout.domain.Payment.CreatePayment
+import eu.timepit.refined.scalacheck.all.greaterEqualArbitrary
+import eu.timepit.refined.types.numeric.NonNegShort
+import squants.Money
 
 import java.time.{LocalDate, LocalDateTime}
 import java.util.UUID
@@ -37,6 +41,9 @@ object Generators {
   val userIdGen: Gen[UserId] =
     idGen(UserId.apply)
 
+  val paymentIdGen: Gen[PaymentId] =
+    idGen(PaymentId.apply)
+
   val usernameGen: Gen[UserName] =
     arbitrary[FullName].map(UserName.apply)
 
@@ -57,6 +64,10 @@ object Generators {
   val filenameGen: Gen[FileName] = arbitrary[FileName]
 
   val roleGen: Gen[Role] = arbitrary[Role]
+
+  val priceGen: Gen[Money] = Gen.posNum[Long].map(n => UZS(BigDecimal(n)))
+
+  val durationGen: Gen[Duration] = arbitrary[NonNegShort].map(Duration.apply)
 
   val userGen: Gen[User] =
     for {
@@ -83,4 +94,21 @@ object Generators {
       r <- roleGen
       ps <- passwordGen
     } yield CreateUser(n, p, b, f, r , ps)
+
+  val paymentGen: Gen[Payment] =
+    for {
+      i <- paymentIdGen
+      u <- userIdGen
+      p <- priceGen
+      ca <- timestampGen
+      ea <- timestampGen
+    } yield Payment(i, u, p, ca, ea)
+
+  val createPaymentGen: Gen[CreatePayment] =
+    for {
+      u <- userIdGen
+      p <- priceGen
+      d <- durationGen
+    } yield CreatePayment(u, p, d)
 }
+

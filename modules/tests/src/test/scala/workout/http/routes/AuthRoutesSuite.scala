@@ -4,7 +4,7 @@ import cats.effect.{IO, Sync}
 import cats.implicits._
 import com.itforelead.workout.domain.User
 import com.itforelead.workout.domain.User.{CreateUser, UserWithPassword}
-import com.itforelead.workout.domain.custom.refinements.{EmailAddress, Password}
+import com.itforelead.workout.domain.custom.refinements.{Password, Tel}
 import com.itforelead.workout.routes.{AuthRoutes, deriveEntityEncoder}
 import com.itforelead.workout.services.Users
 import eu.timepit.refined.auto.autoUnwrap
@@ -25,9 +25,9 @@ object AuthRoutesSuite extends HttpSuite {
 
   def users[F[_]: Sync](user: User, pass: Password): Users[F] = new UsersStub[F] {
     override def find(
-      email: EmailAddress
+      phoneNumber: Tel
     ): F[Option[UserWithPassword]] =
-      if (user.email.equalsIgnoreCase(email))
+      if (user.phoneNumber.equalsIgnoreCase(phoneNumber))
         SCrypt.hashpw[F](pass).map { hash =>
           UserWithPassword(user, hash).some
         }
@@ -52,7 +52,7 @@ object AuthRoutesSuite extends HttpSuite {
         auth <- AuthMock[IO](users(user, newUser.password), RedisClient)
         (postData, shouldReturn) =
           if (conflict)
-            (newUser.copy(email = user.email), Status.Conflict)
+            (newUser.copy(phoneNumber = user.phoneNumber), Status.Conflict)
           else
             (newUser, Status.Created)
         req    = POST(postData, uri"/auth/user")
@@ -74,7 +74,7 @@ object AuthRoutesSuite extends HttpSuite {
         auth <- AuthMock[IO](users(user, c.password), RedisClient)
         (postData, shouldReturn) =
           if (isCorrect)
-            (c.copy(email = user.email), Status.Ok)
+            (c.copy(phone = user.phoneNumber), Status.Ok)
           else
             (c, Status.Forbidden)
         req    = POST(postData, uri"/auth/login")

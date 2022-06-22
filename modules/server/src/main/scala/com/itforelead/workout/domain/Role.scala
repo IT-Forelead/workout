@@ -9,7 +9,7 @@ object Role {
   case object ADMIN extends Role("admin")
   case object USER  extends Role("user")
 
-  val roles = List(ADMIN, USER)
+  val roles: List[Role] = List(ADMIN, USER)
 
   def find(value: String): Option[Role] =
     roles.find(_.value == value.toLowerCase)

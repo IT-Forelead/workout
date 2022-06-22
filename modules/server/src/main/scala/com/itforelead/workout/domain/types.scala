@@ -9,6 +9,7 @@ import io.estatico.newtype.macros.newtype
 import com.itforelead.workout.types.uuid
 import io.circe.refined._
 import eu.timepit.refined.cats._
+import eu.timepit.refined.types.numeric.NonNegShort
 import squants.market.Currency
 
 import java.util.UUID
@@ -24,8 +25,8 @@ object types {
   @derive(decoder, encoder, eqv, show, uuid)
   @newtype case class UserId(value: UUID)
 
-  @derive(decoder, encoder, eqv, show, uuid)
-  @newtype case class Duration(value: Short)
+  @derive(decoder, encoder, eqv, show)
+  @newtype case class Duration(value: NonNegShort)
 
   @derive(decoder, encoder, eqv, show, uuid)
   @newtype case class PaymentId(value: UUID)

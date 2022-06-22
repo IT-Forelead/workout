@@ -10,6 +10,7 @@ import skunk.data.{Arr, Type}
 import tsec.passwordhashers.PasswordHash
 import tsec.passwordhashers.jca.SCrypt
 import eu.timepit.refined.auto.autoUnwrap
+import eu.timepit.refined.types.numeric.NonNegShort
 import squants.Money
 
 import java.util.UUID
@@ -38,7 +39,7 @@ package object sql {
 
   val price: Codec[Money] = numeric.imap[Money](money => UZS(money))(_.amount)
 
-  val duration: Codec[Duration] = int2.imap[Duration](duration => Duration(Short.box(duration)))(_.value)
+  val duration: Codec[Duration] = int2.imap[Duration](duration => Duration(NonNegShort.unsafeFrom(duration)))(_.value)
 
   val filePath: Codec[FilePath] = varchar.imap[FilePath](FilePath.unsafeFrom)(_.value)
 }

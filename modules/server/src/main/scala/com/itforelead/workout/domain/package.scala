@@ -1,10 +1,13 @@
 package com.itforelead.workout
 
 import cats.implicits.toContravariantOps
-import cats.{Eq, Show}
+import cats.{Eq, Monoid, Show}
+import com.itforelead.workout.domain.types.UZS
 import dev.profunktor.auth.jwt.JwtToken
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto.deriveEncoder
+import squants.Money
+import squants.market.Currency
 import tsec.passwordhashers.PasswordHash
 import tsec.passwordhashers.jca.SCrypt
 
@@ -23,4 +26,22 @@ package object domain {
 
   implicit val passwordHashEncoder: Encoder[PasswordHash[SCrypt]] = Encoder.encodeString.contramap(_.toString)
   implicit val passwordHashDecoder: Decoder[PasswordHash[SCrypt]] = Decoder.decodeString.map(PasswordHash[SCrypt])
+
+  implicit val moneyDecoder: Decoder[Money] =
+    Decoder[BigDecimal].map(UZS.apply)
+
+  implicit val moneyEncoder: Encoder[Money] =
+    Encoder[BigDecimal].contramap(_.amount)
+
+  implicit val moneyMonoid: Monoid[Money] =
+    new Monoid[Money] {
+      def empty: Money                       = UZS(0)
+      def combine(x: Money, y: Money): Money = x + y
+    }
+
+  implicit val currencyEq: Eq[Currency] = Eq.and(Eq.and(Eq.by(_.code), Eq.by(_.symbol)), Eq.by(_.name))
+
+  implicit val moneyEq: Eq[Money] = Eq.and(Eq.by(_.amount), Eq.by(_.currency))
+
+  implicit val moneyShow: Show[Money] = Show.fromToString
 }

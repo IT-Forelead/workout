@@ -1,13 +1,12 @@
 package com.itforelead.workout.domain
 
-import com.itforelead.workout.domain.custom.refinements.{FilePath, Tel}
 import com.itforelead.workout.domain.types._
 import derevo.cats._
 import derevo.circe.magnolia.{decoder, encoder}
 import derevo.derive
-import squants.Money
 import io.circe.refined._
 import eu.timepit.refined.cats._
+import squants.Money
 
 import java.time.LocalDateTime
 
@@ -29,13 +28,8 @@ object Payment {
   )
 
   @derive(decoder, encoder, show)
-  case class PaymentWithUserInfo(
+  case class PaymentWithUser(
     payment: Payment,
-    userName: UserName,
-    userPhone: Tel,
-    userPicture: FilePath,
-    cost: Money,
-    createdAt: LocalDateTime,
-    expiredAt: LocalDateTime
+    user: User
   )
 }

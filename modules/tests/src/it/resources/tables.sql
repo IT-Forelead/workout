@@ -7,8 +7,8 @@ CREATE TABLE IF NOT EXISTS users
     phone        VARCHAR   NOT NULL,
     birthday     TIMESTAMP NOT NULL,
     user_picture VARCHAR   NOT NULL,
-    password     VARCHAR   NOT NULL,
-    role         ROLE      NOT NULL DEFAULT 'user'
+    role         ROLE      NOT NULL DEFAULT 'user',
+    password     VARCHAR   NOT NULL
 );
 
 INSERT INTO "users" ("uuid", "fullname", "phone", "birthday", "user_picture", "password", "role")
