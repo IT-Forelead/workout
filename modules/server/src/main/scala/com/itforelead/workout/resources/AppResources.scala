@@ -1,7 +1,7 @@
 package com.itforelead.workout.resources
 
 import cats.effect.std.Console
-import cats.effect.{Concurrent, Resource}
+import cats.effect.{Async, Concurrent, Resource}
 import cats.syntax.all._
 import com.itforelead.workout.services.redis.RedisClient
 import dev.profunktor.redis4cats.effect.MkRedis
@@ -15,11 +15,13 @@ import skunk.codec.text._
 import skunk.implicits._
 import skunk.util.Typer
 import com.itforelead.workout.config.{AppConfig, DBConfig, RedisConfig}
-import com.itforelead.workout.services.redis.RedisClient
+import org.http4s.client.Client
+import org.http4s.ember.client.EmberClientBuilder
 
 case class AppResources[F[_]](
   postgres: Resource[F, Session[F]],
-  redis: RedisClient[F]
+  redis: RedisClient[F],
+  httpClient: Client[F]
 )
 
 object AppResources {
@@ -58,12 +60,16 @@ object AppResources {
       )
       .evalTap(checkPostgresConnection[F])
 
-  def apply[F[_]: Concurrent: Console: Logger: MkRedis: Network](
+  private def httpClient[F[_]: Async]: Resource[F, Client[F]] =
+    EmberClientBuilder.default[F].build
+
+  def apply[F[_]: Async: Console: Logger: MkRedis: Network](
     cfg: AppConfig
   ): Resource[F, AppResources[F]] =
     (
       postgresSqlResource(cfg.dbConfig),
-      redisResource(cfg.redis)
+      redisResource(cfg.redis),
+      httpClient
     ).parMapN(AppResources[F])
 
 }

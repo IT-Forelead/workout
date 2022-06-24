@@ -39,6 +39,7 @@ object Users {
           PhoneInUse(userParam.phoneNumber).raiseError[F, User]
         }
 
+    def verifyPhone(userPhone: Tel)
   }
 
 }

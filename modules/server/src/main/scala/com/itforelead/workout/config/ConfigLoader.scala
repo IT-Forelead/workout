@@ -10,6 +10,7 @@ import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
 import com.itforelead.workout.domain.custom.refinements.UriAddress
 import com.itforelead.workout.types._
+import org.http4s.Uri
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -33,6 +34,13 @@ object ConfigLoader {
     env("HTTP_PORT").as[UserPortNumber]
   ).parMapN(HttpServerConfig.apply)
 
+  def messageBroker: ConfigValue[Effect, BrokerConfig] = (
+    env("MESSAGE_BROKER_API").as[Uri],
+    env("MESSAGE_BROKER_USERNAME").as[NonEmptyString],
+    env("MESSAGE_BROKER_PASSWORD").as[NonEmptyString].secret,
+    env("MESSAGE_BROKER_ENABLED").as[Boolean]
+    ).parMapN(BrokerConfig.apply)
+
   def redisConfig: ConfigValue[Effect, RedisConfig] =
     env("REDIS_SERVER_URI").as[UriAddress].map(RedisConfig.apply)
 
@@ -47,6 +55,7 @@ object ConfigLoader {
     databaseConfig,
     redisConfig,
     httpServerConfig,
-    httpLogConfig
+    httpLogConfig,
+    messageBroker
   ).parMapN(AppConfig.apply).load[F]
 }

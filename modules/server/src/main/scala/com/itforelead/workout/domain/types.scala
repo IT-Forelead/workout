@@ -25,6 +25,9 @@ object types {
   @derive(decoder, encoder, eqv, show, uuid)
   @newtype case class UserId(value: UUID)
 
+  @derive(decoder, encoder, eqv, show, uuid)
+  @newtype case class MessageId(value: UUID)
+
   @derive(decoder, encoder, eqv, show)
   @newtype case class Duration(value: NonNegShort)
 
