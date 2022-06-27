@@ -11,7 +11,6 @@ import eu.timepit.refined.cats._
 @derive(decoder, encoder, show)
 case class BrokerMessage(
   recipient: Tel,
-  messageId: MessageId,
   text: String,
   sms: SMS
 )

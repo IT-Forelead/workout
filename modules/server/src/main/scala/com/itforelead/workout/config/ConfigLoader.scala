@@ -39,7 +39,7 @@ object ConfigLoader {
     env("MESSAGE_BROKER_USERNAME").as[NonEmptyString],
     env("MESSAGE_BROKER_PASSWORD").as[NonEmptyString].secret,
     env("MESSAGE_BROKER_ENABLED").as[Boolean]
-    ).parMapN(BrokerConfig.apply)
+  ).parMapN(BrokerConfig.apply)
 
   def redisConfig: ConfigValue[Effect, RedisConfig] =
     env("REDIS_SERVER_URI").as[UriAddress].map(RedisConfig.apply)

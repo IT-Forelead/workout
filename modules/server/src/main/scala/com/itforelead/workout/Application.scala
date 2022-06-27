@@ -24,10 +24,9 @@ object Application extends IOApp.Simple {
               implicit val session: Resource[IO, Session[IO]] = res.postgres
 
               val services = Services[IO](cfg.messageBroker, res.httpClient)
-              services.congratulator.start >>
                 modules.Security[IO](cfg, services.users, res.redis).map { security =>
-                cfg.serverConfig -> modules.HttpApi[IO](security, services, res.redis, cfg.logConfig).httpApp
-              }
+                  cfg.serverConfig -> modules.HttpApi[IO](security, services, res.redis, cfg.logConfig).httpApp
+                }
             }
             .flatMap { case (cfg, httpApp) =>
               MkHttpServer[IO].newEmber(cfg, httpApp)

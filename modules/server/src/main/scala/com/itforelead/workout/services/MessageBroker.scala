@@ -1,14 +1,11 @@
 package com.itforelead.workout.services
 
-
-
-import cats.data.NonEmptyList
 import cats.effect.Async
 import com.itforelead.workout.config.BrokerConfig
-import com.itforelead.workout.domain.broker.{BrokerMessage, Content, SMS, SendSMS}
-import com.itforelead.workout.domain.custom.refinements.Tel
-import com.itforelead.workout.domain.types.MessageId
+import com.itforelead.workout.domain.Message
+import com.itforelead.workout.domain.broker.{BrokerMessage, Content, SMS}
 import eu.timepit.refined.auto._
+import eu.timepit.refined.types.string.NonEmptyString
 import org.http4s.Method.POST
 import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
 import org.http4s.client.Client
@@ -18,7 +15,7 @@ import org.http4s.{AuthScheme, BasicCredentials, Credentials, MediaType, Request
 import org.typelevel.log4cats.Logger
 
 trait MessageBroker[F[_]] {
-  def send(messageId: MessageId, phone: Tel, text: String): F[Unit]
+  def sendSMS(message: Message): F[Unit]
 }
 
 object MessageBroker {
@@ -29,21 +26,21 @@ object MessageBroker {
       new MessageBrokerMock[F]
 
   private class MessageBrokerMock[F[_]: Logger] extends MessageBroker[F] {
-    override def send(messageId: MessageId, phone: Tel, text: String): F[Unit] =
+    override def sendSMS(message: Message): F[Unit] =
       Logger[F].info(
-        s"""Congratulation message sent to [ $phone ],
+        s"""Congratulation message sent to [$message.phone],
               message text [
-                $text
+                ${message.text}
               ] """
       )
   }
 
-  private class MessageBrokerImpl[F[_]: Async](httpClint: Client[F], config: BrokerConfig)
-    extends MessageBroker[F]
+  private class MessageBrokerImpl[F[_]: Async](httpClient: Client[F], config: BrokerConfig)
+      extends MessageBroker[F]
       with Http4sClientDsl[F] {
     private val ORIGINATOR: String = "3700"
 
-    private def makeRequest(sms: SendSMS): Request[F] =
+    private def makeRequest(sms: BrokerMessage): Request[F] =
       POST(
         sms,
         config.apiURL,
@@ -51,11 +48,20 @@ object MessageBroker {
         Accept(MediaType.application.json)
       )
 
-    private def makeSMS(messageId: MessageId, phone: Tel, text: String): SendSMS =
-      SendSMS(NonEmptyList.one(BrokerMessage(phone, messageId, text, SMS(ORIGINATOR, Content(text)))))
+    def validationCodeCreate(text: NonEmptyString): NonEmptyString = {
+      val validationCode: Int = scala.util.Random.between(100000, 999999)
+      text.replace("[Activation Code]", validationCode.toString)
+    }
 
-    override def send(messageId: MessageId, phone: Tel, text: String): F[Unit] =
-      httpClint.expect(makeRequest(makeSMS(messageId, phone, text)))
+    private def makeSMS(message: Message) =
+        BrokerMessage(
+          message.phone,
+          validationCodeCreate(message.text),
+          SMS(ORIGINATOR, Content(validationCodeCreate(message.text)))
+        )
+
+    override def sendSMS(message: Message): F[Unit] =
+      httpClient.expect(makeRequest(makeSMS(message)))
   }
 
 }

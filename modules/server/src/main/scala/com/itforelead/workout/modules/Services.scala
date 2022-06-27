@@ -11,15 +11,14 @@ import skunk.Session
 
 object Services {
   def apply[F[_]: Async: GenUUID: Logger](
-     brokerConfig: BrokerConfig,
-     httpClient: Client[F]
-   )(implicit session: Resource[F, Session[F]]): Services[F] = {
-    val messageBroker = MessageBroker[F](httpClient, brokerConfig)
+    brokerConfig: BrokerConfig,
+    httpClient: Client[F]
+  )(implicit session: Resource[F, Session[F]]): Services[F] = {
 
     new Services[F](
       users = Users[F],
-      payments = Payments[F] ,
-      congratulator = Congratulator.make[F](messageBroker)
+      payments = Payments[F],
+      messageBroker = MessageBroker[F](httpClient, brokerConfig)
     )
   }
 }
@@ -27,5 +26,5 @@ object Services {
 final class Services[F[_]] private (
   val users: Users[F],
   val payments: Payments[F],
-  val congratulator: Congratulator[F]
+  val messageBroker: MessageBroker[F]
 )
