@@ -3,17 +3,13 @@ CREATE TYPE ROLE AS ENUM ('admin', 'user');
 CREATE TABLE IF NOT EXISTS users
 (
     uuid         UUID PRIMARY KEY,
-    fullname     VARCHAR   NOT NULL,
-    phone        VARCHAR   NOT NULL,
-    birthday     TIMESTAMP NOT NULL,
-    user_picture VARCHAR   NOT NULL,
-    role         ROLE      NOT NULL DEFAULT 'user',
-    password     VARCHAR   NOT NULL
+    fullname     VARCHAR        NOT NULL,
+    phone        VARCHAR UNIQUE NOT NULL,
+    birthday     DATE           NOT NULL,
+    user_picture VARCHAR        NULL,
+    role         ROLE           NOT NULL DEFAULT 'user',
+    password     VARCHAR        NOT NULL
 );
-
-INSERT INTO "users" ("uuid", "fullname", "phone", "birthday", "user_picture", "password", "role")
-VALUES ('c1039d34-425b-4f78-9a7f-893f5b4df478', 'Admin', '+998901234567', '2022-01-01', '  ',
-        '$s0$e0801$5JK3Ogs35C2h5htbXQoeEQ==$N7HgNieSnOajn1FuEB7l4PhC6puBSq+e1E8WUaSJcGY=', 'admin');
 
 CREATE TABLE IF NOT EXISTS payments
 (
@@ -24,3 +20,8 @@ CREATE TABLE IF NOT EXISTS payments
     created_at TIMESTAMP NOT NULL,
     expired_at TIMESTAMP NOT NULL
 );
+
+INSERT INTO "users" ("uuid", "fullname", "phone", "birthday", "user_picture", "password", "role")
+VALUES ('76c2c44c-8fbf-4184-9199-19303a042fa0', 'Admin Adminov Adminjon', '+998901237771', '2022-01-01',
+        'images/84385647-4114-4e3f-9caf-358b54f6b955.jpg',
+        '$s0$e0801$5JK3Ogs35C2h5htbXQoeEQ==$N7HgNieSnOajn1FuEB7l4PhC6puBSq+e1E8WUaSJcGY=', 'admin');

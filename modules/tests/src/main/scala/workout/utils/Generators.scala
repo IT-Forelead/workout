@@ -5,7 +5,6 @@ import com.itforelead.workout.domain._
 import com.itforelead.workout.domain.custom.refinements._
 import com.itforelead.workout.domain.types._
 import eu.timepit.refined.scalacheck.string._
-import eu.timepit.refined.types.string.NonEmptyString
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 import Arbitraries._
@@ -74,7 +73,7 @@ object Generators {
       i <- userIdGen
       n <- usernameGen
       p <- phoneGen
-      b <- timestampGen
+      b <- dateGen
       f <- filePathGen
       r <- roleGen
     } yield User(i, n, p, b, f, r)
@@ -89,11 +88,10 @@ object Generators {
     for {
       n <- usernameGen
       p <- phoneGen
-      b <- timestampGen
+      b <- dateGen
       f <- filePathGen
-      r <- roleGen
       ps <- passwordGen
-    } yield CreateUser(n, p, b, f, r , ps)
+    } yield CreateUser(n, p, b, f, ps)
 
   val paymentGen: Gen[Payment] =
     for {

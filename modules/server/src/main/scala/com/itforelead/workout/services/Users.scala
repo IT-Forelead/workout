@@ -35,10 +35,6 @@ object Users {
         .flatMap { id =>
           prepQueryUnique(insertUser, id ~ userParam ~ password).map(_._1)
         }
-        .recoverWith { case SqlState.UniqueViolation(_) =>
-          PhoneInUse(userParam.phoneNumber).raiseError[F, User]
-        }
-
   }
 
 }

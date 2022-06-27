@@ -17,15 +17,15 @@ final class PaymentRoutes[F[_]: JsonDecoder: MonadThrow](payments: Payments[F]) 
   private[routes] val prefixPath = "/payment"
 
   private[this] val httpRoutes: AuthedRoutes[User, F] = AuthedRoutes.of {
-    case GET -> Root as _ =>
+
+    case GET -> Root as user if user.role == ADMIN =>
       payments.payments.flatMap(Ok(_))
 
-    case ar @ POST -> Root as user =>
-      if (user.role == ADMIN)
-        ar.req.decodeR[CreatePayment] { createPayment =>
-          payments.create(createPayment).flatMap(Created(_))
-        }
-      else BadRequest("You don't have right to do this action")
+    case ar @ POST -> Root as user if user.role == ADMIN =>
+      ar.req.decodeR[CreatePayment] { createPayment =>
+        payments.create(createPayment).flatMap(Created(_))
+      }
+
   }
 
   def routes(authMiddleware: AuthMiddleware[F, User]): HttpRoutes[F] = Router(
