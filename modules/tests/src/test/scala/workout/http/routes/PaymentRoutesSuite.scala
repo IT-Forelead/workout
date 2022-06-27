@@ -2,7 +2,7 @@ package workout.http.routes
 
 import cats.effect.{IO, Sync}
 import cats.implicits._
-import com.itforelead.workout.domain.Payment
+import com.itforelead.workout.domain.{Payment, User}
 import com.itforelead.workout.domain.Payment.{CreatePayment, PaymentWithUser}
 import com.itforelead.workout.domain.Role.ADMIN
 import com.itforelead.workout.effects.GenUUID
@@ -15,44 +15,43 @@ import workout.stub_services.PaymentsStub
 import workout.utils.Generators._
 import workout.utils.HttpSuite
 
-
-
 object PaymentRoutesSuite extends HttpSuite {
-  def payments[F[_]: Sync: GenUUID](payment: Payment): PaymentsStub[F] = new PaymentsStub[F] {
+  private def paymentS[F[_]: Sync: GenUUID](payment: Payment, user: User): PaymentsStub[F] = new PaymentsStub[F] {
     override def create(createPayment: CreatePayment): F[Payment] = Sync[F].delay(payment)
-    override def payments: F[List[PaymentWithUser]]               = List.empty[PaymentWithUser].pure[F]
+    override def payments: F[List[PaymentWithUser]]               = Sync[F].delay(List(PaymentWithUser(payment, user)))
   }
 
   test("GET Payments") {
     val gen = for {
-      p <- paymentGen
       u <- userGen
-    } yield (p, u)
+      m <- userGen
+      p <- paymentGen
+    } yield (u, m, p)
 
-    forall(gen) { case (payment, user) =>
+    forall(gen) { case (user, member, payment) =>
       for {
         token <- authToken(user)
         req    = GET(uri"/payment").putHeaders(token)
-        routes = new PaymentRoutes[IO](payments(payment)).routes(usersMiddleware)
-        res <- expectHttpStatus(routes, req)(Status.Ok)
+        routes = new PaymentRoutes[IO](paymentS(payment, member)).routes(usersMiddleware)
+        res <- if (user.role == ADMIN) expectHttpStatus(routes, req)(Status.Ok) else expectNotFound(routes, req)
       } yield res
     }
   }
 
-  test("PUT Payment") {
+  test("CREATE Payment") {
     val gen = for {
       u  <- userGen
+      m  <- userGen
       cp <- createPaymentGen
       p  <- paymentGen
-    } yield (u, cp, p)
+    } yield (u, m, cp, p)
 
-    forall(gen) { case (user, createPayment, payment) =>
+    forall(gen) { case (user, member, createPay, payment) =>
       for {
         token <- authToken(user)
-        req    = POST(createPayment, uri"/payment").putHeaders(token)
-        routes = new PaymentRoutes[IO](payments(payment)).routes(usersMiddleware)
-        shouldReturn = if (user.role == ADMIN) Status.Created else Status.BadRequest
-        res <- expectHttpStatus(routes, req)(shouldReturn)
+        req    = POST(createPay, uri"/payment").putHeaders(token)
+        routes = new PaymentRoutes[IO](paymentS(payment, member)).routes(usersMiddleware)
+        res <- if (user.role == ADMIN) expectHttpStatus(routes, req)(Status.Created) else expectNotFound(routes, req)
       } yield res
     }
   }

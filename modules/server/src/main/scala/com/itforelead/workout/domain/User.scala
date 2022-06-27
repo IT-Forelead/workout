@@ -10,14 +10,14 @@ import tsec.passwordhashers.jca.SCrypt
 import io.circe.refined._
 import eu.timepit.refined.cats._
 
-import java.time.LocalDateTime
+import java.time.LocalDate
 
 @derive(decoder, encoder, show)
 case class User(
   id: UserId,
   fullname: UserName,
   phoneNumber: Tel,
-  birthday: LocalDateTime,
+  birthday: LocalDate,
   userPicture: FilePath,
   role: Role
 )
@@ -28,9 +28,8 @@ object User {
   case class CreateUser(
     fullname: UserName,
     phoneNumber: Tel,
-    birthday: LocalDateTime,
+    birthday: LocalDate,
     userPicture: FilePath,
-    role: Role,
     password: Password
   )
 

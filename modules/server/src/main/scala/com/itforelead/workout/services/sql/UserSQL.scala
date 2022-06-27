@@ -9,13 +9,13 @@ import tsec.passwordhashers.jca.SCrypt
 import com.itforelead.workout.domain.custom.refinements.Tel
 import com.itforelead.workout.domain.types._
 import com.itforelead.workout.domain.Role
-import skunk.codec.all.timestamp
+import skunk.codec.all.date
 
 object UserSQL {
   val userId: Codec[UserId] = identity[UserId]
 
-  private val Columns            = userId ~ userName ~ tel ~ timestamp ~ filePath ~ role ~ passwordHash
-  private val ColumnsWithoutPass = userId ~ userName ~ tel ~ timestamp ~ filePath ~ role
+  private val Columns            = userId ~ userName ~ tel ~ date ~ filePath ~ role ~ passwordHash
+  private val ColumnsWithoutPass = userId ~ userName ~ tel ~ date ~ filePath ~ role
 
   val encoder: Encoder[UserId ~ CreateUser ~ PasswordHash[SCrypt]] =
     Columns.contramap { case i ~ u ~ p =>
