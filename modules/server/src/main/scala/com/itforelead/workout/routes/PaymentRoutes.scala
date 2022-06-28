@@ -3,7 +3,6 @@ package com.itforelead.workout.routes
 import cats.MonadThrow
 import cats.implicits.toFlatMapOps
 import com.itforelead.workout.domain.Payment.CreatePayment
-import com.itforelead.workout.domain.Role.ADMIN
 import com.itforelead.workout.domain.User
 import com.itforelead.workout.services.Payments
 import org.http4s._
@@ -18,10 +17,10 @@ final class PaymentRoutes[F[_]: JsonDecoder: MonadThrow](payments: Payments[F]) 
 
   private[this] val httpRoutes: AuthedRoutes[User, F] = AuthedRoutes.of {
 
-    case GET -> Root as user if user.role == ADMIN =>
+    case GET -> Root as user =>
       payments.payments.flatMap(Ok(_))
 
-    case ar @ POST -> Root as user if user.role == ADMIN =>
+    case ar @ POST -> Root as user =>
       ar.req.decodeR[CreatePayment] { createPayment =>
         payments.create(createPayment).flatMap(Created(_))
       }

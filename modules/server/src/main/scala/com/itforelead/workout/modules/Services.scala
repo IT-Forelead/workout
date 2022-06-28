@@ -17,6 +17,8 @@ object Services {
 
     new Services[F](
       users = Users[F],
+      members = Members[F],
+      userValidation = UserValidation[F],
       payments = Payments[F],
       messageBroker = MessageBroker[F](httpClient, brokerConfig)
     )
@@ -25,6 +27,8 @@ object Services {
 
 final class Services[F[_]] private (
   val users: Users[F],
+  val members: Members[F],
+  val userValidation: UserValidation[F],
   val payments: Payments[F],
   val messageBroker: MessageBroker[F]
 )

@@ -8,28 +8,27 @@ import tsec.passwordhashers.PasswordHash
 import tsec.passwordhashers.jca.SCrypt
 import com.itforelead.workout.domain.custom.refinements.Tel
 import com.itforelead.workout.domain.types._
-import com.itforelead.workout.domain.Role
 import skunk.codec.all.date
 
 object UserSQL {
   val userId: Codec[UserId] = identity[UserId]
 
-  private val Columns            = userId ~ userName ~ tel ~ date ~ filePath ~ role ~ passwordHash
-  private val ColumnsWithoutPass = userId ~ userName ~ tel ~ date ~ filePath ~ role
+  private val Columns            = userId ~ userName ~ userName ~ tel ~ gymName ~ passwordHash
+  private val ColumnsWithoutPass = userId ~ userName ~ userName ~ tel ~ gymName
 
   val encoder: Encoder[UserId ~ CreateUser ~ PasswordHash[SCrypt]] =
     Columns.contramap { case i ~ u ~ p =>
-      i ~ u.fullname ~ u.phoneNumber ~ u.birthday ~ u.userPicture ~ Role.USER ~ p
+      i ~ u.firstname ~ u.lastname ~ u.phone ~ u.gymName ~ p
     }
 
   val userDecoder: Decoder[User ~ PasswordHash[SCrypt]] =
-    Columns.map { case i ~ fn ~ p ~ b ~ up ~ r ~ ps =>
-      User(i, fn, p, b, up, r) ~ ps
+    Columns.map { case i ~ fn ~ ln ~ p ~ gn ~ ps =>
+      User(i, fn, ln, p, gn) ~ ps
     }
 
   val userDecoderWithoutPass: Decoder[User] =
-    ColumnsWithoutPass.map { case i ~ fn ~ p ~ b ~ up ~ r =>
-      User(i, fn, p, b, up, r)
+    ColumnsWithoutPass.map { case i ~ fn ~ ln ~ p ~ gn =>
+      User(i, fn, ln, p, gn)
     }
 
   val selectUser: Query[Tel, User ~ PasswordHash[SCrypt]] =

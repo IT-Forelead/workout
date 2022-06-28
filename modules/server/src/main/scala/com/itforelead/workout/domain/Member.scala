@@ -23,9 +23,6 @@ case class Member(
 
 object Member {
   @derive(decoder, encoder, show)
-  case class Validation(phone: Tel, code: ValidationCode)
-
-  @derive(decoder, encoder, show)
   case class CreateMember(
     gymId: GymId,
     firstname: UserName,

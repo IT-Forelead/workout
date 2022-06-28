@@ -2,8 +2,7 @@ package com.itforelead.workout.services
 
 import cats.effect.{Resource, Sync}
 import cats.implicits.toFunctorOps
-import com.itforelead.workout.domain.Member.Validation
-import com.itforelead.workout.domain.Message
+import com.itforelead.workout.domain.{Message, Validation}
 import com.itforelead.workout.domain.custom.refinements.{Tel, ValidationCode}
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.implicits.CirceDecoderOps

@@ -2,12 +2,11 @@ package com.itforelead.workout.services
 
 import cats.data.OptionT
 import cats.effect.{Resource, Sync}
-import cats.implicits.toFunctorOps
-import com.itforelead.workout.domain.Member.{CreateMember, MemberWithPassword, Validation}
-import com.itforelead.workout.domain.{ID, Member, Message}
-import com.itforelead.workout.domain.custom.refinements.{Tel, ValidationCode}
+import com.itforelead.workout.domain.Member.{CreateMember, MemberWithPassword}
+import com.itforelead.workout.domain.{ID, Member, Message, Validation}
+import com.itforelead.workout.domain.custom.refinements.Tel
 import com.itforelead.workout.effects.GenUUID
-import com.itforelead.workout.services.redis.RedisClient
+import com.itforelead.workout.services.sql.MemberSQL.{insertMember, selectMember}
 import eu.timepit.refined.types.string.NonEmptyString
 import skunk.{Session, ~}
 import tsec.passwordhashers.PasswordHash
@@ -16,13 +15,11 @@ import tsec.passwordhashers.jca.SCrypt
 trait Members[F[_]] {
   def find(phone: Tel): F[Option[MemberWithPassword]]
   def create(memberParam: CreateMember, password: PasswordHash[SCrypt]): F[Member]
-  def sendValidationCode(phone: Tel): F[Unit]
-  def validatePhone(validation: Validation): F[Boolean]
 }
 
 object Members {
 
-  def apply[F[_]: GenUUID: Sync](messageBroker: MessageBroker[F], redis: RedisClient[F])(implicit
+  def apply[F[_]: GenUUID: Sync](messageBroker: MessageBroker[F])(implicit
     session: Resource[F, Session[F]]
   ): Members[F] =
     new Members[F] with SkunkHelper[F] {

@@ -3,7 +3,7 @@ package com.itforelead.workout.services.sql
 import com.itforelead.workout.domain.Payment
 import com.itforelead.workout.domain.Payment.PaymentWithUser
 import com.itforelead.workout.domain.types.PaymentId
-import com.itforelead.workout.services.sql.UserSQL.{userDecoder, userDecoderWithoutPass}
+import com.itforelead.workout.services.sql.UserSQL.userDecoderWithoutPass
 import skunk.codec.all.timestamp
 import skunk.implicits._
 import skunk._

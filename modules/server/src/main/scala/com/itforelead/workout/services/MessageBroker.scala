@@ -5,7 +5,6 @@ import com.itforelead.workout.config.BrokerConfig
 import com.itforelead.workout.domain.Message
 import com.itforelead.workout.domain.broker.{BrokerMessage, Content, SMS}
 import eu.timepit.refined.auto._
-import eu.timepit.refined.types.string.NonEmptyString
 import org.http4s.Method.POST
 import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
 import org.http4s.client.Client
