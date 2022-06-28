@@ -22,6 +22,6 @@ CREATE TABLE IF NOT EXISTS payments
 );
 
 INSERT INTO "users" ("uuid", "fullname", "phone", "birthday", "user_picture", "password", "role")
-VALUES ('76c2c44c-8fbf-4184-9199-19303a042fa0', 'Admin Adminov Adminjon', '+998901237771', '2022-01-01',
+VALUES ('76c2c44c-8fbf-4184-9199-19303a042fa0', 'Admin Adminov', '+998901237771', '2022-01-01',
         'images/84385647-4114-4e3f-9caf-358b54f6b955.jpg',
         '$s0$e0801$5JK3Ogs35C2h5htbXQoeEQ==$N7HgNieSnOajn1FuEB7l4PhC6puBSq+e1E8WUaSJcGY=', 'admin');
