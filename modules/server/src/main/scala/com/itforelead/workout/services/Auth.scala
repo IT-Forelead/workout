@@ -2,6 +2,7 @@ package com.itforelead.workout.services
 
 import cats.effect.Sync
 import cats.syntax.all._
+import com.itforelead.workout.domain.Member.CreateMember
 import com.itforelead.workout.domain.User.CreateUser
 import dev.profunktor.auth.jwt.JwtToken
 import eu.timepit.refined.auto.autoUnwrap
@@ -16,6 +17,7 @@ import com.itforelead.workout.types.TokenExpiration
 
 trait Auth[F[_]] {
   def newUser(userParam: CreateUser): F[JwtToken]
+  def newMember(memberParam: CreateMember): F[JwtToken]
   def login(credentials: Credentials): F[JwtToken]
   def logout(token: JwtToken, phone: Tel): F[Unit]
 }
@@ -25,6 +27,7 @@ object Auth {
     tokenExpiration: TokenExpiration,
     tokens: Tokens[F],
     users: Users[F],
+    members: Members[F],
     redis: RedisClient[F]
   ): Auth[F] =
     new Auth[F] {
@@ -32,16 +35,30 @@ object Auth {
       private val TokenExpiration = tokenExpiration.value
 
       override def newUser(userParam: CreateUser): F[JwtToken] =
-        users.find(userParam.phoneNumber).flatMap {
+        users.find(userParam.phone).flatMap {
           case Some(_) =>
-            PhoneInUse(userParam.phoneNumber).raiseError[F, JwtToken]
+            PhoneInUse(userParam.phone).raiseError[F, JwtToken]
           case None =>
             for {
               hash <- SCrypt.hashpw[F](userParam.password)
               user <- users.create(userParam, hash)
               t    <- tokens.create
               _    <- redis.put(t.value, user, TokenExpiration)
-              _    <- redis.put(user.phoneNumber, t.value, TokenExpiration)
+              _    <- redis.put(user.phone, t.value, TokenExpiration)
+            } yield t
+        }
+
+      override def newMember(memberParam: CreateMember): F[JwtToken] =
+        members.find(memberParam.phone).flatMap {
+          case Some(_) =>
+            PhoneInUse(memberParam.phone).raiseError[F, JwtToken]
+          case None =>
+            for {
+              hash <- SCrypt.hashpw[F](memberParam.password)
+              member <- members.create(memberParam, hash)
+              t    <- tokens.create
+              _    <- redis.put(t.value, member, TokenExpiration)
+              _    <- redis.put(member.phone, t.value, TokenExpiration)
             } yield t
         }
 

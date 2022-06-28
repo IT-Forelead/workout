@@ -3,12 +3,23 @@ CREATE TYPE ROLE AS ENUM ('admin', 'user');
 CREATE TABLE IF NOT EXISTS users
 (
     uuid         UUID PRIMARY KEY,
-    fullname     VARCHAR        NOT NULL,
+    firstname    VARCHAR        NOT NULL,
+    lastname     VARCHAR        NOT NULL,
+    phone        VARCHAR UNIQUE NOT NULL,
+    gym_name     VARCHAR        NOT NULL,
+    password     VARCHAR        NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS members
+(
+    uuid         UUID PRIMARY KEY,
+    user_id      UUID NOT NULL
+        CONSTRAINT fk_user_id REFERENCES users (uuid) ON UPDATE NO ACTION ON DELETE NO ACTION,
+    firstname    VARCHAR        NOT NULL,
+    lastname     VARCHAR        NOT NULL,
     phone        VARCHAR UNIQUE NOT NULL,
     birthday     DATE           NOT NULL,
-    user_picture VARCHAR        NULL,
-    role         ROLE           NOT NULL DEFAULT 'user',
-    password     VARCHAR        NOT NULL
+    user_picture VARCHAR        NULL
 );
 
 CREATE TABLE IF NOT EXISTS payments

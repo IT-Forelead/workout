@@ -48,16 +48,11 @@ object MessageBroker {
         Accept(MediaType.application.json)
       )
 
-    def validationCodeCreate(text: NonEmptyString): NonEmptyString = {
-      val validationCode: Int = scala.util.Random.between(100000, 999999)
-      text.replace("[Activation Code]", validationCode.toString)
-    }
-
     private def makeSMS(message: Message) =
         BrokerMessage(
           message.phone,
-          validationCodeCreate(message.text),
-          SMS(ORIGINATOR, Content(validationCodeCreate(message.text)))
+          message.text,
+          SMS(ORIGINATOR, Content(message.text))
         )
 
     override def sendSMS(message: Message): F[Unit] =

@@ -1,6 +1,5 @@
 package com.itforelead.workout.domain
 
-import com.itforelead.workout.domain.custom.refinements.FullName
 import derevo.cats.{eqv, show}
 import derevo.circe.magnolia.{decoder, encoder}
 import derevo.derive
@@ -10,6 +9,7 @@ import com.itforelead.workout.types.uuid
 import io.circe.refined._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.numeric.NonNegShort
+import eu.timepit.refined.types.string.NonEmptyString
 import squants.market.Currency
 
 import java.util.UUID
@@ -19,11 +19,17 @@ object types {
 
   object UZS extends Currency("UZS", "Uzbek sum", "SUM", 2)
 
-  @derive(decoder, encoder, show)
-  @newtype case class UserName(value: FullName)
-
   @derive(decoder, encoder, eqv, show, uuid)
   @newtype case class UserId(value: UUID)
+
+  @derive(decoder, encoder, eqv, show, uuid)
+  @newtype case class MemberId(value: UUID)
+
+  @derive(decoder, encoder, eqv, show, uuid)
+  @newtype case class GymId(value: UUID)
+
+  @derive(decoder, encoder, eqv, show, uuid)
+  @newtype case class GymName(value: NonEmptyString)
 
   @derive(decoder, encoder, eqv, show, uuid)
   @newtype case class MessageId(value: UUID)

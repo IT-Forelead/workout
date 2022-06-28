@@ -7,33 +7,35 @@ import derevo.circe.magnolia.{decoder, encoder}
 import derevo.derive
 import tsec.passwordhashers.PasswordHash
 import tsec.passwordhashers.jca.SCrypt
-import io.circe.refined._
-import eu.timepit.refined.cats._
 
 import java.time.LocalDate
 
 @derive(decoder, encoder, show)
-case class User(
-  id: UserId,
+case class Member(
+  id: MemberId,
+  gymId: GymId,
   firstname: UserName,
   lastname: UserName,
   phone: Tel,
-  gymName: GymName,
+  birthday: LocalDate,
   userPicture: FilePath
 )
 
-object User {
+object Member {
+  @derive(decoder, encoder, show)
+  case class Validation(phone: Tel, code: ValidationCode)
 
   @derive(decoder, encoder, show)
-  case class CreateUser(
+  case class CreateMember(
+    gymId: GymId,
     firstname: UserName,
     lastname: UserName,
     phone: Tel,
-    gymName: GymName,
+    birthday: LocalDate,
     userPicture: FilePath,
     password: Password
   )
 
   @derive(decoder, encoder)
-  case class UserWithPassword(user: User, password: PasswordHash[SCrypt])
+  case class MemberWithPassword(member: Member, password: PasswordHash[SCrypt])
 }
