@@ -1,4 +1,5 @@
 CREATE TYPE PAYMENT_TYPE AS ENUM ('daily', 'monthly');
+CREATE TYPE ARRIVAL_TYPE AS ENUM ('come_in', 'go_out');
 
 CREATE TABLE IF NOT EXISTS users
 (
@@ -7,7 +8,8 @@ CREATE TABLE IF NOT EXISTS users
     lastname  VARCHAR        NOT NULL,
     phone     VARCHAR UNIQUE NOT NULL,
     gym_name  VARCHAR        NOT NULL,
-    password  VARCHAR        NOT NULL
+    password  VARCHAR        NOT NULL,
+    deleted   BOOLEAN        NOT NULL DEFAULT false
 );
 
 INSERT INTO "users" ("id", "firstname", "lastname", "phone", "gym_name", "password")
@@ -23,7 +25,8 @@ CREATE TABLE IF NOT EXISTS members
     lastname  VARCHAR        NOT NULL,
     phone     VARCHAR UNIQUE NOT NULL,
     birthday  DATE           NOT NULL,
-    image     VARCHAR        NULL
+    image     VARCHAR        NULL,
+    deleted   BOOLEAN        NOT NULL DEFAULT false
 );
 
 CREATE TABLE IF NOT EXISTS payments
@@ -36,5 +39,18 @@ CREATE TABLE IF NOT EXISTS payments
     payment_type PAYMENT_TYPE NOT NULL,
     price        NUMERIC      NOT NULL,
     created_at   TIMESTAMP    NOT NULL,
-    expired_at   TIMESTAMP    NOT NULL
+    expired_at   TIMESTAMP    NOT NULL,
+    deleted      BOOLEAN      NOT NULL DEFAULT false
+);
+
+CREATE TABLE IF NOT EXISTS arrival_event
+(
+    id         UUID PRIMARY KEY,
+    user_id    UUID         NOT NULL
+        CONSTRAINT fk_user_id REFERENCES users (id) ON UPDATE NO ACTION ON DELETE NO ACTION,
+    member_id  UUID         NOT NULL
+        CONSTRAINT fk_member_id REFERENCES members (id) ON UPDATE NO ACTION ON DELETE NO ACTION,
+    created_at TIMESTAMP    NOT NULL,
+    arrival    ARRIVAL_TYPE NOT NULL,
+    deleted    BOOLEAN      NOT NULL DEFAULT false
 );
