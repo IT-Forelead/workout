@@ -14,22 +14,22 @@ import java.time.LocalDate
 case class Member(
   id: MemberId,
   userId: UserId,
-  firstname: UserName,
-  lastname: UserName,
+  firstname: MemberFirstName,
+  lastname: MemberLastName,
   phone: Tel,
   birthday: LocalDate,
-  userPicture: FilePath
+  image: FilePath
 )
 
 object Member {
   @derive(decoder, encoder, show)
   case class CreateMember(
     userId: UserId,
-    firstname: UserName,
-    lastname: UserName,
+    firstname: MemberFirstName,
+    lastname: MemberLastName,
     phone: Tel,
     birthday: LocalDate,
-    userPicture: FilePath,
+    image: FilePath,
     code: ValidationCode
   )
 }

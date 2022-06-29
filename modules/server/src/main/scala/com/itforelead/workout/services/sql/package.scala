@@ -29,6 +29,12 @@ package object sql {
 
   val userName: Codec[UserName] = varchar.imap[UserName](name => UserName(NonEmptyString.unsafeFrom(name)))(_.value)
 
+  val memberFirstName: Codec[MemberFirstName] =
+    varchar.imap[MemberFirstName](name => MemberFirstName(NonEmptyString.unsafeFrom(name)))(_.value)
+
+  val memberLastName: Codec[MemberLastName] =
+    varchar.imap[MemberLastName](name => MemberLastName(NonEmptyString.unsafeFrom(name)))(_.value)
+
   val gymName: Codec[GymName] = varchar.imap[GymName](name => GymName(NonEmptyString.unsafeFrom(name)))(_.value)
 
   val passwordHash: Codec[PasswordHash[SCrypt]] = varchar.imap[PasswordHash[SCrypt]](PasswordHash[SCrypt])(_.toString)

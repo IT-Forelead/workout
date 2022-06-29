@@ -12,17 +12,17 @@ import skunk.Session
 
 import scala.concurrent.duration.DurationInt
 
-trait UserValidation[F[_]] {
+trait Validations[F[_]] {
   def sendValidationCode(phone: Tel): F[Unit]
   def validatePhone(validation: Validation): F[Boolean]
 }
 
-object UserValidation {
+object Validations {
 
   def apply[F[_]: GenUUID: Sync](messageBroker: MessageBroker[F], redis: RedisClient[F])(implicit
     session: Resource[F, Session[F]]
-  ): UserValidation[F] =
-    new UserValidation[F] with SkunkHelper[F] {
+  ): Validations[F] =
+    new Validations[F] with SkunkHelper[F] {
 
       def sendValidationCode(phone: Tel): F[Unit] = {
         val validationCode = scala.util.Random.between(10000, 99999)

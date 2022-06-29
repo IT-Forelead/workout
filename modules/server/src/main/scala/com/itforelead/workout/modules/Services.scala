@@ -20,7 +20,7 @@ object Services {
     new Services[F](
       users = Users[F],
       members = Members[F],
-      userValidation = UserValidation[F](messageBroker, redisClient),
+      userValidation = Validations[F](messageBroker, redisClient),
       payments = Payments[F],
       messageBroker = messageBroker
     )
@@ -30,7 +30,7 @@ object Services {
 final class Services[F[_]] private (
   val users: Users[F],
   val members: Members[F],
-  val userValidation: UserValidation[F],
+  val userValidation: Validations[F],
   val payments: Payments[F],
   val messageBroker: MessageBroker[F]
 )
