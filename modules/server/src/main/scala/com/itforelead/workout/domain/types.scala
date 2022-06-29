@@ -28,7 +28,10 @@ object types {
   @derive(decoder, encoder, eqv, show, uuid)
   @newtype case class GymId(value: UUID)
 
-  @derive(decoder, encoder, eqv, show, uuid)
+  @derive(decoder, encoder, eqv, show)
+  @newtype case class UserName(value: NonEmptyString)
+
+  @derive(decoder, encoder, eqv, show)
   @newtype case class GymName(value: NonEmptyString)
 
   @derive(decoder, encoder, eqv, show, uuid)

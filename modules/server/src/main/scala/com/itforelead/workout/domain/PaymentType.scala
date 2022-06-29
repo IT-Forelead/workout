@@ -19,5 +19,5 @@ object PaymentType {
   implicit val encType: Encoder[PaymentType] = Encoder.encodeString.contramap[PaymentType](_.value)
 
   implicit val decType: Decoder[PaymentType] = Decoder.decodeString.map(unsafeFrom)
-  implicit val show: Show[PaymentType]              = Show.show(_.value)
+  implicit val show: Show[PaymentType]       = Show.show(_.value)
 }

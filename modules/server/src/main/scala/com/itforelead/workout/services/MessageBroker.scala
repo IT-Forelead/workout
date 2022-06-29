@@ -48,11 +48,11 @@ object MessageBroker {
       )
 
     private def makeSMS(message: Message) =
-        BrokerMessage(
-          message.phone,
-          message.text,
-          SMS(ORIGINATOR, Content(message.text))
-        )
+      BrokerMessage(
+        message.phone,
+        message.text,
+        SMS(ORIGINATOR, Content(message.text))
+      )
 
     override def sendSMS(message: Message): F[Unit] =
       httpClient.expect(makeRequest(makeSMS(message)))

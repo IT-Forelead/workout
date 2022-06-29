@@ -42,16 +42,6 @@ final case class AuthRoutes[F[_]: Monad: JsonDecoder: MonadThrow](
             Conflict(u)
           }
       }
-
-    case req @ POST -> Root / "member" =>
-      req.decodeR[CreateMember] { member =>
-        auth
-          .newMember(member)
-          .flatMap(Created(_))
-          .recoverWith { case PhoneInUse(u) =>
-            Conflict(u)
-          }
-      }
   }
   private[this] val privateRoutes: AuthedRoutes[User, F] = AuthedRoutes.of { case ar @ GET -> Root / "logout" as user =>
     AuthHeaders

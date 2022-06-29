@@ -1,6 +1,6 @@
 package com.itforelead.workout.services
 
-import com.itforelead.workout.domain.custom.refinements.{FilePath, Tel, UserName}
+import com.itforelead.workout.domain.custom.refinements.{FilePath, Tel}
 import com.itforelead.workout.domain.types._
 import com.itforelead.workout.types.IsUUID
 import skunk.Codec
@@ -27,7 +27,7 @@ package object sql {
 
   def identity[A: IsUUID]: Codec[A] = uuid.imap[A](IsUUID[A]._UUID.get)(IsUUID[A]._UUID.apply)
 
-  val userName: Codec[UserName] = varchar.imap[UserName](name => UserName(UserName.unsafeFrom(name)))(_.value)
+  val userName: Codec[UserName] = varchar.imap[UserName](name => UserName(NonEmptyString.unsafeFrom(name)))(_.value)
 
   val gymName: Codec[GymName] = varchar.imap[GymName](name => GymName(NonEmptyString.unsafeFrom(name)))(_.value)
 

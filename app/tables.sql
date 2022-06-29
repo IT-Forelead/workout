@@ -7,7 +7,6 @@ CREATE TABLE IF NOT EXISTS users
     firstname VARCHAR        NOT NULL,
     lastname  VARCHAR        NOT NULL,
     phone     VARCHAR UNIQUE NOT NULL,
-    gym_name  VARCHAR        NOT NULL,
     password  VARCHAR        NOT NULL,
     deleted   BOOLEAN        NOT NULL DEFAULT false
 );
@@ -54,3 +53,12 @@ CREATE TABLE IF NOT EXISTS arrival_event
     arrival    ARRIVAL_TYPE NOT NULL,
     deleted    BOOLEAN      NOT NULL DEFAULT false
 );
+
+CREATE TABLE IF NOT EXISTS gym_settings
+(
+    user_id       UUID    NOT NULL
+        CONSTRAINT fk_user_id REFERENCES users (id) ON UPDATE NO ACTION ON DELETE NO ACTION,
+    name      VARCHAR NOT NULL,
+    daily_price   NUMERIC NOT NULL DEFAULT 0,
+    monthly_price NUMERIC NOT NULL DEFAULT 0
+)

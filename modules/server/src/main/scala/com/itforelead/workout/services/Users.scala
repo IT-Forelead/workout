@@ -14,7 +14,6 @@ import skunk.implicits._
 import tsec.passwordhashers.PasswordHash
 import tsec.passwordhashers.jca.SCrypt
 
-
 trait Users[F[_]] {
   def find(phoneNumber: Tel): F[Option[UserWithPassword]]
   def create(userParam: CreateUser, password: PasswordHash[SCrypt]): F[User]
@@ -22,7 +21,7 @@ trait Users[F[_]] {
 
 object Users {
 
-  def apply[F[_]: GenUUID: Sync](messageBroker: MessageBroker[F])(implicit
+  def apply[F[_]: GenUUID: Sync](implicit
     session: Resource[F, Session[F]]
   ): Users[F] =
     new Users[F] with SkunkHelper[F] {
@@ -38,7 +37,6 @@ object Users {
             prepQueryUnique(insertUser, id ~ userParam ~ password).map(_._1)
           }
       }
-
 
     }
 

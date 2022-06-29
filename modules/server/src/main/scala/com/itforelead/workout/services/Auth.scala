@@ -17,7 +17,6 @@ import com.itforelead.workout.types.TokenExpiration
 
 trait Auth[F[_]] {
   def newUser(userParam: CreateUser): F[JwtToken]
-  def newMember(memberParam: CreateMember): F[JwtToken]
   def login(credentials: Credentials): F[JwtToken]
   def logout(token: JwtToken, phone: Tel): F[Unit]
 }
@@ -27,7 +26,6 @@ object Auth {
     tokenExpiration: TokenExpiration,
     tokens: Tokens[F],
     users: Users[F],
-    members: Members[F],
     redis: RedisClient[F]
   ): Auth[F] =
     new Auth[F] {
@@ -45,20 +43,6 @@ object Auth {
               t    <- tokens.create
               _    <- redis.put(t.value, user, TokenExpiration)
               _    <- redis.put(user.phone, t.value, TokenExpiration)
-            } yield t
-        }
-
-      override def newMember(memberParam: CreateMember): F[JwtToken] =
-        members.find(memberParam.phone).flatMap {
-          case Some(_) =>
-            PhoneInUse(memberParam.phone).raiseError[F, JwtToken]
-          case None =>
-            for {
-              hash <- SCrypt.hashpw[F](memberParam.password)
-              member <- members.create(memberParam, hash)
-              t    <- tokens.create
-              _    <- redis.put(t.value, member, TokenExpiration)
-              _    <- redis.put(member.phone, t.value, TokenExpiration)
             } yield t
         }
 
