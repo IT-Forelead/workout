@@ -5,14 +5,15 @@ import cats.implicits._
 import com.itforelead.workout.domain.Member.CreateMember
 import com.itforelead.workout.domain.custom.exception.PhoneInUse
 import com.itforelead.workout.domain.{ID, Member}
-import com.itforelead.workout.domain.types.MemberId
+import com.itforelead.workout.domain.types.{MemberId, UserId}
 import com.itforelead.workout.effects.GenUUID
-import com.itforelead.workout.services.sql.MemberSQL.insertMember
+import com.itforelead.workout.services.sql.MemberSQL.{insertMember, selectByUserId}
 import skunk.implicits._
 import skunk.{Session, SqlState}
 
 trait Members[F[_]] {
   def create(memberParam: CreateMember): F[Member]
+  def findByUserId(userId: UserId): F[List[Member]]
 }
 
 object Members {
@@ -31,6 +32,12 @@ object Members {
             PhoneInUse(memberParam.phone).raiseError[F, Member]
           }
       }
+
+      override def findByUserId(
+        userId: UserId
+      ): F[List[Member]] =
+        prepQueryList(selectByUserId, userId)
+
     }
 
 }
