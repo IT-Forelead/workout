@@ -46,9 +46,9 @@ final class HttpApi[F[_]: Async: Logger] private (
     JwtAuthMiddleware[F, User](security.userJwtAuth.value, findUser)
 
   // Auth routes
-  private[this] val authRoutes = AuthRoutes[F](security.auth).routes(usersMiddleware)
-  private[this] val userRoutes = new UserRoutes[F].routes(usersMiddleware)
-//  private[this] val memberRoutes         = new MemberRoutes[F].routes(usersMiddleware)
+  private[this] val authRoutes           = AuthRoutes[F](security.auth).routes(usersMiddleware)
+  private[this] val userRoutes           = new UserRoutes[F].routes(usersMiddleware)
+  private[this] val memberRoutes         = new MemberRoutes[F](services.members).routes(usersMiddleware)
   private[this] val userValidationRoutes = new UserValidationRoutes[F](services.userValidation).routes(usersMiddleware)
 
   // Service routes
@@ -57,7 +57,7 @@ final class HttpApi[F[_]: Async: Logger] private (
 
   // Open routes
   private[this] val openRoutes: HttpRoutes[F] =
-    userRoutes <+> userValidationRoutes <+> paymentRoutes <+> userSettingRoutes <+> authRoutes
+    userRoutes <+> memberRoutes <+> userValidationRoutes <+> paymentRoutes <+> userSettingRoutes <+> authRoutes
 
   private[this] val routes: HttpRoutes[F] = Router(
     baseURL -> openRoutes
