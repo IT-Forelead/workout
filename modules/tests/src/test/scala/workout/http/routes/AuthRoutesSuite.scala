@@ -27,7 +27,7 @@ object AuthRoutesSuite extends HttpSuite {
     override def find(
       phoneNumber: Tel
     ): F[Option[UserWithPassword]] =
-      if (user.phoneNumber.equalsIgnoreCase(phoneNumber))
+      if (user.phone.equalsIgnoreCase(phoneNumber))
         SCrypt.hashpw[F](pass).map { hash =>
           UserWithPassword(user, hash).some
         }
@@ -52,7 +52,7 @@ object AuthRoutesSuite extends HttpSuite {
         auth <- AuthMock[IO](users(user, newUser.password), RedisClient)
         (postData, shouldReturn) =
           if (conflict)
-            (newUser.copy(phoneNumber = user.phoneNumber), Status.Conflict)
+            (newUser.copy(phone = user.phone), Status.Conflict)
           else
             (newUser, Status.Created)
         req    = POST(postData, uri"/auth/user")
@@ -74,7 +74,7 @@ object AuthRoutesSuite extends HttpSuite {
         auth <- AuthMock[IO](users(user, c.password), RedisClient)
         (postData, shouldReturn) =
           if (isCorrect)
-            (c.copy(phone = user.phoneNumber), Status.Ok)
+            (c.copy(phone = user.phone), Status.Ok)
           else
             (c, Status.Forbidden)
         req    = POST(postData, uri"/auth/login")

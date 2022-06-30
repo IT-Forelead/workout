@@ -1,6 +1,6 @@
 package workout.utils
 
-import com.itforelead.workout.domain.Role
+import com.itforelead.workout.domain.{ArrivalType, PaymentType}
 import com.itforelead.workout.domain.custom.refinements._
 import org.http4s.MediaType
 import org.scalacheck.Gen._
@@ -11,7 +11,9 @@ import java.time.LocalDateTime
 
 object Arbitraries {
 
-  implicit lazy val arbRole: Arbitrary[Role] = Arbitrary(oneOf(Role.roles))
+  implicit lazy val arbArrivalType: Arbitrary[ArrivalType] = Arbitrary(oneOf(ArrivalType.arrivalTypes))
+
+  implicit lazy val arbPaymentType: Arbitrary[PaymentType] = Arbitrary(oneOf(PaymentType.paymentTypes))
 
   implicit lazy val arbFilePath: Arbitrary[FilePath] = Arbitrary(
     for {
@@ -19,13 +21,6 @@ object Arbitraries {
       s1 <- uuid
       s2 <- oneOf("png","jpg","jpeg","bmp")
     } yield FilePath.unsafeFrom(s"$s0/$s1.$s2")
-  )
-
-  implicit lazy val arbFullname: Arbitrary[FullName] = Arbitrary(
-    for {
-      s0 <- nonEmptyStringGen(3, 12)
-      s1 <- nonEmptyStringGen(3, 12)
-    } yield FullName.unsafeFrom(s"$s0 $s1")
   )
 
   implicit lazy val arbLocalDateTime: Arbitrary[LocalDateTime] = Arbitrary(
@@ -37,6 +32,7 @@ object Arbitraries {
       minute <- Gen.choose(0, 59)
     } yield LocalDateTime.of(year, month, day, hour, minute)
   )
+
   implicit lazy val arbEmail: Arbitrary[EmailAddress] = Arbitrary(
     for {
       s0 <- nonEmptyStringGen(4, 8)
@@ -65,5 +61,11 @@ object Arbitraries {
     for {
       s0 <- numberGen(12)
     } yield Tel.unsafeFrom(s"+$s0")
+  )
+
+  implicit lazy val arbValidationCode: Arbitrary[ValidationCode] = Arbitrary(
+    for {
+      s0 <- numberGen(6)
+    } yield ValidationCode.unsafeFrom(s"$s0")
   )
 }

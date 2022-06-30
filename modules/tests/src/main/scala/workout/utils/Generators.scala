@@ -8,9 +8,12 @@ import eu.timepit.refined.scalacheck.string._
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 import Arbitraries._
+import com.itforelead.workout.domain.Arrival.CreateArrival
+import com.itforelead.workout.domain.Member.CreateMember
 import com.itforelead.workout.domain.Payment.CreatePayment
 import eu.timepit.refined.scalacheck.all.greaterEqualArbitrary
-import eu.timepit.refined.types.numeric.NonNegShort
+import eu.timepit.refined.types.numeric.{NonNegInt, NonNegShort}
+import eu.timepit.refined.types.string.NonEmptyString
 import squants.Money
 
 import java.time.{LocalDate, LocalDateTime}
@@ -37,14 +40,21 @@ object Generators {
   def idGen[A](f: UUID => A): Gen[A] =
     Gen.uuid.map(f)
 
-  val userIdGen: Gen[UserId] =
-    idGen(UserId.apply)
+  val userIdGen: Gen[UserId] = idGen(UserId.apply)
 
-  val paymentIdGen: Gen[PaymentId] =
-    idGen(PaymentId.apply)
+  val memberIdGen: Gen[MemberId] = idGen(MemberId.apply)
 
-  val usernameGen: Gen[UserName] =
-    arbitrary[FullName].map(UserName.apply)
+  val arrivalIdGen: Gen[ArrivalId] = idGen(ArrivalId.apply)
+
+  val paymentIdGen: Gen[PaymentId] = idGen(PaymentId.apply)
+
+  val firstNameGen: Gen[FirstName] = arbitrary[NonEmptyString].map(FirstName.apply)
+
+  val lastNameGen: Gen[LastName] = arbitrary[NonEmptyString].map(LastName.apply)
+
+  val arrivalTypeGen: Gen[ArrivalType] = arbitrary[ArrivalType]
+
+  val paymentTypeGen: Gen[PaymentType] = arbitrary[PaymentType]
 
   val phoneGen: Gen[Tel] = arbitrary[Tel]
 
@@ -56,13 +66,13 @@ object Generators {
 
   val filePathGen: Gen[FilePath] = arbitrary[FilePath]
 
+  val validationCodeGen: Gen[ValidationCode] = arbitrary[ValidationCode]
+
   val booleanGen: Gen[Boolean] = arbitrary[Boolean]
 
   val emailGen: Gen[EmailAddress] = arbitrary[EmailAddress]
 
   val filenameGen: Gen[FileName] = arbitrary[FileName]
-
-  val roleGen: Gen[Role] = arbitrary[Role]
 
   val priceGen: Gen[Money] = Gen.posNum[Long].map(n => UZS(BigDecimal(n)))
 
@@ -71,12 +81,57 @@ object Generators {
   val userGen: Gen[User] =
     for {
       i <- userIdGen
-      n <- usernameGen
-      p <- phoneGen
-      b <- dateGen
-      f <- filePathGen
-      r <- roleGen
-    } yield User(i, n, p, b, f, r)
+      fn <- firstNameGen
+      ln <- lastNameGen
+      ph <- phoneGen
+    } yield User(i, fn, ln, ph)
+
+  val createUserGen: Gen[CreateUser] =
+    for {
+      fn <- firstNameGen
+      ln <- lastNameGen
+      ph <- phoneGen
+      p  <- passwordGen
+    } yield CreateUser(fn, ln, ph, p)
+
+  val memberGen: Gen[Member] =
+    for {
+      i <- memberIdGen
+      ui <- userIdGen
+      fn <- firstNameGen
+      ln <- lastNameGen
+      ph <- phoneGen
+      d <- dateGen
+      im <- filePathGen
+    } yield Member(i, ui, fn, ln, ph, d, im)
+
+  val createMemberGen: Gen[CreateMember] =
+    for {
+      ui <- userIdGen
+      fn <- firstNameGen
+      ln <- lastNameGen
+      ph <- phoneGen
+      d  <- dateGen
+      im <- filePathGen
+      vc <- validationCodeGen
+    } yield CreateMember(ui, fn, ln, ph, d, im, vc)
+
+  val arrivalGen: Gen[Arrival] =
+    for {
+      i  <- arrivalIdGen
+      ui <- userIdGen
+      mi <- memberIdGen
+      dt <- timestampGen
+      at <- arrivalTypeGen
+    } yield Arrival(i, ui, mi, dt, at)
+
+  val createArrivalGen: Gen[CreateArrival] =
+    for {
+      ui <- userIdGen
+      mi <- memberIdGen
+      dt <- timestampGen
+      at <- arrivalTypeGen
+    } yield CreateArrival(ui, mi, dt, at)
 
   val userCredentialGen: Gen[Credentials] =
     for {
@@ -84,29 +139,23 @@ object Generators {
       p <- passwordGen
     } yield Credentials(e, p)
 
-  val createUserGen: Gen[CreateUser] =
-    for {
-      n <- usernameGen
-      p <- phoneGen
-      b <- dateGen
-      f <- filePathGen
-      ps <- passwordGen
-    } yield CreateUser(n, p, b, f, ps)
-
   val paymentGen: Gen[Payment] =
     for {
       i <- paymentIdGen
-      u <- userIdGen
+      ui <- userIdGen
+      mi <- memberIdGen
+      pt <- paymentTypeGen
       p <- priceGen
       ca <- timestampGen
       ea <- timestampGen
-    } yield Payment(i, u, p, ca, ea)
+    } yield Payment(i, ui, mi, pt, p, ca, ea)
 
   val createPaymentGen: Gen[CreatePayment] =
     for {
-      u <- userIdGen
+      ui <- userIdGen
+      mi <- memberIdGen
+      pt <- paymentTypeGen
       p <- priceGen
-      d <- durationGen
-    } yield CreatePayment(u, p, d)
+    } yield CreatePayment(ui, mi, pt, p)
 }
 

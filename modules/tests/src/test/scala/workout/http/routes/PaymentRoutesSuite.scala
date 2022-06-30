@@ -2,9 +2,9 @@ package workout.http.routes
 
 import cats.effect.{IO, Sync}
 import cats.implicits._
-import com.itforelead.workout.domain.{Payment, User}
-import com.itforelead.workout.domain.Payment.{CreatePayment, PaymentWithUser}
-import com.itforelead.workout.domain.Role.ADMIN
+import com.itforelead.workout.domain.{Member, Payment, User}
+import com.itforelead.workout.domain.Payment.{CreatePayment, PaymentWithMember}
+import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.routes.{PaymentRoutes, deriveEntityEncoder}
 import org.http4s.Method.{GET, POST}
@@ -16,15 +16,15 @@ import workout.utils.Generators._
 import workout.utils.HttpSuite
 
 object PaymentRoutesSuite extends HttpSuite {
-  private def paymentS[F[_]: Sync: GenUUID](payment: Payment, user: User): PaymentsStub[F] = new PaymentsStub[F] {
-    override def create(createPayment: CreatePayment): F[Payment] = Sync[F].delay(payment)
-    override def payments: F[List[PaymentWithUser]]               = Sync[F].delay(List(PaymentWithUser(payment, user)))
+  private def paymentS[F[_]: Sync: GenUUID](payment: Payment, member: Member): PaymentsStub[F] = new PaymentsStub[F] {
+    override def create(createPayment: CreatePayment): F[Payment]     = Sync[F].delay(payment)
+    override def payments(userId: UserId): F[List[PaymentWithMember]] = Sync[F].delay(List(PaymentWithMember(payment, member)))
   }
 
   test("GET Payments") {
     val gen = for {
       u <- userGen
-      m <- userGen
+      m <- memberGen
       p <- paymentGen
     } yield (u, m, p)
 
@@ -33,7 +33,7 @@ object PaymentRoutesSuite extends HttpSuite {
         token <- authToken(user)
         req    = GET(uri"/payment").putHeaders(token)
         routes = new PaymentRoutes[IO](paymentS(payment, member)).routes(usersMiddleware)
-        res <- if (user.role == ADMIN) expectHttpStatus(routes, req)(Status.Ok) else expectNotFound(routes, req)
+        res <- expectHttpStatus(routes, req)(Status.Ok)
       } yield res
     }
   }
@@ -41,7 +41,7 @@ object PaymentRoutesSuite extends HttpSuite {
   test("CREATE Payment") {
     val gen = for {
       u  <- userGen
-      m  <- userGen
+      m  <- memberGen
       cp <- createPaymentGen
       p  <- paymentGen
     } yield (u, m, cp, p)
@@ -51,7 +51,7 @@ object PaymentRoutesSuite extends HttpSuite {
         token <- authToken(user)
         req    = POST(createPay, uri"/payment").putHeaders(token)
         routes = new PaymentRoutes[IO](paymentS(payment, member)).routes(usersMiddleware)
-        res <- if (user.role == ADMIN) expectHttpStatus(routes, req)(Status.Created) else expectNotFound(routes, req)
+        res <- expectHttpStatus(routes, req)(Status.Created)
       } yield res
     }
   }
