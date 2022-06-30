@@ -16,12 +16,12 @@ final class UserValidationRoutes[F[_]: JsonDecoder: MonadThrow](userValidation: 
   private[routes] val prefixPath = "/validation"
 
   private[this] val httpRoutes: AuthedRoutes[User, F] = AuthedRoutes.of {
-    case aR @ POST -> Root as _ =>
+    case aR @ POST -> Root / "sent-code" as _ =>
       aR.req.decodeR[Tel] { phone =>
         userValidation.sendValidationCode(phone) >> NoContent()
       }
 
-    case aR @ POST -> Root as _ =>
+    case aR @ POST -> Root / "code" as _ =>
       aR.req.decodeR[Validation] { validation =>
         userValidation.validatePhone(validation) >> Ok()
       }
