@@ -1,16 +1,15 @@
 package com.itforelead.workout.services
 
 import cats.effect.{Resource, Sync}
-import com.itforelead.workout.domain.{ID, Payment, PaymentType}
+import com.itforelead.workout.domain.{ID, Payment}
 import com.itforelead.workout.domain.Payment.{CreatePayment, PaymentWithMember}
 import com.itforelead.workout.domain.custom.exception.UserIdIncorrect
 import com.itforelead.workout.domain.types.{PaymentId, UserId}
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.services.sql.PaymentSQL.{insert, selectAll}
 import cats.syntax.all._
-import com.itforelead.workout.domain.PaymentType.{DAILY, MONTHLY, paymentTypes}
+import com.itforelead.workout.domain.PaymentType.{DAILY, MONTHLY}
 import skunk._
-import squants.Money
 
 import java.time.LocalDateTime
 
@@ -21,16 +20,18 @@ trait Payments[F[_]] {
 
 object Payments {
 
-  def apply[F[_]: GenUUID: Sync](implicit session: Resource[F, Session[F]]): Payments[F] = new Payments[F]
-    with SkunkHelper[F] {
+  def apply[F[_]: GenUUID: Sync](
+    userSettings: UserSettings[F]
+  )(implicit session: Resource[F, Session[F]]): Payments[F] = new Payments[F] with SkunkHelper[F] {
 
     override def create(payment: CreatePayment): F[Payment] = {
       (for {
-        id  <- ID.make[F, PaymentId]
-        now <- Sync[F].delay(LocalDateTime.now())
+        id           <- ID.make[F, PaymentId]
+        userSettings <- userSettings.settings(payment.userId)
+        now          <- Sync[F].delay(LocalDateTime.now())
         expiredAt = payment.paymentType match {
-          case MONTHLY => now.plusMonths((payment.cost / payment.userSetting.monthlyPrice).toLong)
-          case DAILY   => now.plusMonths((payment.cost / payment.userSetting.dailyPrice).toLong)
+          case MONTHLY => now.plusMonths(1)
+          case DAILY   => now.plusDays(1)
         }
         payment <- prepQueryUnique(
           insert,
