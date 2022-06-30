@@ -14,6 +14,8 @@ import java.time.LocalDateTime
 case class Payment(
   id: PaymentId,
   userId: UserId,
+  memberId: MemberId,
+  paymentType: PaymentType,
   cost: Money,
   createdAt: LocalDateTime,
   expiredAt: LocalDateTime
@@ -23,13 +25,15 @@ object Payment {
   @derive(decoder, encoder, show)
   case class CreatePayment(
     userId: UserId,
+    memberId: MemberId,
+    paymentType: PaymentType,
     cost: Money,
     duration: Duration
   )
 
   @derive(decoder, encoder, show)
-  case class PaymentWithUser(
+  case class PaymentWithMember(
     payment: Payment,
-    user: User
+    member: Member
   )
 }

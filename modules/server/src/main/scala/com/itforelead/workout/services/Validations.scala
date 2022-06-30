@@ -2,8 +2,7 @@ package com.itforelead.workout.services
 
 import cats.effect._
 import cats.implicits._
-import com.itforelead.workout.domain.Member.CreateMember
-import com.itforelead.workout.domain.custom.refinements.{Tel, ValidationCode}
+import com.itforelead.workout.domain.custom.refinements.Tel
 import com.itforelead.workout.domain.{Message, Validation}
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.services.redis.RedisClient

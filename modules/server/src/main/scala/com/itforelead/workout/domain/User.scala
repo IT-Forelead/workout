@@ -9,7 +9,6 @@ import tsec.passwordhashers.PasswordHash
 import tsec.passwordhashers.jca.SCrypt
 import io.circe.refined._
 import eu.timepit.refined.cats._
-import java.time.LocalDate
 
 @derive(decoder, encoder, show)
 case class User(

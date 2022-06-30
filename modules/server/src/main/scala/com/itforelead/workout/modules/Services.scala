@@ -3,6 +3,7 @@ package com.itforelead.workout.modules
 import cats.effect.Resource
 import cats.effect.kernel.Async
 import com.itforelead.workout.config.BrokerConfig
+import com.itforelead.workout.domain.UserSetting
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.services._
 import com.itforelead.workout.services.redis.RedisClient
@@ -23,6 +24,7 @@ object Services {
       members = members,
       userValidation = Validations[F](messageBroker, members, redisClient),
       payments = Payments[F],
+      userSettings = UserSettings[F],
       messageBroker = messageBroker
     )
   }
@@ -33,5 +35,6 @@ final class Services[F[_]] private (
   val members: Members[F],
   val userValidation: Validations[F],
   val payments: Payments[F],
+  val userSettings: UserSettings[F],
   val messageBroker: MessageBroker[F]
 )

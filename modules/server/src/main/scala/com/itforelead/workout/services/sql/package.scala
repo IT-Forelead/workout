@@ -1,5 +1,6 @@
 package com.itforelead.workout.services
 
+import com.itforelead.workout.domain.PaymentType
 import com.itforelead.workout.domain.custom.refinements.{FilePath, Tel}
 import com.itforelead.workout.domain.types._
 import com.itforelead.workout.types.IsUUID
@@ -40,6 +41,8 @@ package object sql {
   val passwordHash: Codec[PasswordHash[SCrypt]] = varchar.imap[PasswordHash[SCrypt]](PasswordHash[SCrypt])(_.toString)
 
   val tel: Codec[Tel] = varchar.imap[Tel](Tel.unsafeFrom)(_.value)
+
+  val paymentType: Codec[PaymentType] = `enum`[PaymentType](_.value, PaymentType.find, Type("payment_type"))
 
   val price: Codec[Money] = numeric.imap[Money](money => UZS(money))(_.amount)
 

@@ -21,7 +21,7 @@ object PaymentsSuite extends DBSuite {
         hash <- SCrypt.hashpw[IO](createUser.password)
         user1 <- users.create(createUser, hash)
         payment <- payments.create(createPayment.copy(userId = user1.id))
-        getPayments <- payments.payments
+        getPayments <- payments.payments(user1.id)
       } yield assert(getPayments.exists(p => p.payment == payment))
     }
   }

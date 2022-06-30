@@ -8,7 +8,7 @@ import tsec.passwordhashers.PasswordHash
 import tsec.passwordhashers.jca.SCrypt
 import com.itforelead.workout.domain.custom.refinements.Tel
 import com.itforelead.workout.domain.types._
-import skunk.codec.all.{bool, date}
+import skunk.codec.all.bool
 
 object UserSQL {
   val userId: Codec[UserId] = identity[UserId]

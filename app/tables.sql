@@ -11,9 +11,10 @@ CREATE TABLE IF NOT EXISTS users
     deleted   BOOLEAN        NOT NULL DEFAULT false
 );
 
-INSERT INTO "users" ("id", "firstname", "lastname", "phone", "gym_name", "password")
-VALUES ('76c2c44c-8fbf-4184-9199-19303a042fa0', 'Admin', 'Adminov', '+998901234567', 'GYM-Forelead',
+INSERT INTO "users" ("id", "firstname", "lastname", "phone", "password")
+VALUES ('76c2c44c-8fbf-4184-9199-19303a042fa0', 'Admin', 'Adminov', '+998901234567',
         '$s0$e0801$5JK3Ogs35C2h5htbXQoeEQ==$N7HgNieSnOajn1FuEB7l4PhC6puBSq+e1E8WUaSJcGY=');
+
 
 CREATE TABLE IF NOT EXISTS members
 (
@@ -54,11 +55,11 @@ CREATE TABLE IF NOT EXISTS arrival_event
     deleted    BOOLEAN      NOT NULL DEFAULT false
 );
 
-CREATE TABLE IF NOT EXISTS gym_settings
+CREATE TABLE IF NOT EXISTS user_settings
 (
     user_id       UUID    NOT NULL
         CONSTRAINT fk_user_id REFERENCES users (id) ON UPDATE NO ACTION ON DELETE NO ACTION,
-    name      VARCHAR NOT NULL,
+    name          VARCHAR NOT NULL,
     daily_price   NUMERIC NOT NULL DEFAULT 0,
     monthly_price NUMERIC NOT NULL DEFAULT 0
 )

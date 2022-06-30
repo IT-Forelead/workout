@@ -15,7 +15,7 @@ object UsersSuite extends DBSuite {
       SCrypt.hashpw[IO](createUser.password).flatMap { hash =>
         for {
           user1 <- users.create(createUser, hash)
-          user2 <- users.find(user1.phoneNumber)
+          user2 <- users.find(user1.phone)
         } yield assert(user2.exists(_.user == user1))
       }
     }
