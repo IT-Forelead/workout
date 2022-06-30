@@ -14,8 +14,8 @@ import java.time.LocalDate
 case class Member(
   id: MemberId,
   userId: UserId,
-  firstname: MemberFirstName,
-  lastname: MemberLastName,
+  firstname: FirstName,
+  lastname: LastName,
   phone: Tel,
   birthday: LocalDate,
   image: FilePath
@@ -25,8 +25,8 @@ object Member {
   @derive(decoder, encoder, show)
   case class CreateMember(
     userId: UserId,
-    firstname: MemberFirstName,
-    lastname: MemberLastName,
+    firstname: FirstName,
+    lastname: LastName,
     phone: Tel,
     birthday: LocalDate,
     image: FilePath,

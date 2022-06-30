@@ -50,6 +50,7 @@ final class HttpApi[F[_]: Async: Logger] private (
   private[this] val userRoutes           = new UserRoutes[F].routes(usersMiddleware)
   private[this] val memberRoutes         = new MemberRoutes[F](services.members).routes(usersMiddleware)
   private[this] val userValidationRoutes = new UserValidationRoutes[F](services.userValidation).routes(usersMiddleware)
+  private[this] val arrivalRoutes        = new ArrivalRoutes[F](services.arrivalService).routes(usersMiddleware)
 
   // Service routes
   private[this] val paymentRoutes     = new PaymentRoutes[F](services.payments).routes(usersMiddleware)
@@ -57,7 +58,7 @@ final class HttpApi[F[_]: Async: Logger] private (
 
   // Open routes
   private[this] val openRoutes: HttpRoutes[F] =
-    userRoutes <+> memberRoutes <+> userValidationRoutes <+> paymentRoutes <+> userSettingRoutes <+> authRoutes
+    userRoutes <+> memberRoutes <+> userValidationRoutes <+> paymentRoutes <+> arrivalRoutes <+> userSettingRoutes <+> authRoutes
 
   private[this] val routes: HttpRoutes[F] = Router(
     baseURL -> openRoutes

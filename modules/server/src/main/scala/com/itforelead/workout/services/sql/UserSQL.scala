@@ -13,8 +13,8 @@ import skunk.codec.all.bool
 object UserSQL {
   val userId: Codec[UserId] = identity[UserId]
 
-  private val Columns            = userId ~ userName ~ userName ~ tel ~ passwordHash ~ bool
-  private val ColumnsWithoutPass = userId ~ userName ~ userName ~ tel ~ bool
+  private val Columns            = userId ~ firstName ~ lastName ~ tel ~ passwordHash ~ bool
+  private val ColumnsWithoutPass = userId ~ firstName ~ lastName ~ tel ~ bool
 
   val encoder: Encoder[UserId ~ CreateUser ~ PasswordHash[SCrypt]] =
     Columns.contramap { case i ~ u ~ p =>

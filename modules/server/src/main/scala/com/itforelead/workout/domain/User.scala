@@ -13,8 +13,8 @@ import eu.timepit.refined.cats._
 @derive(decoder, encoder, show)
 case class User(
   id: UserId,
-  firstname: UserName,
-  lastname: UserName,
+  firstname: FirstName,
+  lastname: LastName,
   phone: Tel
 )
 
@@ -22,8 +22,8 @@ object User {
 
   @derive(decoder, encoder, show)
   case class CreateUser(
-    firstname: UserName,
-    lastname: UserName,
+    firstname: FirstName,
+    lastname: LastName,
     phone: Tel,
     password: Password
   )

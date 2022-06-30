@@ -10,6 +10,9 @@ import io.circe.refined._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
+import skunk.Codec
+import skunk.data.Type
+import skunk.codec.all._
 import squants.market.Currency
 
 import java.util.UUID
@@ -26,10 +29,13 @@ object types {
   @newtype case class MemberId(value: UUID)
 
   @derive(decoder, encoder, eqv, show, uuid)
-  @newtype case class GymId(value: UUID)
+  @newtype case class ArrivalId(value: UUID)
 
   @derive(decoder, encoder, eqv, show)
-  @newtype case class UserName(value: NonEmptyString)
+  @newtype case class FirstName(value: NonEmptyString)
+
+  @derive(decoder, encoder, eqv, show)
+  @newtype case class LastName(value: NonEmptyString)
 
   @derive(decoder, encoder, eqv, show)
   @newtype case class GymName(value: NonEmptyString)
@@ -51,6 +57,9 @@ object types {
 
   @derive(decoder, encoder, eqv, show)
   @newtype case class EncryptedPassword(value: String)
+
+  val arrivalType: Codec[ArrivalType] =
+    `enum`[ArrivalType](_.value, ArrivalType.find, Type("arrival_type"))
 
   @newtype case class EncryptCipher(value: Cipher)
 

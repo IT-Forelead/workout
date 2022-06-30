@@ -28,7 +28,9 @@ package object sql {
 
   def identity[A: IsUUID]: Codec[A] = uuid.imap[A](IsUUID[A]._UUID.get)(IsUUID[A]._UUID.apply)
 
-  val userName: Codec[UserName] = varchar.imap[UserName](name => UserName(NonEmptyString.unsafeFrom(name)))(_.value)
+  val firstName: Codec[FirstName] = varchar.imap[FirstName](name => FirstName(NonEmptyString.unsafeFrom(name)))(_.value)
+
+  val lastName: Codec[LastName] = varchar.imap[LastName](name => LastName(NonEmptyString.unsafeFrom(name)))(_.value)
 
   val memberFirstName: Codec[MemberFirstName] =
     varchar.imap[MemberFirstName](name => MemberFirstName(NonEmptyString.unsafeFrom(name)))(_.value)

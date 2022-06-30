@@ -24,6 +24,7 @@ object Services {
       members = members,
       userValidation = Validations[F](messageBroker, members, redisClient),
       payments = Payments[F],
+      arrivalService = ArrivalService[F],
       userSettings = UserSettings[F],
       messageBroker = messageBroker
     )
@@ -35,6 +36,7 @@ final class Services[F[_]] private (
   val members: Members[F],
   val userValidation: Validations[F],
   val payments: Payments[F],
+  val arrivalService: ArrivalService[F],
   val userSettings: UserSettings[F],
   val messageBroker: MessageBroker[F]
 )
