@@ -28,7 +28,7 @@ object Payment {
     memberId: MemberId,
     paymentType: PaymentType,
     cost: Money,
-    duration: Duration
+    userSetting: UserSetting
   )
 
   @derive(decoder, encoder, show)
