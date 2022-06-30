@@ -5,20 +5,21 @@ import com.itforelead.workout.domain.Payment.PaymentWithMember
 import com.itforelead.workout.domain.types.{PaymentId, UserId}
 import com.itforelead.workout.services.sql.MemberSQL.memberDecoder
 import com.itforelead.workout.services.sql.UserSQL.{userDecoderWithoutPass, userId}
-import skunk.codec.all.{timestamp, uuid}
+import skunk.codec.all.{bool, timestamp, uuid}
 import skunk.implicits._
 import skunk._
 
 object PaymentSQL {
   val paymentId: Codec[PaymentId] = identity[PaymentId]
 
-  private val Columns = paymentId ~ UserSQL.userId ~ MemberSQL.memberId ~ paymentType ~ price ~ timestamp ~ timestamp
+  private val Columns =
+    paymentId ~ UserSQL.userId ~ MemberSQL.memberId ~ paymentType ~ price ~ timestamp ~ timestamp ~ bool
 
   val encoder: Encoder[Payment] =
-    Columns.contramap { p => p.id ~ p.userId ~ p.memberId ~ p.paymentType ~ p.cost ~ p.createdAt ~ p.expiredAt }
+    Columns.contramap { p => p.id ~ p.userId ~ p.memberId ~ p.paymentType ~ p.cost ~ p.createdAt ~ p.expiredAt ~ false }
 
   val paymentDecoder: Decoder[Payment] =
-    Columns.map { case i ~ ui ~ mi ~ pt ~ c ~ ca ~ ea =>
+    Columns.map { case i ~ ui ~ mi ~ pt ~ c ~ ca ~ ea ~ _ =>
       Payment(i, ui, mi, pt, c, ca, ea)
     }
 
@@ -34,7 +35,7 @@ object PaymentSQL {
     sql"""SELECT payments.*, members.*
         FROM payments
         INNER JOIN members ON members.id = payments.member_id
-        WHERE payments.user_id = $userId
+        WHERE payments.user_id = $userId AND payments.deleted = false
        """.query(decPaymentWithMember)
 
 }
