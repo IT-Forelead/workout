@@ -129,9 +129,8 @@ object Generators {
     for {
       ui <- userIdGen
       mi <- memberIdGen
-      dt <- timestampGen
       at <- arrivalTypeGen
-    } yield CreateArrival(ui, mi, dt, at)
+    } yield CreateArrival(ui, mi, at)
 
   val userCredentialGen: Gen[Credentials] =
     for {
