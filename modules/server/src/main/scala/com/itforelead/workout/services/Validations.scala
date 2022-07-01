@@ -26,7 +26,7 @@ object Validations {
     new Validations[F] with SkunkHelper[F] {
 
       def sendValidationCode(phone: Tel): F[Unit] = {
-        val validationCode = scala.util.Random.between(10000, 99999)
+        val validationCode = scala.util.Random.between(100000, 999999)
         redis.put(phone.value, validationCode.toString, 3 minute)
         val messageText = NonEmptyString.unsafeFrom(s"Your Activation code is $validationCode")
         messageBroker.sendSMS(Message(phone, messageText))
