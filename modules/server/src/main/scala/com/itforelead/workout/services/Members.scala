@@ -4,6 +4,7 @@ import cats.effect.{Resource, Sync}
 import cats.implicits._
 import com.itforelead.workout.domain.Member.CreateMember
 import com.itforelead.workout.domain.custom.exception.PhoneInUse
+import com.itforelead.workout.domain.custom.refinements.FileKey
 import com.itforelead.workout.domain.{ID, Member}
 import com.itforelead.workout.domain.types.{MemberId, UserId}
 import com.itforelead.workout.effects.GenUUID
@@ -12,7 +13,7 @@ import skunk.implicits._
 import skunk.{Session, SqlState}
 
 trait Members[F[_]] {
-  def create(memberParam: CreateMember): F[Member]
+  def create(memberParam: CreateMember, filePath: FileKey): F[Member]
   def findByUserId(userId: UserId): F[List[Member]]
 }
 
@@ -23,10 +24,10 @@ object Members {
   ): Members[F] =
     new Members[F] with SkunkHelper[F] {
 
-      def create(memberParam: CreateMember): F[Member] = {
+      def create(memberParam: CreateMember, filePath: FileKey): F[Member] = {
         ID.make[F, MemberId]
           .flatMap { id =>
-            prepQueryUnique(insertMember, id ~ memberParam)
+            prepQueryUnique(insertMember, id ~ memberParam ~ filePath)
           }
           .recoverWith { case SqlState.UniqueViolation(_) =>
             PhoneInUse(memberParam.phone).raiseError[F, Member]
