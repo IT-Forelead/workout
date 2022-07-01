@@ -21,13 +21,14 @@ jobs:
       - name: "Install Nix ❄️"
         uses: cachix/install-nix-action@v13
 
+      - name: "Starting up Redis 🐳"
+        run: nix-shell --argstr jdk "${{ matrix.java }}" --run "cd app; bash redis.sh"
+
       - name: "Install Cachix ❄️"
         uses: cachix/cachix-action@v10
         with:
           name: http4s-server
           signingKey: "${{ secrets.CACHIX_SIGNING_KEY }}"
 
-      - name: "Run with ${{ matrix.java }} 🚀"
-        run: nix-shell --argstr jdk "${{ matrix.java }}" --run "sbt 'test;'"
       - name: "Testing 🤘"
-        run: nix-shell --argstr jdk "${{ matrix.java }}" --run "bash it_test.sh"
+        run: nix-shell --argstr jdk "${{ matrix.java }}" --run "bash it_test.sh; bash test.sh"
