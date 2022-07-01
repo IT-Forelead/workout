@@ -1,6 +1,6 @@
 package com.itforelead.workout.domain
 
-import com.itforelead.workout.domain.custom.refinements.{FilePath, Tel, ValidationCode}
+import com.itforelead.workout.domain.custom.refinements.{FileKey, Tel, ValidationCode}
 import com.itforelead.workout.domain.types._
 import derevo.cats._
 import derevo.circe.magnolia.{decoder, encoder}
@@ -18,7 +18,7 @@ case class Member(
   lastname: LastName,
   phone: Tel,
   birthday: LocalDate,
-  image: FilePath
+  image: FileKey
 )
 
 object Member {
@@ -29,7 +29,7 @@ object Member {
     lastname: LastName,
     phone: Tel,
     birthday: LocalDate,
-    image: FilePath,
+    image: FileKey,
     code: ValidationCode
   )
 }

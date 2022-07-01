@@ -8,5 +8,6 @@ case class AppConfig(
   redis: RedisConfig,
   serverConfig: HttpServerConfig,
   logConfig: LogConfig,
-  messageBroker: BrokerConfig
+  messageBroker: BrokerConfig,
+  awsConfig: AWSConfig
 )

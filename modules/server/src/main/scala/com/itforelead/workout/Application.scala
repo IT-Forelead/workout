@@ -5,6 +5,7 @@ import cats.effect.{IO, IOApp, Resource}
 import com.itforelead.workout.config.ConfigLoader
 import com.itforelead.workout.modules.Services
 import com.itforelead.workout.resources.MkHttpServer
+import com.itforelead.workout.services.s3.S3Client
 import dev.profunktor.redis4cats.log4cats._
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import org.typelevel.log4cats.{Logger, SelfAwareStructuredLogger}
@@ -25,7 +26,9 @@ object Application extends IOApp.Simple {
 
               val services = Services[IO](cfg.messageBroker, res.httpClient, res.redis)
               modules.Security[IO](cfg, services.users, res.redis).map { security =>
-                cfg.serverConfig -> modules.HttpApi[IO](security, services, res.redis, cfg.logConfig).httpApp
+                cfg.serverConfig -> modules
+                  .HttpApi[IO](security, services, S3Client.stream(cfg.awsConfig), res.redis, cfg.logConfig)
+                  .httpApp
               }
             }
             .flatMap { case (cfg, httpApp) =>

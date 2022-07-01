@@ -9,7 +9,7 @@ import eu.timepit.refined.cats._
 import eu.timepit.refined.types.net.{NonSystemPortNumber, UserPortNumber}
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
-import com.itforelead.workout.domain.custom.refinements.UriAddress
+import com.itforelead.workout.domain.custom.refinements.{BucketName, UriAddress, UrlAddress}
 import com.itforelead.workout.types._
 import org.http4s.Uri
 
@@ -42,6 +42,14 @@ object ConfigLoader {
     env("MESSAGE_BROKER_ENABLED").as[Boolean]
   ).parMapN(BrokerConfig.apply)
 
+  def awsConfig: ConfigValue[Effect, AWSConfig] = (
+    env("AWS_ACCESS_KEY").as[NonEmptyString],
+    env("AWS_SECRET_KEY").as[NonEmptyString],
+    env("AWS_ENDPOINT").as[UrlAddress],
+    env("AWS_SIGNING_REGION").as[NonEmptyString],
+    env("AWS_BUCKET_NAME").as[BucketName]
+  ).parMapN(AWSConfig.apply)
+
   def redisConfig: ConfigValue[Effect, RedisConfig] =
     env("REDIS_SERVER_URI").as[UriAddress].map(RedisConfig.apply)
 
@@ -58,6 +66,7 @@ object ConfigLoader {
     redisConfig,
     httpServerConfig,
     httpLogConfig,
-    messageBroker
+    messageBroker,
+    awsConfig
   ).parMapN(AppConfig.apply).load[F]
 }

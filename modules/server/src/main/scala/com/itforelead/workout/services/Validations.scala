@@ -5,6 +5,7 @@ import cats.implicits._
 import com.itforelead.workout.domain.Member.CreateMember
 import com.itforelead.workout.domain.custom.refinements.Tel
 import com.itforelead.workout.domain.Message
+import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.services.redis.RedisClient
 import eu.timepit.refined.types.string.NonEmptyString
@@ -32,14 +33,18 @@ object Validations {
         messageBroker.sendSMS(Message(phone, messageText))
       }
 
-      def validatePhone(createMember: CreateMember): F[Boolean] =
+      def validatePhone(createMember: CreateMember): F[Boolean] = {
+
         for {
           redisCode <- redis.get(createMember.phone.value)
           bool = redisCode.fold(false)(_ == createMember.code.value)
           _ <-
-            if (bool) { members.create(createMember) }
-            else { F.unit }
+            if (bool) {
+              members.create(createMember)
+            } else {
+              F.unit
+            }
         } yield bool
-
+      }
     }
 }

@@ -3,11 +3,12 @@ package com.itforelead.workout.modules
 import cats.data.OptionT
 import cats.effect._
 import cats.syntax.all._
-import com.itforelead.workout.config.LogConfig
+import com.itforelead.workout.config.{AWSConfig, LogConfig}
 import com.itforelead.workout.domain.User
 import com.itforelead.workout.implicits.CirceDecoderOps
 import com.itforelead.workout.routes._
 import com.itforelead.workout.services.redis.RedisClient
+import com.itforelead.workout.services.s3.S3Client
 import dev.profunktor.auth.JwtAuthMiddleware
 import dev.profunktor.auth.jwt.JwtToken
 import org.http4s._
@@ -23,15 +24,17 @@ object HttpApi {
   def apply[F[_]: Async: Logger](
     security: Security[F],
     services: Services[F],
+    s3Client: fs2.Stream[F, S3Client[F]],
     redis: RedisClient[F],
     logConfig: LogConfig
   )(implicit F: Sync[F]): HttpApi[F] =
-    new HttpApi[F](security, services, redis, logConfig)
+    new HttpApi[F](security, services, s3Client, redis, logConfig)
 }
 
 final class HttpApi[F[_]: Async: Logger] private (
   security: Security[F],
   services: Services[F],
+  s3Client: fs2.Stream[F, S3Client[F]],
   redis: RedisClient[F],
   logConfig: LogConfig
 ) {
@@ -46,11 +49,12 @@ final class HttpApi[F[_]: Async: Logger] private (
     JwtAuthMiddleware[F, User](security.userJwtAuth.value, findUser)
 
   // Auth routes
-  private[this] val authRoutes           = AuthRoutes[F](security.auth).routes(usersMiddleware)
-  private[this] val userRoutes           = new UserRoutes[F].routes(usersMiddleware)
-  private[this] val memberRoutes         = new MemberRoutes[F](services.members).routes(usersMiddleware)
-  private[this] val userValidationRoutes = new UserValidationRoutes[F](services.userValidation).routes(usersMiddleware)
-  private[this] val arrivalRoutes        = new ArrivalRoutes[F](services.arrivalService).routes(usersMiddleware)
+  private[this] val authRoutes   = AuthRoutes[F](security.auth).routes(usersMiddleware)
+  private[this] val userRoutes   = new UserRoutes[F].routes(usersMiddleware)
+  private[this] val memberRoutes = new MemberRoutes[F](services.members).routes(usersMiddleware)
+  private[this] val userValidationRoutes =
+    new UserValidationRoutes[F](s3Client, services.userValidation).routes(usersMiddleware)
+  private[this] val arrivalRoutes = new ArrivalRoutes[F](services.arrivalService).routes(usersMiddleware)
 
   // Service routes
   private[this] val paymentRoutes     = new PaymentRoutes[F](services.payments).routes(usersMiddleware)

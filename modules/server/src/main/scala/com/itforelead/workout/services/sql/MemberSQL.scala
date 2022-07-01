@@ -11,7 +11,7 @@ import skunk.implicits._
 object MemberSQL {
   val memberId: Codec[MemberId] = identity[MemberId]
 
-  private val Columns = memberId ~ userId ~ firstName ~ lastName ~ tel ~ date ~ filePath ~ bool
+  private val Columns = memberId ~ userId ~ firstName ~ lastName ~ tel ~ date ~ fileKey ~ bool
 
   val encoder: Encoder[MemberId ~ CreateMember] =
     Columns.contramap { case i ~ u =>

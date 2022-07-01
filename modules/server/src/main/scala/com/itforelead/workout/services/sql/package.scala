@@ -1,7 +1,7 @@
 package com.itforelead.workout.services
 
 import com.itforelead.workout.domain.PaymentType
-import com.itforelead.workout.domain.custom.refinements.{FilePath, Tel}
+import com.itforelead.workout.domain.custom.refinements.{FileKey, Tel}
 import com.itforelead.workout.domain.types._
 import com.itforelead.workout.types.IsUUID
 import skunk.Codec
@@ -50,5 +50,5 @@ package object sql {
 
   val duration: Codec[Duration] = int2.imap[Duration](duration => Duration(NonNegShort.unsafeFrom(duration)))(_.value)
 
-  val filePath: Codec[FilePath] = varchar.imap[FilePath](FilePath.unsafeFrom)(_.value)
+  val fileKey: Codec[FileKey] = varchar.imap[FileKey](fileKey => FileKey.unsafeFrom(fileKey))(_.value)
 }
