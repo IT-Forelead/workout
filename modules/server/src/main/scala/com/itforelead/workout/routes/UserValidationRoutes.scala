@@ -2,10 +2,9 @@ package com.itforelead.workout.routes
 
 import cats.implicits._
 import cats.MonadThrow
-import com.itforelead.workout.domain.{User, Validation}
-import com.itforelead.workout.domain.custom.refinements.Tel
+import com.itforelead.workout.domain.Member.CreateMember
+import com.itforelead.workout.domain.{Member, User, ValidationPhone}
 import com.itforelead.workout.services.Validations
-import io.circe.refined.refinedDecoder
 import org.http4s._
 import org.http4s.circe.JsonDecoder
 import org.http4s.dsl.Http4sDsl
@@ -17,13 +16,13 @@ final class UserValidationRoutes[F[_]: JsonDecoder: MonadThrow](userValidation: 
 
   private[this] val httpRoutes: AuthedRoutes[User, F] = AuthedRoutes.of {
     case aR @ POST -> Root / "sent-code" as _ =>
-      aR.req.decodeR[Tel] { phone =>
-        userValidation.sendValidationCode(phone) >> NoContent()
+      aR.req.decodeR[ValidationPhone] { validationPhone =>
+        userValidation.sendValidationCode(validationPhone.phone) >> NoContent()
       }
 
     case aR @ POST -> Root / "code" as _ =>
-      aR.req.decodeR[Validation] { validation =>
-        userValidation.validatePhone(validation) >> Ok()
+      aR.req.decodeR[CreateMember] { validation =>
+        userValidation.validatePhone(validation) >> Created()
       }
   }
 

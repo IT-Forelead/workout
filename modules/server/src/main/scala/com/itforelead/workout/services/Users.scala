@@ -37,7 +37,6 @@ object Users {
             prepQueryUnique(insertUser, id ~ userParam ~ password).map(_._1)
           }
       }
-
     }
 
 }

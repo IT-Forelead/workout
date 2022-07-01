@@ -26,7 +26,8 @@ object MemberSQL {
   val selectByUserId: Query[UserId, Member] =
     sql"""SELECT * FROM members WHERE user_id = $userId AND deleted = false""".query(memberDecoder)
 
-  val insertMember: Query[MemberId ~ CreateMember, Member] =
-    sql"""INSERT INTO members VALUES ($encoder) returning *""".query(memberDecoder)
+  val insertMember: Query[MemberId ~ CreateMember, Member] = {
+    sql"""INSERT INTO members VALUES ($encoder) RETURNING *""".query(memberDecoder)
+  }
 
 }

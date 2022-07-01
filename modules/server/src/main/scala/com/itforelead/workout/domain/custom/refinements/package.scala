@@ -11,7 +11,7 @@ package object refinements {
   private type FileNamePred       = MatchesRegex["^[\\w,\\s-]+\\.[A-Za-z0-z-]{1,}$"]
   private type TelNumberPred      = MatchesRegex["^[+][0-9]{12}$"]
   private type FilePathPred       = MatchesRegex["[a-z0-9-]+/+[a-z0-9-]+.+(png|jpg|jpeg|bmp)"]
-  private type ValidationCodePred = MatchesRegex["^[0-9]{5}$"]
+  private type ValidationCodePred = MatchesRegex["^[0-9]{6}$"]
 
   type EmailAddress = String Refined EmailPred
   object EmailAddress extends RefinedTypeOps[EmailAddress, String]

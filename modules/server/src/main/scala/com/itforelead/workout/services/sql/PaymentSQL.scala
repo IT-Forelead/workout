@@ -4,8 +4,8 @@ import com.itforelead.workout.domain.Payment
 import com.itforelead.workout.domain.Payment.PaymentWithMember
 import com.itforelead.workout.domain.types.{PaymentId, UserId}
 import com.itforelead.workout.services.sql.MemberSQL.memberDecoder
-import com.itforelead.workout.services.sql.UserSQL.{userDecoderWithoutPass, userId}
-import skunk.codec.all.{bool, timestamp, uuid}
+import com.itforelead.workout.services.sql.UserSQL.userId
+import skunk.codec.all.{bool, timestamp}
 import skunk.implicits._
 import skunk._
 

@@ -10,12 +10,16 @@ object UserSettingsSQL {
 
   private val Columns = userId ~ gymName ~ price ~ price
 
-  val paymentDecoder: Decoder[UserSetting] =
+  val userSettingEncoder: Encoder[UserSetting] =
+    Columns.contramap { u => u.userId ~ u.gymName ~ u.dailyPrice ~ u.monthlyPrice }
+
+  val userSetting: Decoder[UserSetting] =
     Columns.map { case ui ~ gn ~ dp ~ mp =>
       UserSetting(ui, gn, dp, mp)
     }
+
   val selectSettings: Query[UserId, UserSetting] =
-    sql"""SELECT * FROM user_settings WHERE user_id = $userId """.query(paymentDecoder)
+    sql"""SELECT * FROM user_settings WHERE user_id = $userId """.query(userSetting)
 
   val updateUserSettings: Query[UserSetting, UserSetting] =
     sql"""UPDATE user_settings
@@ -23,6 +27,6 @@ object UserSettingsSQL {
                 daily_price = $price,
                 monthly_price = $price
             WHERE user_id = $userId RETURNING *"""
-      .query(paymentDecoder)
+      .query(userSetting)
       .contramap[UserSetting](s => s.gymName ~ s.dailyPrice ~ s.monthlyPrice ~ s.userId)
 }
