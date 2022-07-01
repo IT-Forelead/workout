@@ -10,6 +10,7 @@ import org.scalacheck.Gen
 import Arbitraries._
 import com.itforelead.workout.domain.Arrival.CreateArrival
 import com.itforelead.workout.domain.Member.CreateMember
+import com.itforelead.workout.domain.Message.CreateMessage
 import com.itforelead.workout.domain.Payment.CreatePayment
 import eu.timepit.refined.scalacheck.all.greaterEqualArbitrary
 import eu.timepit.refined.types.numeric.{NonNegInt, NonNegShort}
@@ -46,13 +47,19 @@ object Generators {
 
   val arrivalIdGen: Gen[ArrivalId] = idGen(ArrivalId.apply)
 
+  val messageIdGen: Gen[MessageId] = idGen(MessageId.apply)
+
   val paymentIdGen: Gen[PaymentId] = idGen(PaymentId.apply)
 
   val firstNameGen: Gen[FirstName] = arbitrary[NonEmptyString].map(FirstName.apply)
 
   val lastNameGen: Gen[LastName] = arbitrary[NonEmptyString].map(LastName.apply)
 
+  val textGen: Gen[Text] = arbitrary[NonEmptyString].map(Text.apply)
+
   val arrivalTypeGen: Gen[ArrivalType] = arbitrary[ArrivalType]
+
+  val deliveryStatusGen: Gen[DeliveryStatus] = arbitrary[DeliveryStatus]
 
   val paymentTypeGen: Gen[PaymentType] = arbitrary[PaymentType]
 
@@ -131,6 +138,25 @@ object Generators {
       mi <- memberIdGen
       at <- arrivalTypeGen
     } yield CreateArrival(ui, mi, at)
+
+  val messageGen: Gen[Message] =
+    for {
+      i  <- messageIdGen
+      ui <- userIdGen
+      mi <- memberIdGen
+      t  <- textGen
+      dt <- timestampGen
+      ds <- deliveryStatusGen
+    } yield Message(i, ui, mi, t, dt, ds)
+
+  val createMessageGen: Gen[CreateMessage] =
+    for {
+      ui <- userIdGen
+      mi <- memberIdGen
+      t  <- textGen
+      dt <- timestampGen
+      ds <- deliveryStatusGen
+    } yield CreateMessage(ui, mi, t, dt, ds)
 
   val userCredentialGen: Gen[Credentials] =
     for {

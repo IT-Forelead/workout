@@ -1,5 +1,6 @@
 CREATE TYPE PAYMENT_TYPE AS ENUM ('daily', 'monthly');
 CREATE TYPE ARRIVAL_TYPE AS ENUM ('come_in', 'go_out');
+CREATE TYPE DELIVERY_STATUS AS ENUM ('sent', 'delivered', 'failed', 'unknown');
 
 CREATE TABLE IF NOT EXISTS users
 (
@@ -68,4 +69,15 @@ CREATE TABLE IF NOT EXISTS arrival_event
     created_at TIMESTAMP    NOT NULL,
     arrival    ARRIVAL_TYPE NOT NULL,
     deleted    BOOLEAN      NOT NULL DEFAULT false
+);
+
+CREATE TABLE IF NOT EXISTS messages(
+    id              UUID PRIMARY KEY,
+    user_id         UUID NOT NULL
+        CONSTRAINT fk_user_id REFERENCES users (id) ON UPDATE NO ACTION ON DELETE NO ACTION,
+    member_id       UUID NOT NULL
+        CONSTRAINT fk_member_id REFERENCES members (id) ON UPDATE CASCADE ON DELETE CASCADE,
+    text            VARCHAR NOT NULL,
+    sent_date       TIMESTAMP NOT NULL,
+    delivery_status DELIVERY_STATUS NOT NULL
 );

@@ -3,7 +3,7 @@ package com.itforelead.workout.routes
 import cats.implicits._
 import cats.MonadThrow
 import com.itforelead.workout.domain.Member.CreateMember
-import com.itforelead.workout.domain.{Member, User, ValidationPhone}
+import com.itforelead.workout.domain.{Member, User, Validation}
 import com.itforelead.workout.services.Validations
 import org.http4s._
 import org.http4s.circe.JsonDecoder
@@ -16,7 +16,7 @@ final class UserValidationRoutes[F[_]: JsonDecoder: MonadThrow](userValidation: 
 
   private[this] val httpRoutes: AuthedRoutes[User, F] = AuthedRoutes.of {
     case aR @ POST -> Root / "sent-code" as _ =>
-      aR.req.decodeR[ValidationPhone] { validationPhone =>
+      aR.req.decodeR[Validation] { validationPhone =>
         userValidation.sendValidationCode(validationPhone.phone) >> NoContent()
       }
 

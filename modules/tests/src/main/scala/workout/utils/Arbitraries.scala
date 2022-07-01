@@ -1,6 +1,6 @@
 package workout.utils
 
-import com.itforelead.workout.domain.{ArrivalType, PaymentType}
+import com.itforelead.workout.domain.{ArrivalType, DeliveryStatus, PaymentType}
 import com.itforelead.workout.domain.custom.refinements._
 import org.http4s.MediaType
 import org.scalacheck.Gen._
@@ -12,6 +12,8 @@ import java.time.LocalDateTime
 object Arbitraries {
 
   implicit lazy val arbArrivalType: Arbitrary[ArrivalType] = Arbitrary(oneOf(ArrivalType.arrivalTypes))
+
+  implicit lazy val arbDeliveryStatusType: Arbitrary[DeliveryStatus] = Arbitrary(oneOf(DeliveryStatus.statuses))
 
   implicit lazy val arbPaymentType: Arbitrary[PaymentType] = Arbitrary(oneOf(PaymentType.paymentTypes))
 

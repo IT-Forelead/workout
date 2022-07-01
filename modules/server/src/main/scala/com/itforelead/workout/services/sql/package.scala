@@ -1,6 +1,6 @@
 package com.itforelead.workout.services
 
-import com.itforelead.workout.domain.PaymentType
+import com.itforelead.workout.domain.{DeliveryStatus, PaymentType}
 import com.itforelead.workout.domain.custom.refinements.{FilePath, Tel}
 import com.itforelead.workout.domain.types._
 import com.itforelead.workout.types.IsUUID
@@ -32,11 +32,7 @@ package object sql {
 
   val lastName: Codec[LastName] = varchar.imap[LastName](name => LastName(NonEmptyString.unsafeFrom(name)))(_.value)
 
-  val memberFirstName: Codec[MemberFirstName] =
-    varchar.imap[MemberFirstName](name => MemberFirstName(NonEmptyString.unsafeFrom(name)))(_.value)
-
-  val memberLastName: Codec[MemberLastName] =
-    varchar.imap[MemberLastName](name => MemberLastName(NonEmptyString.unsafeFrom(name)))(_.value)
+  val text: Codec[Text] = varchar.imap[Text](name => Text(NonEmptyString.unsafeFrom(name)))(_.value)
 
   val gymName: Codec[GymName] = varchar.imap[GymName](name => GymName(NonEmptyString.unsafeFrom(name)))(_.value)
 
@@ -45,6 +41,9 @@ package object sql {
   val tel: Codec[Tel] = varchar.imap[Tel](Tel.unsafeFrom)(_.value)
 
   val paymentType: Codec[PaymentType] = `enum`[PaymentType](_.value, PaymentType.find, Type("payment_type"))
+
+  val deliveryStatus: Codec[DeliveryStatus] =
+    `enum`[DeliveryStatus](_.value, DeliveryStatus.find, Type("delivery_status"))
 
   val price: Codec[Money] = numeric.imap[Money](money => UZS(money))(_.amount)
 

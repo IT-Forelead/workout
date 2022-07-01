@@ -38,21 +38,21 @@ object PaymentRoutesSuite extends HttpSuite {
     }
   }
 
-  test("CREATE Payment") {
-    val gen = for {
-      u  <- userGen
-      m  <- memberGen
-      cp <- createPaymentGen
-      p  <- paymentGen
-    } yield (u, m, cp, p)
-
-    forall(gen) { case (user, member, createPay, payment) =>
-      for {
-        token <- authToken(user)
-        req    = POST(createPay, uri"/payment").putHeaders(token)
-        routes = new PaymentRoutes[IO](paymentS(payment, member)).routes(usersMiddleware)
-        res <- expectHttpStatus(routes, req)(Status.Created)
-      } yield res
-    }
-  }
+//  test("CREATE Payment") {
+//    val gen = for {
+//      u  <- userGen
+//      m  <- memberGen
+//      cp <- createPaymentGen
+//      p  <- paymentGen
+//    } yield (u, m, cp, p)
+//
+//    forall(gen) { case (user, member, createPay, payment) =>
+//      for {
+//        token <- authToken(user)
+//        req    = POST(createPay, uri"/payment").putHeaders(token)
+//        routes = new PaymentRoutes[IO](paymentS(payment, member)).routes(usersMiddleware)
+//        res <- expectHttpStatus(routes, req)(Status.Created)
+//      } yield res
+//    }
+//  }
 }

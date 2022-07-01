@@ -6,6 +6,12 @@ import derevo.circe.magnolia.{decoder, encoder}
 import derevo.derive
 import io.circe.refined._
 import eu.timepit.refined.cats._
+import eu.timepit.refined.types.string.NonEmptyString
 
 @derive(decoder, encoder, show)
-case class ValidationPhone(phone: Tel)
+case class Validation(phone: Tel)
+
+object Validation {
+  @derive(decoder, encoder, show)
+  case class ValidationMessage(phone: Tel, text: NonEmptyString)
+}
