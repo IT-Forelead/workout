@@ -22,7 +22,6 @@ object Arrival {
   case class CreateArrival(
     userId: UserId,
     memberId: MemberId,
-    createdAt: LocalDateTime,
     arrivalType: ArrivalType
   )
 }
