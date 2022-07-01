@@ -33,6 +33,10 @@ object Payments {
           case MONTHLY => now.plusMonths(1)
           case DAILY   => now.plusDays(1)
         }
+        cost = payment.paymentType match {
+          case MONTHLY => userSettings.monthlyPrice
+          case DAILY   => userSettings.dailyPrice
+        }
         payment <- prepQueryUnique(
           insert,
           Payment(
@@ -40,7 +44,7 @@ object Payments {
             userId = payment.userId,
             memberId = payment.memberId,
             paymentType = payment.paymentType,
-            cost = payment.cost,
+            cost = cost,
             createdAt = now,
             expiredAt = expiredAt
           )

@@ -1,31 +1,31 @@
 package workout.services
 
 import cats.effect.IO
+import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.services.{Members, Payments, UserSettings, Users}
 import eu.timepit.refined.auto.autoUnwrap
 import tsec.passwordhashers.jca.SCrypt
 import workout.utils.DBSuite
-import workout.utils.Generators.{createMemberGen, createPaymentGen, createUserGen}
+import workout.utils.Generators.{createMemberGen, createPaymentGen, createUserGen, userGen}
+
+import java.util.UUID
 
 object PaymentsSuite extends DBSuite {
 
   test("Create Payment") { implicit postgres =>
-    val users        = Users[IO]
     val members      = Members[IO]
     val userSettings = UserSettings[IO]
     val payments     = Payments[IO](userSettings)
     val gen = for {
-      u  <- createUserGen
       m  <- createMemberGen
       cp <- createPaymentGen
-    } yield (u, m, cp)
-    forall(gen) { case (createUser, createMember, createPayment) =>
+    } yield (m, cp)
+    forall(gen) { case (createMember, createPayment) =>
+      val userId = UserId(UUID.fromString("76c2c44c-8fbf-4184-9199-19303a042fa0"))
       for {
-        hash        <- SCrypt.hashpw[IO](createUser.password)
-        user1       <- users.create(createUser, hash)
-        member1     <- members.create(createMember.copy(userId = user1.id))
-        payment     <- payments.create(createPayment.copy(userId = user1.id, memberId = member1.id))
-        getPayments <- payments.payments(user1.id)
+        member1     <- members.create(createMember.copy(userId = userId))
+        payment     <- payments.create(createPayment.copy(userId = userId, memberId = member1.id))
+        getPayments <- payments.payments(userId)
       } yield assert(getPayments.exists(_.payment == payment))
     }
   }
