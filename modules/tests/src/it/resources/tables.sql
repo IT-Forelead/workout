@@ -15,6 +15,22 @@ INSERT INTO "users" ("id", "firstname", "lastname", "phone", "password")
 VALUES ('76c2c44c-8fbf-4184-9199-19303a042fa0', 'Admin', 'Adminov', '+998901234567',
         '$s0$e0801$5JK3Ogs35C2h5htbXQoeEQ==$N7HgNieSnOajn1FuEB7l4PhC6puBSq+e1E8WUaSJcGY=');
 
+CREATE TABLE IF NOT EXISTS user_settings
+(
+    user_id       UUID    NOT NULL
+        CONSTRAINT fk_user_id REFERENCES users (id) ON UPDATE NO ACTION ON DELETE NO ACTION,
+    name          VARCHAR NOT NULL,
+    daily_price   NUMERIC NOT NULL DEFAULT 0,
+    monthly_price NUMERIC NOT NULL DEFAULT 0
+);
+
+INSERT INTO "user_settings" ("user_id", "name")
+VALUES ('76c2c44c-8fbf-4184-9199-19303a042fa0', 'GYM-Forelead');
+
+INSERT INTO "users" ("id", "firstname", "lastname", "phone", "password")
+VALUES ('76c2c44c-8fbf-4184-9199-19303a042fa0', 'Admin', 'Adminov', '+998901234567',
+        '$s0$e0801$5JK3Ogs35C2h5htbXQoeEQ==$N7HgNieSnOajn1FuEB7l4PhC6puBSq+e1E8WUaSJcGY=');
+
 
 CREATE TABLE IF NOT EXISTS user_settings
 (
