@@ -4,7 +4,8 @@ import cats.effect._
 import cats.implicits._
 import com.itforelead.workout.domain.Member.CreateMember
 import com.itforelead.workout.domain.custom.refinements.Tel
-import com.itforelead.workout.domain.Message
+import com.itforelead.workout.domain.{Member, Message}
+import com.itforelead.workout.domain.custom.exception.{PhoneInUse, ValidationCodeExpired}
 import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.services.redis.RedisClient
@@ -34,16 +35,16 @@ object Validations {
       }
 
       def validatePhone(createMember: CreateMember): F[Boolean] = {
-
+        val members = Members[F]
         for {
           redisCode <- redis.get(createMember.phone.value)
-          bool = redisCode.fold(false)(_ == createMember.code.value)
-          _ <-
-            if (bool) {
-              members.create(createMember)
-            } else {
-              F.unit
-            }
+          bool = redisCode match {
+            case Some(f) =>
+              if (f == createMember.code.value) {
+                if (members.findMemberByPhone(createMember.phone) == F[Member]) PhoneInUse(createMember.phone)
+              }
+            case None => ValidationCodeExpired(createMember.phone)
+          }
         } yield bool
       }
     }
