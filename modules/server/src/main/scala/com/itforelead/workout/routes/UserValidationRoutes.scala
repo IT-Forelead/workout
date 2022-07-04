@@ -65,7 +65,7 @@ final class UserValidationRoutes[F[_]: Async: Logger: JsonDecoder: MonadThrow](
           response <-
             if (multipart.parts.isFilePartExists) {
               val streamRes = createMember(form).handleErrorWith { ex =>
-                logger.error(ex)("Error occurred while upload product!") >>
+                logger.error(ex)("Error occurred while upload member!") >>
                   F.raiseError[Unit](new Exception("Something went wrong!"))
               }
               Ok(streamRes)
