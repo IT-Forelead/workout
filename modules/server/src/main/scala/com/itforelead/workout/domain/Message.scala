@@ -1,6 +1,7 @@
 package com.itforelead.workout.domain
 
-import com.itforelead.workout.domain.types.{MemberId, MessageId, Text, UserId}
+import com.itforelead.workout.domain.custom.refinements.Tel
+import com.itforelead.workout.domain.types.{MemberId, MessageId, MessageText, UserId}
 import derevo.cats.show
 import derevo.circe.magnolia.{decoder, encoder}
 import derevo.derive
@@ -14,7 +15,7 @@ case class Message(
   id: MessageId,
   userId: UserId,
   memberId: MemberId,
-  text: Text,
+  text: MessageText,
   sentDate: LocalDateTime,
   deliveryStatus: DeliveryStatus
 )
@@ -24,10 +25,12 @@ object Message {
   case class CreateMessage(
     userId: UserId,
     memberId: MemberId,
-    text: Text,
+    text: MessageText,
     sentDate: LocalDateTime,
     deliveryStatus: DeliveryStatus
   )
+
+  case class SendMessage(phone: Tel, text: MessageText)
 
   @derive(decoder, encoder, show)
   case class MessageWithMember(

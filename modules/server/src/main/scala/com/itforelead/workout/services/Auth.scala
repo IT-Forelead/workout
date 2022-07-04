@@ -2,7 +2,6 @@ package com.itforelead.workout.services
 
 import cats.effect.Sync
 import cats.syntax.all._
-import com.itforelead.workout.domain.Member.CreateMember
 import com.itforelead.workout.domain.User.CreateUser
 import dev.profunktor.auth.jwt.JwtToken
 import eu.timepit.refined.auto.autoUnwrap

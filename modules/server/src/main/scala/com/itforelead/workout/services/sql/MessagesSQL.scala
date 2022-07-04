@@ -1,9 +1,9 @@
 package com.itforelead.workout.services.sql
 
-import com.itforelead.workout.domain.Message.MessageWithMember
+import com.itforelead.workout.domain.Message.{CreateMessage, MessageWithMember}
 import com.itforelead.workout.domain.{DeliveryStatus, Message}
 import com.itforelead.workout.domain.types._
-import com.itforelead.workout.services.sql.MemberSQL.memberId
+import com.itforelead.workout.services.sql.MemberSQL.{memberDecoder, memberId}
 import com.itforelead.workout.services.sql.UserSQL.userId
 import skunk._
 import skunk.codec.all.timestamp
@@ -12,7 +12,7 @@ import skunk.implicits._
 object MessagesSQL {
   val messageId: Codec[MessageId] = identity[MessageId]
 
-  private val Columns = messageId ~ userId ~ memberId ~ text ~ timestamp ~ deliveryStatus
+  private val Columns = messageId ~ userId ~ memberId ~ messageText ~ timestamp ~ deliveryStatus
 
   val encoder: Encoder[Message] =
     Columns.contramap(m => m.id ~ m.userId ~ m.memberId ~ m.text ~ m.sentDate ~ m.deliveryStatus)
@@ -22,14 +22,14 @@ object MessagesSQL {
       Message(id, userId, memberId, text, sentDate, deliveryStatus)
     }
 
-  private val MessageColumns = decoder ~ MemberSQL.decoder
+  private val MessageColumns = decoder ~ memberDecoder
 
   val decMessageWithMember: Decoder[MessageWithMember] =
     MessageColumns.map { case message ~ member =>
       MessageWithMember(message, member)
     }
 
-  val insert: Query[Message, Message] =
+  val insertMessage: Query[Message, Message] =
     sql"""INSERT INTO messages VALUES ($encoder) RETURNING *""".query(decoder)
 
   val select: Query[UserId, MessageWithMember] =

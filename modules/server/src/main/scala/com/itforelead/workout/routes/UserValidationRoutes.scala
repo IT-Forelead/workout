@@ -4,10 +4,12 @@ import cats.implicits._
 import cats.MonadThrow
 import com.itforelead.workout.config.AWSConfig
 import com.itforelead.workout.domain.Member.CreateMember
+import com.itforelead.workout.domain.custom.exception.{PhoneInUse, ValidationCodeError, ValidationCodeExpired}
 import com.itforelead.workout.domain.{Member, User, Validation}
 import com.itforelead.workout.services.Validations
 import com.itforelead.workout.services.s3.S3Client
 import org.http4s._
+import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
 import org.http4s.circe.JsonDecoder
 import org.http4s.dsl.Http4sDsl
 import org.http4s.server.{AuthMiddleware, Router}
@@ -27,7 +29,17 @@ final class UserValidationRoutes[F[_]: JsonDecoder: MonadThrow](
 
     case aR @ POST -> Root / "code" as _ =>
       aR.req.decodeR[CreateMember] { validation =>
-        userValidation.validatePhone(validation) >> Created()
+        userValidation
+          .validatePhone(validation)
+          .flatMap(Created(_))
+          .recoverWith {
+            case ValidationCodeExpired(tel) =>
+              BadRequest(s"Validatsiya qodi tekshirish vaxti tugadi: $tel")
+            case ValidationCodeError(code) =>
+              BadRequest(s"Validatsiya qodi notog'ri: $code")
+            case PhoneInUse(tel) =>
+              BadRequest(s"Telefon nomerga bog'langan Xisob allaqachon mavjud: $tel")
+          }
       }
   }
 

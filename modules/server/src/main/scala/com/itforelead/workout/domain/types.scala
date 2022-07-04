@@ -44,7 +44,7 @@ object types {
   @newtype case class GymName(value: NonEmptyString)
 
   @derive(decoder, encoder, eqv, show)
-  @newtype case class Text(value: NonEmptyString)
+  @newtype case class MessageText(value: NonEmptyString)
 
   @derive(decoder, encoder, eqv, show)
   @newtype case class Duration(value: NonNegShort)

@@ -21,7 +21,7 @@ object Arbitraries {
     for {
       s0 <- uuid
       s1 <- uuid
-      s2 <- oneOf("png","jpg","jpeg","bmp")
+      s2 <- oneOf("png","jpg","jpeg","bmp","webp")
     } yield FilePath.unsafeFrom(s"$s0/$s1.$s2")
   )
 

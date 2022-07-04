@@ -5,17 +5,17 @@ import cats.implicits._
 import com.itforelead.workout.domain.Member.CreateMember
 import com.itforelead.workout.domain.custom.exception.PhoneInUse
 import com.itforelead.workout.domain.custom.refinements.Tel
-import com.itforelead.workout.domain.{ID, Member, ValidationPhone}
+import com.itforelead.workout.domain.{ID, Member}
 import com.itforelead.workout.domain.types.{MemberId, UserId}
 import com.itforelead.workout.effects.GenUUID
-import com.itforelead.workout.services.sql.MemberSQL.{insertMember, selectByUserId}
+import com.itforelead.workout.services.sql.MemberSQL.{insertMember, selectByPhone, selectByUserId}
 import skunk.implicits._
 import skunk.{Session, SqlState}
 
 trait Members[F[_]] {
   def create(memberParam: CreateMember): F[Member]
   def findByUserId(userId: UserId): F[List[Member]]
-  def findMemberByPhone(phone: Tel): F[Member]
+  def findMemberByPhone(phone: Tel): F[Option[Member]]
 }
 
 object Members {
@@ -38,8 +38,8 @@ object Members {
       override def findByUserId(userId: UserId): F[List[Member]] =
         prepQueryList(selectByUserId, userId)
 
-      override def findMemberByPhone(phone: Tel): F[Member] =
-        prepQueryUnique(selectByUserId, phone)
+      override def findMemberByPhone(phone: Tel): F[Option[Member]] =
+        prepOptQuery(selectByPhone, phone)
 
     }
 

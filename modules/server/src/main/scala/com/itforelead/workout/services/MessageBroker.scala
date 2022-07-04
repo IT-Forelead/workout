@@ -2,7 +2,8 @@ package com.itforelead.workout.services
 
 import cats.effect.Async
 import com.itforelead.workout.config.BrokerConfig
-import com.itforelead.workout.domain.Validation.ValidationMessage
+import com.itforelead.workout.domain.Message
+import com.itforelead.workout.domain.Message.SendMessage
 import com.itforelead.workout.domain.broker.{BrokerMessage, Content, SMS}
 import eu.timepit.refined.auto._
 import org.http4s.Method.POST
@@ -14,7 +15,7 @@ import org.http4s.{AuthScheme, BasicCredentials, Credentials, MediaType, Request
 import org.typelevel.log4cats.Logger
 
 trait MessageBroker[F[_]] {
-  def sendSMS(message: ValidationMessage): F[Unit]
+  def sendSMS(message: SendMessage): F[Unit]
 }
 
 object MessageBroker {
@@ -25,7 +26,7 @@ object MessageBroker {
       new MessageBrokerMock[F]
 
   private class MessageBrokerMock[F[_]: Logger] extends MessageBroker[F] {
-    override def sendSMS(message: ValidationMessage): F[Unit] =
+    override def sendSMS(message: SendMessage): F[Unit] =
       Logger[F].info(
         s"""Congratulation message sent to [$message.phone],
               message text [
@@ -47,14 +48,14 @@ object MessageBroker {
         Accept(MediaType.application.json)
       )
 
-    private def makeSMS(message: ValidationMessage) =
+    private def makeSMS(message: SendMessage) =
       BrokerMessage(
         message.phone,
-        message.text,
-        SMS(ORIGINATOR, Content(message.text))
+        message.text.value,
+        SMS(ORIGINATOR, Content(message.text.value))
       )
 
-    override def sendSMS(message: ValidationMessage): F[Unit] =
+    override def sendSMS(message: SendMessage): F[Unit] =
       httpClient.expect(makeRequest(makeSMS(message)))
   }
 

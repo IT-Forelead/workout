@@ -13,7 +13,7 @@ import com.itforelead.workout.domain.Member.CreateMember
 import com.itforelead.workout.domain.Message.CreateMessage
 import com.itforelead.workout.domain.Payment.CreatePayment
 import eu.timepit.refined.scalacheck.all.greaterEqualArbitrary
-import eu.timepit.refined.types.numeric.{NonNegInt, NonNegShort}
+import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import squants.Money
 

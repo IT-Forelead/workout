@@ -29,7 +29,7 @@ object Messages {
           id  <- ID.make[F, MessageId]
           now <- Sync[F].delay(LocalDateTime.now())
           message <- prepQueryUnique(
-            insert,
+            insertMessage,
             Message(id, msg.userId, msg.memberId, msg.text, now, msg.deliveryStatus)
           )
         } yield message

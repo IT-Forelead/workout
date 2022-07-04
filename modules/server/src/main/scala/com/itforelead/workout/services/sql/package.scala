@@ -32,7 +32,8 @@ package object sql {
 
   val lastName: Codec[LastName] = varchar.imap[LastName](name => LastName(NonEmptyString.unsafeFrom(name)))(_.value)
 
-  val text: Codec[Text] = varchar.imap[Text](name => Text(NonEmptyString.unsafeFrom(name)))(_.value)
+  val messageText: Codec[MessageText] =
+    varchar.imap[MessageText](name => MessageText(NonEmptyString.unsafeFrom(name)))(_.value)
 
   val gymName: Codec[GymName] = varchar.imap[GymName](name => GymName(NonEmptyString.unsafeFrom(name)))(_.value)
 
