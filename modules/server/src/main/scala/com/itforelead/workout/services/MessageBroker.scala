@@ -32,10 +32,10 @@ object MessageBroker {
 
   private class MessageBrokerMock[F[_]: Logger] extends MessageBroker[F] {
     override def send(messageId: MessageId, phone: Tel, text: String): F[Unit] =
-      Logger[F].info(s"""Congratulation message sent to [$phone], message text [$text]""")
+      Logger[F].info(s"""NotificationMessage message sent to [$phone], message text [$text]""")
 
     override def sendSMSWithoutMember(phone: Tel, text: NonEmptyString): F[Unit] =
-      Logger[F].info(s"""Congratulation message sent to [$phone], message text [$text]""")
+      Logger[F].info(s"""NotificationMessage message sent to [$phone], message text [$text]""")
   }
 
   private class MessageBrokerImpl[F[_]: Async](httpClient: Client[F], config: BrokerConfig)
