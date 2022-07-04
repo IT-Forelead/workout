@@ -5,7 +5,7 @@ import cats.implicits._
 import com.itforelead.workout.config.SchedulerConfig
 import com.itforelead.workout.domain.{DeliveryStatus, Member, Message}
 import com.itforelead.workout.domain.Message.CreateMessage
-import com.itforelead.workout.domain.types.{MemberId, Text, UserId}
+import com.itforelead.workout.domain.types.{MemberId, MessageText, UserId}
 import com.itforelead.workout.effects.Background
 import eu.timepit.refined.types.string.NonEmptyString
 import org.typelevel.log4cats.Logger
@@ -49,7 +49,7 @@ object NotificationMessage {
 
       private def createMessage(userId: UserId, memberId: MemberId, text: NonEmptyString): F[Message] = {
         Sync[F].delay(LocalDateTime.now()).flatMap { now =>
-          messages.create(CreateMessage(userId, memberId, Text(text), now, DeliveryStatus.SENT))
+          messages.create(CreateMessage(userId, memberId, MessageText(text), now, DeliveryStatus.SENT))
         }
       }
 

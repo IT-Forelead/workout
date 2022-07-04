@@ -2,6 +2,7 @@ package com.itforelead.workout.services.sql
 
 import com.itforelead.workout.domain.Member
 import com.itforelead.workout.domain.Member.CreateMember
+import com.itforelead.workout.domain.custom.refinements.{FileKey, Tel}
 import com.itforelead.workout.domain.types._
 import com.itforelead.workout.services.sql.UserSQL.userId
 import skunk._
@@ -32,9 +33,10 @@ object MemberSQL {
   val total: Query[UserId, Long] =
     sql"""SELECT count(*) FROM members WHERE user_id = $userId AND deleted = false""".query(int8)
 
-  val insertMember: Query[MemberId ~ CreateMember ~ FileKey, Member] = {
-
     val selectByPhone: Query[Tel, Member] =
-    sql"""SELECT * FROM members WHERE phone = $tel AND deleted = false""".query(memberDecoder)
+      sql"""SELECT * FROM members WHERE phone = $tel AND deleted = false""".query(memberDecoder)
+
+  val insertMember: Query[MemberId ~ CreateMember ~ FileKey, Member] =
+    sql"""INSERT INTO members VALUES ($encoder) RETURNING *""".query(memberDecoder)
 
 }

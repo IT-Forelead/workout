@@ -42,6 +42,6 @@ object PaymentSQL {
     sql"""SELECT members.* FROM payments
       INNER JOIN members ON members.id = payments.member_id
       WHERE payments.expired_at - INTERVAL '7 DAY' < NOW() AND
-      NOW() < payments.expired_at""".query(MemberSQL.decoder)
+      NOW() < payments.expired_at""".query(memberDecoder)
 
 }

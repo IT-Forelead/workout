@@ -6,11 +6,18 @@ import cats.effect.{Async, Sync}
 import com.itforelead.workout.implicits._
 import eu.timepit.refined.auto.autoUnwrap
 import com.itforelead.workout.domain.Member.CreateMember
-import com.itforelead.workout.domain.{Member, User, ValidationPhone}
-import com.itforelead.workout.services.Validations
+import com.itforelead.workout.domain.custom.exception.{
+  MultipartDecodeError,
+  PhoneInUse,
+  ValidationCodeError,
+  ValidationCodeExpired
+}
+import com.itforelead.workout.domain.custom.refinements.FileKey
+import com.itforelead.workout.domain.{User, Validation}
+import com.itforelead.workout.services.{Members, Validations}
 import com.itforelead.workout.services.s3.S3Client
+import eu.timepit.refined.types.string.NonEmptyString
 import org.http4s._
-import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
 import org.http4s.circe.JsonDecoder
 import org.http4s.dsl.Http4sDsl
 import org.http4s.multipart.Multipart
@@ -67,6 +74,14 @@ final class UserValidationRoutes[F[_]: Async: Logger: JsonDecoder: MonadThrow](
                   F.raiseError[Unit](new Exception("Something went wrong!"))
               }
               Ok(streamRes)
+//                .recoverWith {
+//                  case ValidationCodeExpired(tel) =>
+//                    BadRequest(s"Validatsiya qodi tekshirish vaxti tugadi: $tel")
+//                  case ValidationCodeError(code) =>
+//                    BadRequest(s"Validatsiya qodi notog'ri: $code")
+//                  case PhoneInUse(tel) =>
+//                    BadRequest(s"Telefon nomerga bog'langan Xisob allaqachon mavjud: $tel")
+//                }
             } else BadRequest("File part isn't defined")
         } yield response)
           .recoverWith {
@@ -77,24 +92,10 @@ final class UserValidationRoutes[F[_]: Async: Logger: JsonDecoder: MonadThrow](
               logger.error(error)("Error occurred creating member!") >>
                 BadRequest("Error occurred creating member. Please try again!")
           }
-      aR.req.decodeR[CreateMember] { validation =>
-        userValidation
-          .validatePhone(validation)
-          .flatMap(Created(_))
-          .recoverWith {
-            case ValidationCodeExpired(tel) =>
-              BadRequest(s"Validatsiya qodi tekshirish vaxti tugadi: $tel")
-            case ValidationCodeError(code) =>
-              BadRequest(s"Validatsiya qodi notog'ri: $code")
-            case PhoneInUse(tel) =>
-              BadRequest(s"Telefon nomerga bog'langan Xisob allaqachon mavjud: $tel")
-          }
       }
-
   }
 
   def routes(authMiddleware: AuthMiddleware[F, User]): HttpRoutes[F] = Router(
     prefixPath -> authMiddleware(httpRoutes)
   )
-
 }
