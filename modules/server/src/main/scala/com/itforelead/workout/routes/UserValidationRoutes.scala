@@ -76,8 +76,8 @@ final class UserValidationRoutes[F[_]: Async: Logger: JsonDecoder: MonadThrow](
               logger.error(s"Error occurred while parse multipart. Error: ${error.cause}") >>
                 BadRequest(s"Bad form data. ${error.cause}")
             case error =>
-              logger.error(error)("Error occurred creating product!") >>
-                BadRequest("Error occurred creating product. Please try again!")
+              logger.error(error)("Error occurred creating member!") >>
+                BadRequest("Error occurred creating member. Please try again!")
           }
       }
 

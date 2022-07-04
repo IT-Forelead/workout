@@ -47,7 +47,7 @@ object Member {
         values
           .get("userId")
           .map(id => UserId(UUID.fromString(id)).validNec)
-          .getOrElse("Field [ productGroupId ] isn't defined".invalidNec),
+          .getOrElse("Field [ userId ] isn't defined".invalidNec),
         values
           .get("firstname")
           .map(str => FirstName(NonEmptyString.unsafeFrom(str)).validNec)
