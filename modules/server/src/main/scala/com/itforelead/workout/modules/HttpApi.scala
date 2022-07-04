@@ -53,7 +53,7 @@ final class HttpApi[F[_]: Async: Logger] private (
   private[this] val userRoutes   = new UserRoutes[F].routes(usersMiddleware)
   private[this] val memberRoutes = new MemberRoutes[F](services.members).routes(usersMiddleware)
   private[this] val userValidationRoutes =
-    new UserValidationRoutes[F](s3Client, services.userValidation).routes(usersMiddleware)
+    new UserValidationRoutes[F](s3Client, services.userValidation, services.members).routes(usersMiddleware)
   private[this] val arrivalRoutes = new ArrivalRoutes[F](services.arrivalService).routes(usersMiddleware)
   private[this] val messageRoutes = new MessageRoutes[F](services.messages).routes(usersMiddleware)
 

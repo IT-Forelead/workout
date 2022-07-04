@@ -16,7 +16,7 @@ import com.itforelead.workout.domain.custom.utils.MapConvert.ValidationResult
 package object implicits {
 
   implicit class PartOps[F[_]: Async](parts: Vector[Part[F]]) {
-    private def filterFileTypes(part: Part[F]): Boolean = part.filename.isDefined
+    private def filterFileTypes(part: Part[F]): Boolean = part.filename.exists(_.trim.nonEmpty)
 
     def fileParts: Vector[Part[F]] = parts.filter(filterFileTypes)
 

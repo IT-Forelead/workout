@@ -5,7 +5,7 @@ import cats.effect.{Async, Resource, Sync}
 import cats.implicits.{catsSyntaxApplicativeErrorId, toFlatMapOps}
 import com.itforelead.workout.domain.Member
 import com.itforelead.workout.domain.Member.CreateMember
-import com.itforelead.workout.domain.custom.refinements.Tel
+import com.itforelead.workout.domain.custom.refinements.{FileKey, Tel}
 import com.itforelead.workout.domain.types.MessageText
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.services.redis.RedisClient
@@ -16,7 +16,7 @@ import scala.concurrent.duration.DurationInt
 
 trait Validations[F[_]] {
   def sendValidationCode(phone: Tel): F[Unit]
-  def validatePhone(createMember: CreateMember): F[Member]
+  def validatePhone(createMember: CreateMember, key: FileKey): F[Member]
 }
 
 object Validations {
@@ -34,7 +34,7 @@ object Validations {
         messageBroker.sendSMSWithoutMember(phone, messageText)
       }
 
-    override def validatePhone(createMember: CreateMember): F[Member] = {
+    override def validatePhone(createMember: CreateMember, key: FileKey): F[Member] = {
       OptionT(redis.get(createMember.phone.value))
         .cataF(
           ValidationCodeExpired(createMember.phone).raiseError[F, Member],
@@ -42,7 +42,7 @@ object Validations {
             if (code == createMember.code.value) {
               members.findMemberByPhone(createMember.phone).flatMap {
                 case Some(_) => PhoneInUse(createMember.phone).raiseError[F, Member]
-                case None    => members.create(createMember)
+                case None    => members.create(createMember, key)
               }
             } else
               ValidationCodeError(createMember.code).raiseError[F, Member]
