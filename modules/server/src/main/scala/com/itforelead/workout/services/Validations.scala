@@ -5,8 +5,6 @@ import cats.effect.{Async, Resource, Sync}
 import cats.implicits.{catsSyntaxApplicativeErrorId, toFlatMapOps}
 import com.itforelead.workout.domain.Member
 import com.itforelead.workout.domain.Member.CreateMember
-import com.itforelead.workout.domain.Message.SendMessage
-import com.itforelead.workout.domain.custom.exception.{PhoneInUse, ValidationCodeError, ValidationCodeExpired}
 import com.itforelead.workout.domain.custom.refinements.Tel
 import com.itforelead.workout.domain.types.MessageText
 import com.itforelead.workout.effects.GenUUID
@@ -26,15 +24,15 @@ object Validations {
   def apply[F[_]: GenUUID: Sync](messageBroker: MessageBroker[F], members: Members[F], redis: RedisClient[F])(implicit
     session: Resource[F, Session[F]],
     F: Async[F]
-  ): Validations[F] = new Validations[F] with SkunkHelper[F] {
+  ): Validations[F] =
+    new Validations[F] with SkunkHelper[F] {
 
-    override def sendValidationCode(phone: Tel): F[Unit] = {
-
-      val validationCode = scala.util.Random.between(100000, 999999)
-      redis.put(phone.value, validationCode.toString, 3 minute)
-      val messageText = MessageText.apply(NonEmptyString.unsafeFrom(s"Your Activation code is $validationCode"))
-      messageBroker.sendSMS(SendMessage(phone, messageText))
-    }
+      def sendValidationCode(phone: Tel): F[Unit] = {
+        val validationCode = scala.util.Random.between(100000, 999999)
+        redis.put(phone.value, validationCode.toString, 3 minute)
+        val messageText = NonEmptyString.unsafeFrom(s"Your Activation code is $validationCode")
+        messageBroker.sendSMSWithoutMember(phone, messageText)
+      }
 
     override def validatePhone(createMember: CreateMember): F[Member] = {
       OptionT(redis.get(createMember.phone.value))
@@ -50,5 +48,4 @@ object Validations {
               ValidationCodeError(createMember.code).raiseError[F, Member]
         )
     }
-  }
 }
