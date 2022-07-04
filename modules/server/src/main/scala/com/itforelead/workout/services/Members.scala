@@ -8,13 +8,13 @@ import com.itforelead.workout.domain.custom.refinements.FileKey
 import com.itforelead.workout.domain.{ID, Member}
 import com.itforelead.workout.domain.types.{MemberId, UserId}
 import com.itforelead.workout.effects.GenUUID
-import com.itforelead.workout.services.sql.MemberSQL.{insertMember, memberDecoderWithTotal, selectByUserId}
+import com.itforelead.workout.services.sql.MemberSQL.{insertMember, memberDecoder, selectByUserId, total}
 import skunk.implicits._
 import skunk.{Session, SqlState}
 
 trait Members[F[_]] {
   def create(memberParam: CreateMember, filePath: FileKey): F[Member]
-  def findByUserId(userId: UserId, page: Int): F[List[MemberWithTotal]]
+  def findByUserId(userId: UserId, page: Int): F[MemberWithTotal]
 }
 
 object Members {
@@ -34,9 +34,13 @@ object Members {
           }
       }
 
-      override def findByUserId(userId: UserId, page: Int): F[List[MemberWithTotal]] = {
-        val af = selectByUserId(userId, page)
-        prepQueryList(af.fragment.query(memberDecoderWithTotal), af.argument)
+      override def findByUserId(userId: UserId, page: Int): F[MemberWithTotal] = {
+        for {
+          af     <- selectByUserId(userId, page).pure[F]
+          dv     <- prepQueryList(af.fragment.query(memberDecoder), af.argument)
+          totall <- prepQueryUnique(total, userId)
+        } yield (MemberWithTotal(dv, totall))
+
       }
 
     }

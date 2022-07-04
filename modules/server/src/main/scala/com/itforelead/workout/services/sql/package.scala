@@ -57,7 +57,7 @@ package object sql {
   final implicit class FragmentOps(af: AppliedFragment) {
     def paginate(lim: Int, index: Int): AppliedFragment = {
       val offset                      = (index - 1) * lim
-      val filter: Fragment[Int ~ Int] = sql"LIMIT $int4 OFFSET $int4"
+      val filter: Fragment[Int ~ Int] = sql" LIMIT $int4 OFFSET $int4 "
       af |+| filter(lim ~ offset)
     }
 
