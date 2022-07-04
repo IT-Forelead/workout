@@ -21,4 +21,6 @@ export MESSAGE_BROKER_API="https://api.playmobile.uz"
 export MESSAGE_BROKER_USERNAME="test"
 export MESSAGE_BROKER_PASSWORD="test_secret"
 export MESSAGE_BROKER_ENABLED=false
+export SCHEDULER_START_TIME="9:00 AM"
+export SCHEDULER_PERIOD=1.day
 source local_env.sh

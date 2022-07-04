@@ -19,7 +19,6 @@ trait NotificationMessage[F[_]] {
 
 object NotificationMessage {
   def make[F[_]: Sync: Logger: Background](
-    members: Members[F],
     payments: Payments[F],
     messages: Messages[F],
     messageBroker: MessageBroker[F],
