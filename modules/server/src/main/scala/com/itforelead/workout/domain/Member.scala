@@ -38,6 +38,9 @@ object Member {
     code: ValidationCode
   )
 
+  @derive(decoder, encoder, show)
+  case class MemberWithTotal(member: Member, total: Int)
+
   implicit def decodeMap[F[_]: Sync]: MapConvert[F, ValidationResult[CreateMember]] =
     (values: Map[String, String]) =>
       (
