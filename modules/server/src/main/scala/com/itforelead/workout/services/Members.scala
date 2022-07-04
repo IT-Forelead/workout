@@ -36,10 +36,10 @@ object Members {
 
       override def findByUserId(userId: UserId, page: Int): F[MemberWithTotal] = {
         for {
-          af     <- selectByUserId(userId, page).pure[F]
-          dv     <- prepQueryList(af.fragment.query(memberDecoder), af.argument)
-          totall <- prepQueryUnique(total, userId)
-        } yield (MemberWithTotal(dv, totall))
+          fr     <- selectByUserId(userId, page).pure[F]
+          member <- prepQueryList(fr.fragment.query(memberDecoder), fr.argument)
+          total  <- prepQueryUnique(total, userId)
+        } yield (MemberWithTotal(member, total))
 
       }
 
