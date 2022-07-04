@@ -1,22 +1,20 @@
 package com.itforelead.workout.services
 
 import cats.data.OptionT
-import cats.effect._
-import cats.implicits._
-import com.itforelead.workout.domain.{ID, Member, Message}
+import cats.effect.{Async, Resource, Sync}
+import cats.implicits.{catsSyntaxApplicativeErrorId, toFlatMapOps}
+import com.itforelead.workout.domain.Member
 import com.itforelead.workout.domain.Member.CreateMember
 import com.itforelead.workout.domain.Message.SendMessage
-import com.itforelead.workout.domain.custom.refinements.Tel
 import com.itforelead.workout.domain.custom.exception.{PhoneInUse, ValidationCodeError, ValidationCodeExpired}
-import com.itforelead.workout.domain.types.{MessageId, MessageText}
+import com.itforelead.workout.domain.custom.refinements.Tel
+import com.itforelead.workout.domain.types.MessageText
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.services.redis.RedisClient
-import com.itforelead.workout.services.sql.MessagesSQL.{encoder, insertMessage}
 import eu.timepit.refined.types.string.NonEmptyString
 import skunk.Session
 
 import scala.concurrent.duration.DurationInt
-import scala.tools.nsc.interactive.Pickler.TildeDecorator
 
 trait Validations[F[_]] {
   def sendValidationCode(phone: Tel): F[Unit]
