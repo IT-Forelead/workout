@@ -1,10 +1,15 @@
 package com.itforelead.workout.services
 
+import cats.data.NonEmptyList
 import cats.effect.Async
 import com.itforelead.workout.config.BrokerConfig
-import com.itforelead.workout.domain.Validation.ValidationMessage
-import com.itforelead.workout.domain.broker.{BrokerMessage, Content, SMS}
+import com.itforelead.workout.domain.broker.BrokerMessage.BrokerMessageWithoutMember
+import com.itforelead.workout.domain.broker.SendSMS.SendSMSWithoutMember
+import com.itforelead.workout.domain.broker.{BrokerMessage, Content, SMS, SendSMS}
+import com.itforelead.workout.domain.custom.refinements.Tel
+import com.itforelead.workout.domain.types.MessageId
 import eu.timepit.refined.auto._
+import eu.timepit.refined.types.string.NonEmptyString
 import org.http4s.Method.POST
 import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
 import org.http4s.client.Client
@@ -14,24 +19,23 @@ import org.http4s.{AuthScheme, BasicCredentials, Credentials, MediaType, Request
 import org.typelevel.log4cats.Logger
 
 trait MessageBroker[F[_]] {
-  def sendSMS(message: ValidationMessage): F[Unit]
+  def send(messageId: MessageId, phone: Tel, text: String): F[Unit]
+  def sendSMSWithoutMember(phone: Tel, text: NonEmptyString): F[Unit]
 }
 
 object MessageBroker {
-  def apply[F[_]: Async: Logger](httpClint: Client[F], config: BrokerConfig): MessageBroker[F] =
+  def apply[F[_]: Async: Logger](httpClient: Client[F], config: BrokerConfig): MessageBroker[F] =
     if (config.enabled)
-      new MessageBrokerImpl[F](httpClint, config)
+      new MessageBrokerImpl[F](httpClient, config)
     else
       new MessageBrokerMock[F]
 
   private class MessageBrokerMock[F[_]: Logger] extends MessageBroker[F] {
-    override def sendSMS(message: ValidationMessage): F[Unit] =
-      Logger[F].info(
-        s"""Congratulation message sent to [$message.phone],
-              message text [
-                ${message.text}
-              ] """
-      )
+    override def send(messageId: MessageId, phone: Tel, text: String): F[Unit] =
+      Logger[F].info(s"""Congratulation message sent to [$phone], message text [$text]""")
+
+    override def sendSMSWithoutMember(phone: Tel, text: NonEmptyString): F[Unit] =
+      Logger[F].info(s"""Congratulation message sent to [$phone], message text [$text]""")
   }
 
   private class MessageBrokerImpl[F[_]: Async](httpClient: Client[F], config: BrokerConfig)
@@ -39,7 +43,7 @@ object MessageBroker {
       with Http4sClientDsl[F] {
     private val ORIGINATOR: String = "3700"
 
-    private def makeRequest(sms: BrokerMessage): Request[F] =
+    private def makeRequest(sms: SendSMS): Request[F] =
       POST(
         sms,
         config.apiURL,
@@ -47,15 +51,25 @@ object MessageBroker {
         Accept(MediaType.application.json)
       )
 
-    private def makeSMS(message: ValidationMessage) =
-      BrokerMessage(
-        message.phone,
-        message.text,
-        SMS(ORIGINATOR, Content(message.text))
+    private def makeRequestWithoutMember(sms: SendSMSWithoutMember): Request[F] =
+      POST(
+        sms,
+        config.apiURL,
+        Authorization(Credentials.Token(AuthScheme.Basic, BasicCredentials(config.login, config.password.value).token)),
+        Accept(MediaType.application.json)
       )
 
-    override def sendSMS(message: ValidationMessage): F[Unit] =
-      httpClient.expect(makeRequest(makeSMS(message)))
+    private def makeSMS(messageId: MessageId, phone: Tel, text: String): SendSMS =
+      SendSMS(NonEmptyList.one(BrokerMessage(phone, messageId, text, SMS(ORIGINATOR, Content(text)))))
+
+    override def send(messageId: MessageId, phone: Tel, text: String): F[Unit] =
+      httpClient.expect(makeRequest(makeSMS(messageId, phone, text)))
+
+    private def makeSMSWithoutMember(phone: Tel, text: NonEmptyString): SendSMSWithoutMember =
+      SendSMSWithoutMember(NonEmptyList.one(BrokerMessageWithoutMember(phone, text, SMS(ORIGINATOR, Content(text)))))
+
+    override def sendSMSWithoutMember(phone: Tel, text: NonEmptyString): F[Unit] =
+      httpClient.expect(makeRequestWithoutMember(makeSMSWithoutMember(phone, text)))
   }
 
 }

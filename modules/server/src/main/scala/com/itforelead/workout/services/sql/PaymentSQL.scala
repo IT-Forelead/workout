@@ -1,6 +1,6 @@
 package com.itforelead.workout.services.sql
 
-import com.itforelead.workout.domain.Payment
+import com.itforelead.workout.domain.{Member, Payment}
 import com.itforelead.workout.domain.Payment.PaymentWithMember
 import com.itforelead.workout.domain.types.{PaymentId, UserId}
 import com.itforelead.workout.services.sql.UserSQL.userId
@@ -36,5 +36,11 @@ object PaymentSQL {
         INNER JOIN members ON members.id = payments.member_id
         WHERE payments.user_id = $userId AND payments.deleted = false
        """.query(decPaymentWithMember)
+
+  val selectExpiredMember: Query[Void, Member] =
+    sql"""SELECT members.* FROM payments
+      INNER JOIN members ON members.id = payments.member_id
+      WHERE payments.expired_at - INTERVAL '7 DAY' < NOW() AND
+      NOW() < payments.expired_at""".query(MemberSQL.decoder)
 
 }

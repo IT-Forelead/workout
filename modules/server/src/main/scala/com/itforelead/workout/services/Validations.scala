@@ -3,7 +3,6 @@ package com.itforelead.workout.services
 import cats.effect._
 import cats.implicits._
 import com.itforelead.workout.domain.Member.CreateMember
-import com.itforelead.workout.domain.Validation.ValidationMessage
 import com.itforelead.workout.domain.custom.refinements.Tel
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.services.redis.RedisClient
@@ -29,7 +28,7 @@ object Validations {
         val validationCode = scala.util.Random.between(100000, 999999)
         redis.put(phone.value, validationCode.toString, 3 minute)
         val messageText = NonEmptyString.unsafeFrom(s"Your Activation code is $validationCode")
-        messageBroker.sendSMS(ValidationMessage(phone, messageText))
+        messageBroker.sendSMSWithoutMember(phone, messageText)
       }
 
       def validatePhone(createMember: CreateMember): F[Boolean] =
