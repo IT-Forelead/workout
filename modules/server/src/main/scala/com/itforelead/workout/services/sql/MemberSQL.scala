@@ -18,19 +18,19 @@ object MemberSQL {
       i ~ u.userId ~ u.firstname ~ u.lastname ~ u.phone ~ u.birthday ~ u.image ~ false
     }
 
-  val memberDecoder: Decoder[Member] =
+  val decoder: Decoder[Member] =
     Columns.map { case i ~ ui ~ fn ~ ln ~ p ~ b ~ fp ~ _ =>
       Member(i, ui, fn, ln, p, b, fp)
     }
 
   val selectByUserId: Query[UserId, Member] =
-    sql"""SELECT * FROM members WHERE user_id = $userId AND deleted = false""".query(memberDecoder)
+    sql"""SELECT * FROM members WHERE user_id = $userId AND deleted = false""".query(decoder)
 
   val selectByPhone: Query[UserId, Member] =
     sql"""SELECT * FROM members WHERE phone = $tel AND deleted = false""".query(memberDecoder)
 
   val insertMember: Query[MemberId ~ CreateMember, Member] = {
-    sql"""INSERT INTO members VALUES ($encoder) RETURNING *""".query(memberDecoder)
+    sql"""INSERT INTO members VALUES ($encoder) RETURNING *""".query(decoder)
   }
 
 }

@@ -1,7 +1,6 @@
 package com.itforelead.workout.domain.broker
 
 import com.itforelead.workout.domain.custom.refinements.Tel
-import com.itforelead.workout.domain.types.MessageId
 import derevo.cats.show
 import derevo.circe.magnolia.{decoder, encoder}
 import derevo.derive

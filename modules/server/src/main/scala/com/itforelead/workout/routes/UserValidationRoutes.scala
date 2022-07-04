@@ -4,7 +4,7 @@ import cats.implicits._
 import cats.MonadThrow
 import com.itforelead.workout.config.AWSConfig
 import com.itforelead.workout.domain.Member.CreateMember
-import com.itforelead.workout.domain.{Member, User, ValidationPhone}
+import com.itforelead.workout.domain.{Member, User, Validation}
 import com.itforelead.workout.services.Validations
 import com.itforelead.workout.services.s3.S3Client
 import org.http4s._
@@ -21,7 +21,7 @@ final class UserValidationRoutes[F[_]: JsonDecoder: MonadThrow](
 
   private[this] val httpRoutes: AuthedRoutes[User, F] = AuthedRoutes.of {
     case aR @ POST -> Root / "sent-code" as _ =>
-      aR.req.decodeR[ValidationPhone] { validationPhone =>
+      aR.req.decodeR[Validation] { validationPhone =>
         userValidation.sendValidationCode(validationPhone.phone) >> NoContent()
       }
 

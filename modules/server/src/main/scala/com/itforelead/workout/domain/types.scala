@@ -31,6 +31,9 @@ object types {
   @derive(decoder, encoder, eqv, show, uuid)
   @newtype case class ArrivalId(value: UUID)
 
+  @derive(decoder, encoder, eqv, show, uuid)
+  @newtype case class MessageId(value: UUID)
+
   @derive(decoder, encoder, eqv, show)
   @newtype case class FirstName(value: NonEmptyString)
 
@@ -41,13 +44,7 @@ object types {
   @newtype case class GymName(value: NonEmptyString)
 
   @derive(decoder, encoder, eqv, show)
-  @newtype case class MemberFirstName(value: NonEmptyString)
-
-  @derive(decoder, encoder, eqv, show)
-  @newtype case class MemberLastName(value: NonEmptyString)
-
-  @derive(decoder, encoder, eqv, show, uuid)
-  @newtype case class MessageId(value: UUID)
+  @newtype case class Text(value: NonEmptyString)
 
   @derive(decoder, encoder, eqv, show)
   @newtype case class Duration(value: NonNegShort)
