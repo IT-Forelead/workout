@@ -19,15 +19,10 @@ object Services {
   )(implicit session: Resource[F, Session[F]]): Services[F] = {
     val messageBroker  = MessageBroker[F](httpClient, brokerConfig)
     val members        = Members[F]
+    val messages       = Messages[F]
     val userSetting    = UserSettings[F]
     val userValidation = Validations[F](messageBroker, members, redisClient)
-    val payments      = Payments[F](userSetting)
-    val messages      = Messages[F]
-    val messageBroker = MessageBroker[F](httpClient, brokerConfig)
-    val members       = Members[F]
-    val userSetting   = UserSettings[F]
-    val payments      = Payments[F](userSetting)
-    val messages      = Messages[F]
+    val payments       = Payments[F](userSetting)
 
     new Services[F](
       users = Users[F],

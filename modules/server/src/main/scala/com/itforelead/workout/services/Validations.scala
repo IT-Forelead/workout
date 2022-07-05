@@ -2,12 +2,11 @@ package com.itforelead.workout.services
 
 import cats.data.OptionT
 import cats.effect.{Async, Resource, Sync}
-import cats.implicits.{catsSyntaxApplicativeErrorId, toFlatMapOps}
+import cats.implicits.{catsSyntaxApplicativeErrorId, catsSyntaxFlatMapOps, toFlatMapOps}
 import com.itforelead.workout.domain.Member
 import com.itforelead.workout.domain.Member.CreateMember
 import com.itforelead.workout.domain.custom.exception.{PhoneInUse, ValidationCodeError, ValidationCodeExpired}
 import com.itforelead.workout.domain.custom.refinements.{FileKey, Tel}
-import com.itforelead.workout.domain.Message
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.services.redis.RedisClient
 import eu.timepit.refined.types.string.NonEmptyString

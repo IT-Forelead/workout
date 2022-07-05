@@ -5,7 +5,7 @@ import cats.effect.kernel.Async
 import cats.implicits._
 import com.itforelead.workout.domain.Member.CreateMember
 import com.itforelead.workout.domain.User
-import com.itforelead.workout.domain.custom.refinements.FilePath
+import com.itforelead.workout.domain.custom.refinements.{FileName, FilePath}
 import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.services.Members
 import com.itforelead.workout.services.s3.S3Client
@@ -42,7 +42,7 @@ final class MemberRoutes[F[_]: Async](members: Members[F], s3ClientStream: fs2.S
       Response(
         body = imageStream,
         headers = Headers(
-          nameToContentType(imageUrl),
+          nameToContentType(FileName.unsafeFrom(imageUrl)),
           `Transfer-Encoding`(TransferCoding.chunked.pure[NonEmptyList])
         )
       ).pure[F]
