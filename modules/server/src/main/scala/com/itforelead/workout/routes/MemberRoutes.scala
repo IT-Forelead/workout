@@ -16,19 +16,19 @@ final class MemberRoutes[F[_]: Async](members: Members[F])(implicit logger: Logg
   private[routes] val prefixPath = "/member"
 
   private[this] val httpRoutes: AuthedRoutes[User, F] = AuthedRoutes.of {
-    case GET -> Root / UUIDVar(userId) as _ =>
-      members.findByUserId(UserId(userId)).flatMap(Ok(_))
+    case GET -> Root / UUIDVar(userId) / IntVar(page) as _ =>
+      members.findByUserId(UserId(userId), page).flatMap(Ok(_))
 
-    case aR @ POST -> Root as _ =>
-      (for {
-        form   <- aR.req.as[CreateMember]
-        member <- members.create(form)
-        res    <- Ok(member)
-      } yield res)
-        .handleErrorWith { err =>
-          logger.error(s"Error occurred while add member. Error: $err") >>
-            BadRequest("Error occurred while add member. Please try again!")
-        }
+//    case aR @ POST -> Root as _ =>
+//      (for {
+//        form   <- aR.req.as[CreateMember]
+//        member <- members.create(form)
+//        res    <- Ok(member)
+//      } yield res)
+//        .handleErrorWith { err =>
+//          logger.error(s"Error occurred while add member. Error: $err") >>
+//            BadRequest("Error occurred while add member. Please try again!")
+//        }
 
   }
 

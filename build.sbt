@@ -20,6 +20,7 @@ lazy val server = (project in file("modules/server"))
     name              := "workout",
     scalafmtOnCompile := true,
     libraryDependencies ++= coreLibraries,
+    libraryDependencies ++= s3Libraries,
     scalacOptions ++= CompilerOptions.cOptions,
     Test / compile / coverageEnabled    := true,
     Compile / compile / coverageEnabled := false

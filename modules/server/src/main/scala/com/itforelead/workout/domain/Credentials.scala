@@ -6,7 +6,7 @@ import com.itforelead.workout.domain.custom.utils.MapConvert
 import derevo.cats.show
 import derevo.circe.magnolia.{decoder, encoder}
 import derevo.derive
-import com.itforelead.workout.domain.custom.refinements.{EmailAddress, Password, Tel}
+import com.itforelead.workout.domain.custom.refinements.{Password, Tel}
 import com.itforelead.workout.domain.custom.utils.MapConvert.ValidationResult
 import io.circe.refined._
 import eu.timepit.refined.cats._

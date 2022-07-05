@@ -4,6 +4,7 @@ import cats.data.OptionT
 import cats.effect._
 import cats.syntax.all._
 import com.itforelead.workout.domain.User.{CreateUser, UserWithPassword}
+import com.itforelead.workout.domain.custom.exception.PhoneInUse
 import com.itforelead.workout.domain.custom.refinements.Tel
 import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.domain.{ID, User}
@@ -36,7 +37,7 @@ object Users {
           .flatMap { id =>
             prepQueryUnique(insertUser, id ~ userParam ~ password).map(_._1)
           }
+          .recoverWith { case SqlState.UniqueViolation(_) => PhoneInUse(userParam.phone).raiseError[F, User] }
       }
     }
-
 }

@@ -9,15 +9,20 @@ import org.http4s.MediaType
 import org.http4s.headers.`Content-Type`
 import org.http4s.multipart.Part
 import com.itforelead.workout.domain.custom.exception.MultipartDecodeError
+import com.itforelead.workout.domain.custom.refinements.{FilePath, Prefix}
 import com.itforelead.workout.domain.custom.utils.MapConvert
 import com.itforelead.workout.domain.custom.utils.MapConvert.ValidationResult
 
 package object implicits {
 
   implicit class PartOps[F[_]: Async](parts: Vector[Part[F]]) {
-    private def filterFileTypes(part: Part[F]): Boolean = part.filename.isDefined
+    private def filterFileTypes(part: Part[F]): Boolean = part.filename.exists(_.trim.nonEmpty)
 
     def fileParts: Vector[Part[F]] = parts.filter(filterFileTypes)
+
+    implicit class EnhancedPrefix(prefix: Prefix) {
+      def /(id: String): FilePath = FilePath.unsafeFrom(s"$prefix/$id")
+    }
 
     def fileParts(mediaType: MediaType): Vector[Part[F]] =
       parts.filter(_.headers.get[`Content-Type`].exists(_.mediaType == mediaType))

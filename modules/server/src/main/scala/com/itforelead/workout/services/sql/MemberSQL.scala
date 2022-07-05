@@ -1,21 +1,22 @@
 package com.itforelead.workout.services.sql
 
 import com.itforelead.workout.domain.Member
-import com.itforelead.workout.domain.Member.CreateMember
+import com.itforelead.workout.domain.Member.{CreateMember, MemberWithTotal}
+import com.itforelead.workout.domain.custom.refinements.FileKey
 import com.itforelead.workout.domain.types._
 import com.itforelead.workout.services.sql.UserSQL.userId
 import skunk._
-import skunk.codec.all.{bool, date}
+import skunk.codec.all.{bool, date, int4}
 import skunk.implicits._
 
 object MemberSQL {
   val memberId: Codec[MemberId] = identity[MemberId]
 
-  private val Columns = memberId ~ userId ~ firstName ~ lastName ~ tel ~ date ~ filePath ~ bool
+  private val Columns = memberId ~ userId ~ firstName ~ lastName ~ tel ~ date ~ fileKey ~ bool
 
-  val encoder: Encoder[MemberId ~ CreateMember] =
-    Columns.contramap { case i ~ u =>
-      i ~ u.userId ~ u.firstname ~ u.lastname ~ u.phone ~ u.birthday ~ u.image ~ false
+  val encoder: Encoder[MemberId ~ CreateMember ~ FileKey] =
+    Columns.contramap { case i ~ u ~ key =>
+      i ~ u.userId ~ u.firstname ~ u.lastname ~ u.phone ~ u.birthday ~ key ~ false
     }
 
   val decoder: Decoder[Member] =
@@ -26,8 +27,23 @@ object MemberSQL {
   val selectByUserId: Query[UserId, Member] =
     sql"""SELECT * FROM members WHERE user_id = $userId AND deleted = false""".query(decoder)
 
+  val memberDecoderWithTotal: Decoder[MemberWithTotal] =
+    (memberId ~ userId ~ firstName ~ lastName ~ tel ~ date ~ fileKey ~ bool ~ int4).map {
+      case i ~ ui ~ fn ~ ln ~ p ~ b ~ fp ~ _ ~ t =>
+        MemberWithTotal(Member(i, ui, fn, ln, p, b, fp), t)
+    }
+
   val insertMember: Query[MemberId ~ CreateMember, Member] = {
     sql"""INSERT INTO members VALUES ($encoder) RETURNING *""".query(decoder)
+
+  def selectByUserId(id: UserId, page: Int): AppliedFragment = {
+    val filterByUserID: AppliedFragment =
+      sql"""SELECT m.*, COUNT(m.*) FROM members m WHERE m.user_id = $userId AND m.deleted = false""".apply(id)
+    filterByUserID.paginate(10, page)
+  }
+
+  val insertMember: Query[MemberId ~ CreateMember ~ FileKey, Member] = {
+    sql"""INSERT INTO members VALUES ($encoder) RETURNING *""".query(memberDecoder)
   }
 
 }
