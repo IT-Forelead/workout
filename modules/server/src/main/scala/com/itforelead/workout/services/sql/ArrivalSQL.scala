@@ -1,6 +1,7 @@
 package com.itforelead.workout.services.sql
 
 import com.itforelead.workout.domain.Arrival
+import com.itforelead.workout.domain.Arrival.ArrivalWithMember
 import com.itforelead.workout.domain.types._
 import com.itforelead.workout.services.sql.MemberSQL.memberId
 import com.itforelead.workout.services.sql.UserSQL.userId
@@ -21,8 +22,15 @@ object ArrivalSQL {
       Arrival(id, userId, memberId, createdAt, arrivalType)
     }
 
-  val selectSql: Query[UserId, Arrival] =
-    sql"""SELECT * FROM arrival_event WHERE user_id = $userId AND deleted = false""".query(decoder)
+  val decArrivalWithMember: Decoder[ArrivalWithMember] =
+    (decoder ~ MemberSQL.decoder).map { case arrival ~ member =>
+      ArrivalWithMember(arrival, member)
+    }
+
+  val selectSql: Query[UserId, ArrivalWithMember] =
+    sql"""SELECT arrival_event.*, members.* FROM arrival_event
+          INNER JOIN members ON members.id = arrival_event.member_id
+         WHERE arrival_event.user_id = $userId AND arrival_event.deleted = false""".query(decArrivalWithMember)
 
   val insertSql: Query[Arrival, Arrival] =
     sql"""INSERT INTO arrival_event VALUES ($encoder) RETURNING *""".query(decoder)
