@@ -40,7 +40,7 @@ object PaymentSQL {
   val selectExpiredMember: Query[Void, Member] =
     sql"""SELECT members.* FROM payments
       INNER JOIN members ON members.id = payments.member_id
-      WHERE payments.expired_at - INTERVAL '7 DAY' < NOW() AND
+      WHERE payments.expired_at - INTERVAL '3 DAY' < NOW() AND
       NOW() < payments.expired_at""".query(MemberSQL.decoder)
 
 }
