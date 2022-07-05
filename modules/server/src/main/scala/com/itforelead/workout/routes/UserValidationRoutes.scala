@@ -31,7 +31,7 @@ final class UserValidationRoutes[F[_]: Async: Logger: JsonDecoder: MonadThrow](
   private[this] val httpRoutes: AuthedRoutes[User, F] = AuthedRoutes.of {
     case aR @ POST -> Root / "sent-code" as _ =>
       aR.req.decodeR[ValidationPhone] { validationPhone =>
-        userValidation.sendValidationCode(validationPhone.phone) >> NoContent()
+        userValidation.sendValidationCode(validationPhone.phone).flatMap(Created(_))
       }
 
     case aR @ POST -> Root / "code" as _ =>

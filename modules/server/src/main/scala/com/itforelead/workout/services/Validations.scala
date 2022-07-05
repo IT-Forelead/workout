@@ -5,7 +5,6 @@ import cats.implicits._
 import com.itforelead.workout.domain.Member.CreateMember
 import com.itforelead.workout.domain.custom.refinements.{FileKey, Tel}
 import com.itforelead.workout.domain.Message
-import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.services.redis.RedisClient
 import eu.timepit.refined.types.string.NonEmptyString
@@ -28,9 +27,9 @@ object Validations {
 
       def sendValidationCode(phone: Tel): F[Unit] = {
         val validationCode = scala.util.Random.between(100000, 999999)
-        redis.put(phone.value, validationCode.toString, 3 minute)
-        val messageText = NonEmptyString.unsafeFrom(s"Your Activation code is $validationCode")
-        messageBroker.sendSMS(Message(phone, messageText))
+        val messageText    = NonEmptyString.unsafeFrom(s"Your Activation code is $validationCode")
+        redis.put(phone.value, validationCode.toString, 3.minute) >>
+          messageBroker.sendSMS(Message(phone, messageText))
       }
 
       def validatePhone(createMember: CreateMember, key: FileKey): F[Boolean] = {

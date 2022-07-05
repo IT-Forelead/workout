@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS members
 );
 INSERT INTO "members" ("id", "user_id", "firstname", "lastname", "phone", "birthday", "image", "deleted")
 VALUES ('99eb364c-f843-11ec-b939-0242ac120002', '76c2c44c-8fbf-4184-9199-19303a042fa0', 'test', 'test', '+998901234567',
-        '2022-06-30', '../../assets/images/bg-login.jpg', 'false');
+        '2022-06-30', 'bg-login.jpg', 'false');
 
 CREATE TABLE IF NOT EXISTS payments
 (
