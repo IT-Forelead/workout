@@ -36,7 +36,7 @@ final class UserValidationRoutes[F[_]: Async: Logger: JsonDecoder: MonadThrow](
   private[this] val httpRoutes: AuthedRoutes[User, F] = AuthedRoutes.of {
     case aR @ POST -> Root / "sent-code" as _ =>
       aR.req.decodeR[Validation] { validationPhone =>
-        userValidation.sendValidationCode(validationPhone.phone) >> NoContent()
+        userValidation.sendValidationCode(validationPhone.phone).flatMap(Created(_))
       }
 
     case aR @ POST -> Root / "code" as _ =>
@@ -74,14 +74,6 @@ final class UserValidationRoutes[F[_]: Async: Logger: JsonDecoder: MonadThrow](
                   F.raiseError[Unit](new Exception("Something went wrong!"))
               }
               Ok(streamRes)
-//                .recoverWith {
-//                  case ValidationCodeExpired(tel) =>
-//                    BadRequest(s"Validatsiya qodi tekshirish vaxti tugadi: $tel")
-//                  case ValidationCodeError(code) =>
-//                    BadRequest(s"Validatsiya qodi notog'ri: $code")
-//                  case PhoneInUse(tel) =>
-//                    BadRequest(s"Telefon nomerga bog'langan Xisob allaqachon mavjud: $tel")
-//                }
             } else BadRequest("File part isn't defined")
         } yield response)
           .recoverWith {
@@ -93,9 +85,11 @@ final class UserValidationRoutes[F[_]: Async: Logger: JsonDecoder: MonadThrow](
                 BadRequest("Error occurred creating member. Please try again!")
           }
       }
+
   }
 
   def routes(authMiddleware: AuthMiddleware[F, User]): HttpRoutes[F] = Router(
     prefixPath -> authMiddleware(httpRoutes)
   )
+
 }
