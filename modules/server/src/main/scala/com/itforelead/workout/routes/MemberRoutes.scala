@@ -42,7 +42,7 @@ final class MemberRoutes[F[_]: Async](members: Members[F], s3ClientStream: fs2.S
       Response(
         body = imageStream,
         headers = Headers(
-          nameToContentType(FileName.unsafeFrom(imageUrl)),
+          nameToContentType(imageUrl),
           `Transfer-Encoding`(TransferCoding.chunked.pure[NonEmptyList])
         )
       ).pure[F]
