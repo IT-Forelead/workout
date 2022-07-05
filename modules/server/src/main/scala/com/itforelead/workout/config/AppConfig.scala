@@ -9,5 +9,6 @@ case class AppConfig(
   serverConfig: HttpServerConfig,
   logConfig: LogConfig,
   messageBroker: BrokerConfig,
+  scheduler: SchedulerConfig,
   awsConfig: AWSConfig
 )

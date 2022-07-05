@@ -13,6 +13,7 @@ import com.itforelead.workout.domain.custom.refinements.{BucketName, UriAddress,
 import com.itforelead.workout.types._
 import org.http4s.Uri
 
+import java.time.LocalTime
 import scala.concurrent.duration.FiniteDuration
 
 object ConfigLoader {
@@ -59,6 +60,11 @@ object ConfigLoader {
     env("JWT_TOKEN_EXPIRATION").as[FiniteDuration].map(TokenExpiration.apply)
   ).parMapN(JwtConfig.apply)
 
+  def scheduler: ConfigValue[Effect, SchedulerConfig] = (
+    env("SCHEDULER_START_TIME").as[LocalTime],
+    env("SCHEDULER_PERIOD").as[FiniteDuration]
+  ).parMapN(SchedulerConfig.apply)
+
   def load[F[_]: Async]: F[AppConfig] = (
     env("APP_ENV").as[AppEnv],
     jwtConfig,
@@ -67,6 +73,7 @@ object ConfigLoader {
     httpServerConfig,
     httpLogConfig,
     messageBroker,
+    scheduler,
     awsConfig
   ).parMapN(AppConfig.apply).load[F]
 }

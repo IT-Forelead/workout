@@ -2,8 +2,8 @@ package com.itforelead.workout.modules
 
 import cats.effect.Resource
 import cats.effect.kernel.Async
-import com.itforelead.workout.config.BrokerConfig
-import com.itforelead.workout.effects.GenUUID
+import com.itforelead.workout.config.{BrokerConfig, SchedulerConfig}
+import com.itforelead.workout.effects.{Background, GenUUID}
 import com.itforelead.workout.services._
 import com.itforelead.workout.services.redis.RedisClient
 import org.http4s.client.Client
@@ -11,8 +11,9 @@ import org.typelevel.log4cats.Logger
 import skunk.Session
 
 object Services {
-  def apply[F[_]: Async: GenUUID: Logger](
+  def apply[F[_]: Async: GenUUID: Logger: Background](
     brokerConfig: BrokerConfig,
+    schedulerConfig: SchedulerConfig,
     httpClient: Client[F],
     redisClient: RedisClient[F]
   )(implicit session: Resource[F, Session[F]]): Services[F] = {
@@ -20,15 +21,24 @@ object Services {
     val members        = Members[F]
     val userSetting    = UserSettings[F]
     val userValidation = Validations[F](messageBroker, members, redisClient)
+    val payments      = Payments[F](userSetting)
+    val messages      = Messages[F]
+    val messageBroker = MessageBroker[F](httpClient, brokerConfig)
+    val members       = Members[F]
+    val userSetting   = UserSettings[F]
+    val payments      = Payments[F](userSetting)
+    val messages      = Messages[F]
+
     new Services[F](
       users = Users[F],
       members = members,
       userValidation = userValidation,
-      payments = Payments[F](userSetting),
+      payments = payments,
       arrivalService = ArrivalService[F],
-      messages = Messages[F],
-      userSettings = UserSettings[F],
-      messageBroker = messageBroker
+      messages = messages,
+      userSettings = userSetting,
+      messageBroker = messageBroker,
+      notificationMessage = NotificationMessage.make[F](payments, messages, messageBroker, schedulerConfig)
     )
   }
 }
@@ -41,5 +51,6 @@ final class Services[F[_]] private (
   val arrivalService: ArrivalService[F],
   val messages: Messages[F],
   val userSettings: UserSettings[F],
-  val messageBroker: MessageBroker[F]
+  val messageBroker: MessageBroker[F],
+  val notificationMessage: NotificationMessage[F]
 )

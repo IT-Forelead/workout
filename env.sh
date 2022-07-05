@@ -28,4 +28,6 @@ export AWS_SIGNING_REGION="us-east-2"
 export AWS_BUCKET_NAME="s3-bucket/"
 export KAFKA_BOOTSTRAP_SERVER="http://localhost:9092"
 export REDIS_SERVER_URI="redis://localhost"
+export SCHEDULER_START_TIME="9:00 AM"
+export SCHEDULER_PERIOD=1.day
 source local_env.sh
