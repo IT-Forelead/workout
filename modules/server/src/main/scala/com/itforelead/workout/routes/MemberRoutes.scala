@@ -21,7 +21,8 @@ final class MemberRoutes[F[_]: Async](members: Members[F], s3ClientStream: fs2.S
 
   private[routes] val prefixPath = "/member"
 
-  private[this] val httpRoutes: AuthedRoutes[User, F] = AuthedRoutes.of {
+  private[this] val privateRoutes: AuthedRoutes[User, F] = AuthedRoutes.of {
+
     case GET -> Root / UUIDVar(userId) / IntVar(page) as _ =>
       members.findByUserId(UserId(userId), page).flatMap(Ok(_))
 
@@ -36,21 +37,23 @@ final class MemberRoutes[F[_]: Async](members: Members[F], s3ClientStream: fs2.S
 //            BadRequest("Error occurred while add member. Please try again!")
 //        }
 
-    case GET -> Root / "image" / imageUrl as _ =>
-      val imageStream =
-        s3ClientStream.flatMap(_.downloadObject(FilePath.unsafeFrom(imageUrl)))
-      Response(
-        body = imageStream,
-        headers = Headers(
-          nameToContentType(imageUrl),
-          `Transfer-Encoding`(TransferCoding.chunked.pure[NonEmptyList])
-        )
-      ).pure[F]
+  }
+
+  private val publicRoutes: HttpRoutes[F] = HttpRoutes.of[F] { case GET -> Root / "image" / imageUrl =>
+    val imageStream =
+      s3ClientStream.flatMap(_.downloadObject(FilePath.unsafeFrom(imageUrl)))
+    Response(
+      body = imageStream,
+      headers = Headers(
+        nameToContentType(imageUrl),
+        `Transfer-Encoding`(TransferCoding.chunked.pure[NonEmptyList])
+      )
+    ).pure[F]
 
   }
 
   def routes(authMiddleware: AuthMiddleware[F, User]): HttpRoutes[F] = Router(
-    prefixPath -> authMiddleware(httpRoutes)
+    prefixPath -> (publicRoutes <+> authMiddleware(privateRoutes))
   )
 
 }
