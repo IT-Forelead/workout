@@ -35,7 +35,6 @@ object Member {
     lastname: LastName,
     phone: Tel,
     birthday: LocalDate,
-    image: FilePath,
     code: ValidationCode
   )
 
@@ -65,10 +64,6 @@ object Member {
           .get("birthday")
           .map(s => LocalDate.now.validNec)
           .getOrElse("Field [ birthday ] isn't defined".invalidNec),
-        values
-          .get("filePath")
-          .map(FilePath.unsafeFrom(_).validNec)
-          .getOrElse("Field [ file path ] isn't defined".invalidNec),
         values
           .get("code")
           .map(ValidationCode.unsafeFrom(_).validNec)
