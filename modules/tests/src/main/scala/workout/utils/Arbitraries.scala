@@ -19,10 +19,9 @@ object Arbitraries {
 
   implicit lazy val arbFilePath: Arbitrary[FilePath] = Arbitrary(
     for {
-      s0 <- uuid
       s1 <- uuid
       s2 <- oneOf("png","jpg","jpeg","bmp","webp")
-    } yield FilePath.unsafeFrom(s"$s0/$s1.$s2")
+    } yield FilePath.unsafeFrom(s"$s1.$s2")
   )
 
   implicit lazy val arbLocalDateTime: Arbitrary[LocalDateTime] = Arbitrary(

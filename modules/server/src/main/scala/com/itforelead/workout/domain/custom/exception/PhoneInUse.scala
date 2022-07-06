@@ -4,4 +4,4 @@ import com.itforelead.workout.domain.custom.refinements.Tel
 
 import scala.util.control.NoStackTrace
 
-case class PhoneInUse(phoneNumber: Tel) extends NoStackTrace
+case class PhoneInUse(phone: Tel) extends NoStackTrace

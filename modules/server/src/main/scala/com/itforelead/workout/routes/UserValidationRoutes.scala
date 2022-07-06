@@ -77,6 +77,15 @@ final class UserValidationRoutes[F[_]: Async: Logger: JsonDecoder: MonadThrow](
             } else BadRequest("File part isn't defined")
         } yield response)
           .recoverWith {
+            case codeExpiredError: ValidationCodeExpired =>
+              logger.error(s"Validation code expired. Error: ${codeExpiredError.phone.value}") >>
+                NotAcceptable(s"Validation code expired. Please try again")
+            case phoneInUseError: PhoneInUse =>
+              logger.error(s"Phone is already in use. Error: ${phoneInUseError.phone.value}") >>
+                NotAcceptable(s"Phone is already in use. Please try again with other phone number")
+            case calCodeError: ValidationCodeError =>
+              logger.error(s"Validation code is wrong. Error: ${calCodeError.code.value}") >>
+                NotAcceptable(s"Validation code is wrong. Please try again")
             case error: MultipartDecodeError =>
               logger.error(s"Error occurred while parse multipart. Error: ${error.cause}") >>
                 BadRequest(s"Bad form data. ${error.cause}")
@@ -84,6 +93,7 @@ final class UserValidationRoutes[F[_]: Async: Logger: JsonDecoder: MonadThrow](
               logger.error(error)("Error occurred creating member!") >>
                 BadRequest("Error occurred creating member. Please try again!")
           }
+
       }
 
   }

@@ -55,7 +55,7 @@ object Generators {
 
   val lastNameGen: Gen[LastName] = arbitrary[NonEmptyString].map(LastName.apply)
 
-  val textGen: Gen[Text] = arbitrary[NonEmptyString].map(Text.apply)
+  val textGen: Gen[MessageText] = arbitrary[NonEmptyString].map(MessageText.apply)
 
   val arrivalTypeGen: Gen[ArrivalType] = arbitrary[ArrivalType]
 

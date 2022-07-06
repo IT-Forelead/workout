@@ -13,9 +13,8 @@ CREATE TABLE IF NOT EXISTS users
 );
 
 INSERT INTO "users" ("id", "firstname", "lastname", "phone", "password")
-VALUES ('76c2c44c-8fbf-4184-9199-19303a042fa0', 'Admin', 'Adminov', '+998901234567',
+VALUES ('76c2c44c-8fbf-4184-9199-19303a042fa0', 'Admin', 'Adminov', '+998901237771',
         '$s0$e0801$5JK3Ogs35C2h5htbXQoeEQ==$N7HgNieSnOajn1FuEB7l4PhC6puBSq+e1E8WUaSJcGY=');
-
 
 CREATE TABLE IF NOT EXISTS user_settings
 (
@@ -41,9 +40,10 @@ CREATE TABLE IF NOT EXISTS members
     image     VARCHAR        NOT NULL,
     deleted   BOOLEAN        NOT NULL DEFAULT false
 );
+
 INSERT INTO "members" ("id", "user_id", "firstname", "lastname", "phone", "birthday", "image", "deleted")
 VALUES ('99eb364c-f843-11ec-b939-0242ac120002', '76c2c44c-8fbf-4184-9199-19303a042fa0', 'test', 'test', '+998901234567',
-        '2022-06-30', 'bg-login.jpg', 'false');
+        '2022-06-30', 'e8bcab0c-ef16-45b5-842d-7ec35468195e.jpg', 'false');
 
 CREATE TABLE IF NOT EXISTS payments
 (
@@ -71,13 +71,14 @@ CREATE TABLE IF NOT EXISTS arrival_event
     deleted    BOOLEAN      NOT NULL DEFAULT false
 );
 
-CREATE TABLE IF NOT EXISTS messages(
+CREATE TABLE IF NOT EXISTS messages
+(
     id              UUID PRIMARY KEY,
-    user_id         UUID NOT NULL
+    user_id         UUID            NOT NULL
         CONSTRAINT fk_user_id REFERENCES users (id) ON UPDATE NO ACTION ON DELETE NO ACTION,
-    member_id       UUID NOT NULL
+    member_id       UUID            NOT NULL
         CONSTRAINT fk_member_id REFERENCES members (id) ON UPDATE CASCADE ON DELETE CASCADE,
-    text            VARCHAR NOT NULL,
-    sent_date       TIMESTAMP NOT NULL,
+    text            VARCHAR         NOT NULL,
+    sent_date       TIMESTAMP       NOT NULL,
     delivery_status DELIVERY_STATUS NOT NULL
 );

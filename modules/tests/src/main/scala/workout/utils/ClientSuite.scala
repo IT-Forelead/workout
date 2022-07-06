@@ -33,7 +33,7 @@ trait ClientSuite extends IOSuite with Checkers with Container {
       .evalMap { res =>
         implicit val session: Resource[IO, Session[IO]] = res.postgres
 
-        val services     = Services[IO](config.messageBroker, res.httpClient, res.redis)
+        val services     = Services[IO](config.messageBroker, config.scheduler, res.httpClient, res.redis)
         Security[IO](config, services.users, res.redis).map { security =>
           HttpApi[IO](security, services, S3Client.stream(config.awsConfig), res.redis, config.logConfig).httpApp
         }
