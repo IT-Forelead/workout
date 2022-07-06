@@ -19,7 +19,7 @@ trait NotificationMessage[F[_]] {
 
 object NotificationMessage {
   def make[F[_]: Sync: Logger: Background](
-    payments: Payments[F],
+    members: Members[F],
     messages: Messages[F],
     messageBroker: MessageBroker[F],
     schedulerConfig: SchedulerConfig
@@ -37,7 +37,7 @@ object NotificationMessage {
 
       private def startSendExpireDate: F[Unit] =
         for {
-          membersList <- payments.findExpireDateShort
+          membersList <- members.findActiveTimeShort
           text = NonEmptyString.unsafeFrom(s"Sizning to'lov vaqtingizga 3 kundan oz muddat qoldi")
           _ <- membersList.traverse { member =>
             createMessage(member.userId, member.id, text).flatMap { message =>

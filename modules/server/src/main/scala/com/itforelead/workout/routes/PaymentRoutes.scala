@@ -22,7 +22,7 @@ final class PaymentRoutes[F[_]: JsonDecoder: MonadThrow](payments: Payments[F]) 
 
     case ar @ POST -> Root as user =>
       ar.req.decodeR[CreatePayment] { createPayment =>
-        payments.create(createPayment).flatMap(Created(_))
+        payments.create(createPayment.copy(userId = user.id)).flatMap(Created(_))
       }
 
   }
