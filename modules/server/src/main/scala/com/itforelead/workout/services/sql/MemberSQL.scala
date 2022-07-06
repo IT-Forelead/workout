@@ -55,4 +55,7 @@ object MemberSQL {
       WHERE active_time - INTERVAL '3 DAY' < NOW() AND
       NOW() < active_time""".query(decoder)
 
+  val selectMemberByIdSql: Query[MemberId, Member] =
+    sql"""SELECT * FROM members WHERE id = $memberId""".query(decoder)
+
 }

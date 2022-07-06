@@ -8,7 +8,7 @@ import eu.timepit.refined.auto.autoUnwrap
 import com.itforelead.workout.domain.Member.CreateMember
 import com.itforelead.workout.domain.custom.exception.MultipartDecodeError
 import com.itforelead.workout.domain.custom.refinements.FileKey
-import com.itforelead.workout.domain.{Member, User, Validation}
+import com.itforelead.workout.domain.{User, Validation}
 import com.itforelead.workout.services.{Members, Validations}
 import com.itforelead.workout.services.s3._
 import eu.timepit.refined.types.string.NonEmptyString

@@ -20,14 +20,13 @@ object Services {
     val messageBroker = MessageBroker[F](httpClient, brokerConfig)
     val members       = Members[F]
     val userSetting   = UserSettings[F]
-    val payments      = Payments[F](userSetting, members)
     val messages      = Messages[F]
 
     new Services[F](
       users = Users[F],
       members = members,
       userValidation = Validations[F](messageBroker, members, redisClient),
-      payments = payments,
+      payments = Payments[F](userSetting, members),
       arrivalService = ArrivalService[F],
       messages = messages,
       userSettings = userSetting,
