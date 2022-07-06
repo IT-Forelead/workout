@@ -6,7 +6,7 @@ import cats.implicits._
 import com.itforelead.workout.domain.Member.{CreateMember, MemberWithTotal}
 import com.itforelead.workout.domain.custom.exception.PhoneInUse
 import com.itforelead.workout.domain.custom.refinements.FileKey
-import com.itforelead.workout.domain.{ID, Member, PaymentType}
+import com.itforelead.workout.domain.{ID, Member}
 import com.itforelead.workout.domain.types.{MemberId, UserId}
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.services.sql.MemberSQL._

@@ -4,7 +4,7 @@ import cats.data.OptionT
 import cats.effect.{Resource, Sync}
 import com.itforelead.workout.domain.{ID, Payment}
 import com.itforelead.workout.domain.Payment.{CreatePayment, PaymentWithMember}
-import com.itforelead.workout.domain.custom.exception.{MemberCurrentActiveTime, MemberNotFound, UserIdIncorrect}
+import com.itforelead.workout.domain.custom.exception.{MemberCurrentActiveTime, MemberNotFound}
 import com.itforelead.workout.domain.types.{PaymentId, UserId}
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.services.sql.PaymentSQL._

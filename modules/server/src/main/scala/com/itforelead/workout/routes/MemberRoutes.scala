@@ -2,7 +2,6 @@ package com.itforelead.workout.routes
 
 import cats.effect.kernel.Async
 import cats.implicits._
-import com.itforelead.workout.domain.Member.CreateMember
 import com.itforelead.workout.domain.User
 import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.services.Members
