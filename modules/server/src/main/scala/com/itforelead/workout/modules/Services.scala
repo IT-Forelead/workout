@@ -20,7 +20,7 @@ object Services {
     val messageBroker = MessageBroker[F](httpClient, brokerConfig)
     val members       = Members[F]
     val userSetting   = UserSettings[F]
-    val payments      = Payments[F](userSetting)
+    val payments      = Payments[F](userSetting, members)
     val messages      = Messages[F]
 
     new Services[F](
@@ -32,7 +32,7 @@ object Services {
       messages = messages,
       userSettings = userSetting,
       messageBroker = messageBroker,
-      notificationMessage = NotificationMessage.make[F](payments, messages, messageBroker, schedulerConfig)
+      notificationMessage = NotificationMessage.make[F](members, messages, messageBroker, schedulerConfig)
     )
   }
 }

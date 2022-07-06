@@ -13,6 +13,8 @@ import com.itforelead.workout.domain.custom.refinements.{FilePath, Prefix}
 import com.itforelead.workout.domain.custom.utils.MapConvert
 import com.itforelead.workout.domain.custom.utils.MapConvert.ValidationResult
 
+import java.time.LocalDateTime
+
 package object implicits {
 
   implicit class PartOps[F[_]: Async](parts: Vector[Part[F]]) {
@@ -56,6 +58,10 @@ package object implicits {
     def toOptWhen(cond: => Boolean): Option[A] = if (cond) Some(obj) else None
 
     def toJson(implicit encoder: Encoder[A]): String = obj.asJson.printWith(printer)
+  }
+
+  implicit class LocalDateTimeOps(ldt: LocalDateTime) {
+    def endOfDay: LocalDateTime = ldt.withHour(23).withMinute(59).withSecond(59)
   }
 
 }

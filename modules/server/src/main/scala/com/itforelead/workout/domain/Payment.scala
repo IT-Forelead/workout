@@ -17,8 +17,7 @@ case class Payment(
   memberId: MemberId,
   paymentType: PaymentType,
   cost: Money,
-  createdAt: LocalDateTime,
-  expiredAt: LocalDateTime
+  createdAt: LocalDateTime
 )
 
 object Payment {
@@ -26,8 +25,7 @@ object Payment {
   case class CreatePayment(
     userId: UserId,
     memberId: MemberId,
-    paymentType: PaymentType,
-    cost: Money
+    paymentType: PaymentType
   )
 
   @derive(decoder, encoder, show)
