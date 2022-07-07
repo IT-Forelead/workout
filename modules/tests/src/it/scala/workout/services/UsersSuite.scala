@@ -1,11 +1,11 @@
 package workout.services
 
 import cats.effect.IO
-import com.itforelead.workout.services.Users
+import com.itforelead.workout.services.{UserSettings, Users}
 import eu.timepit.refined.auto.autoUnwrap
-import workout.utils.Generators.createUserGen
 import tsec.passwordhashers.jca.SCrypt
 import workout.utils.DBSuite
+import workout.utils.Generators.{createUserGen, defaultUserId, userSettingGen}
 
 object UsersSuite extends DBSuite {
 
@@ -20,4 +20,21 @@ object UsersSuite extends DBSuite {
       }
     }
   }
+
+  test("User settings by id") { implicit postgres =>
+    val userSettings = UserSettings[IO]
+    for {
+      userSettings <- userSettings.settings(defaultUserId)
+    } yield assert(userSettings.userId == defaultUserId)
+  }
+
+  test("Update user settings") { implicit postgres =>
+    val userSettings = UserSettings[IO]
+    forall(userSettingGen) { userSetting =>
+      for {
+        settings <- userSettings.updateSettings(userSetting)
+      } yield assert(settings.userId == userSetting.userId)
+    }
+  }
+
 }

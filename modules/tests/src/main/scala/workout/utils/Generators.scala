@@ -95,11 +95,10 @@ object Generators {
 
   val userSettingGen: Gen[UserSetting] =
     for {
-      uId <- userIdGen
       gName <- gymNameGen
       dPrice <- priceGen
       mPrice <- priceGen
-    } yield UserSetting(uId, gName, dPrice, mPrice)
+    } yield UserSetting(defaultUserId, gName, dPrice, mPrice)
 
   val createUserGen: Gen[CreateUser] =
     for {
