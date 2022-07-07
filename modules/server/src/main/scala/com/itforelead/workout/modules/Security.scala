@@ -10,6 +10,7 @@ import com.itforelead.workout.domain.types.UserJwtAuth
 import com.itforelead.workout.security.{JwtExpire, Tokens}
 import com.itforelead.workout.services.redis.RedisClient
 import com.itforelead.workout.services.{Auth, Users}
+
 object Security {
   def apply[F[_]: Sync](
     cfg: AppConfig,

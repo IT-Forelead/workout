@@ -3,6 +3,9 @@ import sbt._
 
 object Dependencies {
   object Versions {
+    val awsSdk        = "1.12.111"
+    val awsSoftwareS3 = "2.16.104"
+
     val cats          = "2.7.0"
     val catsEffect    = "3.3.11"
     val circe         = "0.14.1"
@@ -19,7 +22,9 @@ object Dependencies {
     val derevo        = "0.13.0"
     val monocle       = "3.1.0"
     val tsec          = "0.4.0"
+    val squants       = "1.8.3"
     val catsRetry     = "3.1.0"
+    val guava         = "31.0.1-jre"
 
     val weaver        = "0.7.11"
     val testContainer = "1.17.1"
@@ -27,6 +32,11 @@ object Dependencies {
   }
 
   object Libraries {
+    def awsJdk(artifact: String): ModuleID = "com.amazonaws"          % artifact % Versions.awsSdk
+    val awsCore                            = awsJdk("aws-java-sdk-core")
+    val awsS3                              = awsJdk("aws-java-sdk-s3")
+    val awsSoftwareS3                      = "software.amazon.awssdk" % "s3"     % Versions.awsSoftwareS3
+
     def circe(artifact: String): ModuleID = "io.circe" %% s"circe-$artifact" % Versions.circe
 
     def skunk(artifact: String): ModuleID = "org.tpolecat" %% artifact % Versions.skunk
@@ -63,9 +73,11 @@ object Dependencies {
 
     val refinedType = refined("refined")
     val refinedCats = refined("refined-cats")
+    val squants     = "org.typelevel" %% "squants" % Versions.squants
 
     val redis4catsEffects  = "dev.profunktor" %% "redis4cats-effects"  % Versions.redis4cats
     val redis4catsLog4cats = "dev.profunktor" %% "redis4cats-log4cats" % Versions.redis4cats
+    val guava              = "com.google.guava"       % "guava"               % Versions.guava
 
     val http4sJwtAuth  = "dev.profunktor"     %% "http4s-jwt-auth" % Versions.http4sJwtAuth
     val catsRetry      = "com.github.cb372"   %% "cats-retry"      % Versions.catsRetry
@@ -101,6 +113,8 @@ object Dependencies {
 
   val derevoLibs: Seq[ModuleID] = Seq(derevoCore, derevoCats, derevoCirce)
 
+  val s3Libraries: Seq[ModuleID] = Seq(awsCore, awsS3, awsSoftwareS3)
+
   val coreLibraries: Seq[ModuleID] =
     catsLibs ++ cirisLibs ++ circeLibs ++ skunkLibs ++ http4sLibs ++ logLibs ++ derevoLibs ++
       Seq(
@@ -110,9 +124,11 @@ object Dependencies {
         tsecPassHasher,
         redis4catsEffects,
         redis4catsLog4cats,
+        guava,
         http4sJwtAuth,
         newtype,
-        monocleCore
+        monocleCore,
+        squants
       )
 
   val testLibraries: Seq[ModuleID] = Seq(

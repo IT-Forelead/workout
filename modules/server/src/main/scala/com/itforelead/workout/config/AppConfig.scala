@@ -7,5 +7,8 @@ case class AppConfig(
   dbConfig: DBConfig,
   redis: RedisConfig,
   serverConfig: HttpServerConfig,
-  logConfig: LogConfig
+  logConfig: LogConfig,
+  messageBroker: BrokerConfig,
+  scheduler: SchedulerConfig,
+  awsConfig: AWSConfig
 )

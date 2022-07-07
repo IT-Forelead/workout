@@ -17,4 +17,17 @@ export JWT_TOKEN_EXPIRATION=30.minutes
 export ADMIN_USER_TOKEN=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1dWlkIjogImI4ZTgxYjZlLWFhOTYtMTFlYy1iOTA5LTAyNDJhYzEyMDAwMiJ9._VRMCSQRGWDqbRBjRmy-62nyG3IuInHw0Cs2h08VaRI
 export PASSWORD_SALT=06!grsnxXG0d*Pj496p6fuA*o
 export APP_ENV=DEV
-source locol_env.sh
+export MESSAGE_BROKER_API="https://api.playmobile.uz"
+export MESSAGE_BROKER_USERNAME="test"
+export MESSAGE_BROKER_PASSWORD="test_secret"
+export MESSAGE_BROKER_ENABLED=false
+export AWS_ACCESS_KEY="test"
+export AWS_SECRET_KEY="test"
+export AWS_ENDPOINT="http://localhost:4566"
+export AWS_SIGNING_REGION="us-east-2"
+export AWS_BUCKET_NAME="s3-bucket/"
+export KAFKA_BOOTSTRAP_SERVER="http://localhost:9092"
+export REDIS_SERVER_URI="redis://localhost"
+export SCHEDULER_START_TIME="9:00 AM"
+export SCHEDULER_PERIOD=1.day
+source local_env.sh

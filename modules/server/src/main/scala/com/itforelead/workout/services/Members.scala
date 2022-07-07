@@ -1,0 +1,84 @@
+package com.itforelead.workout.services
+
+import cats.data.OptionT
+import cats.effect.{Resource, Sync}
+import cats.implicits._
+import com.itforelead.workout.domain.Member.{CreateMember, MemberWithTotal}
+import com.itforelead.workout.domain.Message.CreateMessage
+import com.itforelead.workout.domain.custom.exception.{PhoneInUse, ValidationCodeExpired}
+import com.itforelead.workout.domain.custom.refinements.{FileKey, Tel}
+import com.itforelead.workout.domain.types.{MemberId, MessageText, UserId}
+import com.itforelead.workout.domain.{DeliveryStatus, ID, Member}
+import com.itforelead.workout.effects.GenUUID
+import com.itforelead.workout.services.redis.RedisClient
+import com.itforelead.workout.services.sql.MemberSQL
+import com.itforelead.workout.services.sql.MemberSQL.{insertMember, selectByPhone, selectByUserId, total}
+import eu.timepit.refined.types.string.NonEmptyString
+import skunk.implicits._
+import skunk.{Session, SqlState}
+import eu.timepit.refined.auto._
+
+import java.time.LocalDateTime
+import scala.concurrent.duration.DurationInt
+
+trait Members[F[_]] {
+  def findByUserId(userId: UserId, page: Int): F[MemberWithTotal]
+  def findMemberByPhone(phone: Tel): F[Option[Member]]
+  def sendValidationCode(userId: UserId, phone: Tel): F[Unit]
+  def validateAndCreate(userId: UserId, createMember: CreateMember, key: FileKey): F[Member]
+}
+
+object Members {
+
+  def apply[F[_]: GenUUID: Sync](
+    messageBroker: MessageBroker[F],
+    messages: Messages[F],
+    redis: RedisClient[F]
+  )(implicit
+    session: Resource[F, Session[F]]
+  ): Members[F] =
+    new Members[F] with SkunkHelper[F] {
+
+      private def create(userId: UserId, memberParam: CreateMember, filePath: FileKey): F[Member] =
+        ID.make[F, MemberId]
+          .flatMap { id =>
+            prepQueryUnique(insertMember, id ~ userId ~ memberParam ~ filePath)
+          }
+          .recoverWith { case SqlState.UniqueViolation(_) =>
+            PhoneInUse(memberParam.phone).raiseError[F, Member]
+          }
+
+      override def findByUserId(userId: UserId, page: Int): F[MemberWithTotal] =
+        for {
+          fr     <- selectByUserId(userId, page).pure[F]
+          member <- prepQueryList(fr.fragment.query(MemberSQL.decoder), fr.argument)
+          total  <- prepQueryUnique(total, userId)
+        } yield MemberWithTotal(member, total)
+
+      override def findMemberByPhone(phone: Tel): F[Option[Member]] =
+        prepOptQuery(selectByPhone, phone)
+
+      override def sendValidationCode(userId: UserId, phone: Tel): F[Unit] =
+        for {
+          now            <- Sync[F].delay(LocalDateTime.now())
+          validationCode <- Sync[F].delay(scala.util.Random.between(1000, 9999))
+          messageText = MessageText(NonEmptyString.unsafeFrom(s"Your Activation code is $validationCode"))
+          message <- messages.create(CreateMessage(userId, None, messageText, now, DeliveryStatus.SENT))
+          _       <- redis.put(phone.value, validationCode.toString, 3.minute)
+          _       <- messageBroker.send(message.id, phone, messageText.value)
+        } yield ()
+
+      override def validateAndCreate(userId: UserId, createMember: CreateMember, key: FileKey): F[Member] =
+        (for {
+          code <- OptionT(redis.get(createMember.phone.value))
+          member <- OptionT.whenF(code == createMember.code.value)(
+            OptionT(findMemberByPhone(createMember.phone))
+              .semiflatMap(_ => PhoneInUse(createMember.phone).raiseError[F, Member])
+              .getOrElseF(create(userId, createMember, key))
+          )
+        } yield member).getOrElseF {
+          ValidationCodeExpired(createMember.phone).raiseError[F, Member]
+        }
+    }
+
+}

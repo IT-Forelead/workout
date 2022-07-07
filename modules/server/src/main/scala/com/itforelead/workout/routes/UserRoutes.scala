@@ -1,19 +1,30 @@
 package com.itforelead.workout.routes
 
 import cats.MonadThrow
-import com.itforelead.workout.domain.User
+import cats.implicits.toFlatMapOps
+import com.itforelead.workout.domain.{User, UserSetting}
+import com.itforelead.workout.services.UserSettings
 import org.http4s._
 import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
 import org.http4s.circe.JsonDecoder
 import org.http4s.dsl.Http4sDsl
 import org.http4s.server.{AuthMiddleware, Router}
 
-final class UserRoutes[F[_]: JsonDecoder: MonadThrow] extends Http4sDsl[F] {
+final class UserRoutes[F[_]: JsonDecoder: MonadThrow](settings: UserSettings[F]) extends Http4sDsl[F] {
 
   private[routes] val prefixPath = "/user"
 
-  private[this] val httpRoutes: AuthedRoutes[User, F] = AuthedRoutes.of { case GET -> Root as user =>
-    Ok(user)
+  private[this] val httpRoutes: AuthedRoutes[User, F] = AuthedRoutes.of {
+    case GET -> Root as user =>
+      Ok(user)
+
+    case GET -> Root / "settings" as user =>
+      settings.settings(user.id).flatMap(Ok(_))
+
+    case ar @ PUT -> Root / "settings" as _ =>
+      ar.req.decodeR[UserSetting] { updateSettings =>
+        settings.updateSettings(updateSettings).flatMap(Ok(_))
+      }
   }
 
   def routes(authMiddleware: AuthMiddleware[F, User]): HttpRoutes[F] = Router(

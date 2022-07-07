@@ -13,7 +13,8 @@ import org.http4s.circe.JsonDecoder
 import org.http4s.dsl.Http4sDsl
 import org.http4s.server.{AuthMiddleware, Router}
 import com.itforelead.workout.domain
-import com.itforelead.workout.domain.custom.exception.{EmailInUse, InvalidPassword, UserNotFound}
+import com.itforelead.workout.domain.Member.CreateMember
+import com.itforelead.workout.domain.custom.exception.{InvalidPassword, PhoneInUse, UserNotFound}
 import com.itforelead.workout.domain.tokenEncoder
 
 final case class AuthRoutes[F[_]: Monad: JsonDecoder: MonadThrow](
@@ -37,7 +38,7 @@ final case class AuthRoutes[F[_]: Monad: JsonDecoder: MonadThrow](
         auth
           .newUser(user)
           .flatMap(Created(_))
-          .recoverWith { case EmailInUse(u) =>
+          .recoverWith { case PhoneInUse(u) =>
             Conflict(u)
           }
       }
@@ -45,7 +46,7 @@ final case class AuthRoutes[F[_]: Monad: JsonDecoder: MonadThrow](
   private[this] val privateRoutes: AuthedRoutes[User, F] = AuthedRoutes.of { case ar @ GET -> Root / "logout" as user =>
     AuthHeaders
       .getBearerToken(ar.req)
-      .traverse_(auth.logout(_, user.email)) *> NoContent()
+      .traverse_(auth.logout(_, user.phone)) *> NoContent()
   }
 
   def routes(authMiddleware: AuthMiddleware[F, User]): HttpRoutes[F] = Router(

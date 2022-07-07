@@ -1,18 +1,30 @@
 package workout.utils
 
-import com.itforelead.workout.domain.custom.refinements.{EmailAddress, FileName, Password, Tel}
-import com.itforelead.workout.domain.{Gender, Role}
+import com.itforelead.workout.domain.{ArrivalType, DeliveryStatus, PaymentType}
+import com.itforelead.workout.domain.custom.refinements._
+import eu.timepit.refined.types.string.NonEmptyString
 import org.http4s.MediaType
 import org.scalacheck.Gen._
 import org.scalacheck.{Arbitrary, Gen}
-import Generators.{nonEmptyStringGen, numberGen}
+import workout.utils.Generators.{nonEmptyStringGen, numberGen}
 
 import java.time.LocalDateTime
 
 object Arbitraries {
 
-  implicit lazy val arbGender: Arbitrary[Gender] = Arbitrary(oneOf(Gender.genders))
-  implicit lazy val arbRole: Arbitrary[Role]     = Arbitrary(oneOf(Role.roles))
+  implicit lazy val arbArrivalType: Arbitrary[ArrivalType] = Arbitrary(oneOf(ArrivalType.arrivalTypes))
+
+  implicit lazy val arbDeliveryStatusType: Arbitrary[DeliveryStatus] = Arbitrary(oneOf(DeliveryStatus.statuses))
+
+  implicit lazy val arbPaymentType: Arbitrary[PaymentType] = Arbitrary(oneOf(PaymentType.paymentTypes))
+
+  implicit lazy val arbFilePath: Arbitrary[FilePath] = Arbitrary(
+    for {
+      s1 <- uuid
+      s2 <- oneOf("png","jpg","jpeg","bmp","webp")
+    } yield FilePath.unsafeFrom(s"$s1.$s2")
+  )
+
   implicit lazy val arbLocalDateTime: Arbitrary[LocalDateTime] = Arbitrary(
     for {
       year   <- Gen.choose(1800, 2100)
@@ -22,12 +34,17 @@ object Arbitraries {
       minute <- Gen.choose(0, 59)
     } yield LocalDateTime.of(year, month, day, hour, minute)
   )
+
   implicit lazy val arbEmail: Arbitrary[EmailAddress] = Arbitrary(
     for {
       s0 <- nonEmptyStringGen(4, 8)
       s1 <- nonEmptyStringGen(3, 5)
       s2 <- nonEmptyStringGen(2, 3)
     } yield EmailAddress.unsafeFrom(s"$s0@$s1.$s2")
+  )
+
+  implicit lazy val arbNonEmptyString: Arbitrary[NonEmptyString] = Arbitrary(
+    nonEmptyStringGen(4, 15).map(NonEmptyString.unsafeFrom)
   )
 
   implicit lazy val arbPassword: Arbitrary[Password] = Arbitrary(
@@ -50,5 +67,11 @@ object Arbitraries {
     for {
       s0 <- numberGen(12)
     } yield Tel.unsafeFrom(s"+$s0")
+  )
+
+  implicit lazy val arbValidationCode: Arbitrary[ValidationCode] = Arbitrary(
+    for {
+      s0 <- numberGen(4)
+    } yield ValidationCode.unsafeFrom(s"$s0")
   )
 }

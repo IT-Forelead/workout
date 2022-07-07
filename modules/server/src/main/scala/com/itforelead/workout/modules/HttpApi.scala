@@ -8,6 +8,7 @@ import com.itforelead.workout.domain.User
 import com.itforelead.workout.implicits.CirceDecoderOps
 import com.itforelead.workout.routes._
 import com.itforelead.workout.services.redis.RedisClient
+import com.itforelead.workout.services.s3.S3Client
 import dev.profunktor.auth.JwtAuthMiddleware
 import dev.profunktor.auth.jwt.JwtToken
 import org.http4s._
@@ -23,15 +24,17 @@ object HttpApi {
   def apply[F[_]: Async: Logger](
     security: Security[F],
     services: Services[F],
+    s3Client: S3Client[F],
     redis: RedisClient[F],
     logConfig: LogConfig
-  )(implicit F: Sync[F]): HttpApi[F] =
-    new HttpApi[F](security, services, redis, logConfig)
+  ): HttpApi[F] =
+    new HttpApi[F](security, services, s3Client, redis, logConfig)
 }
 
 final class HttpApi[F[_]: Async: Logger] private (
   security: Security[F],
   services: Services[F],
+  s3Client: S3Client[F],
   redis: RedisClient[F],
   logConfig: LogConfig
 ) {
@@ -46,12 +49,16 @@ final class HttpApi[F[_]: Async: Logger] private (
     JwtAuthMiddleware[F, User](security.userJwtAuth.value, findUser)
 
   // Auth routes
-  private[this] val authRoutes = AuthRoutes[F](security.auth).routes(usersMiddleware)
-  private[this] val userRoutes = new UserRoutes[F].routes(usersMiddleware)
+  private[this] val authRoutes    = AuthRoutes[F](security.auth).routes(usersMiddleware)
+  private[this] val userRoutes    = new UserRoutes[F](services.userSettings).routes(usersMiddleware)
+  private[this] val memberRoutes  = new MemberRoutes[F](services.members, s3Client).routes(usersMiddleware)
+  private[this] val arrivalRoutes = new ArrivalRoutes[F](services.arrivalService).routes(usersMiddleware)
+  private[this] val messageRoutes = new MessageRoutes[F](services.messages).routes(usersMiddleware)
+  private[this] val paymentRoutes = new PaymentRoutes[F](services.payments).routes(usersMiddleware)
 
   // Open routes
   private[this] val openRoutes: HttpRoutes[F] =
-    userRoutes <+> authRoutes
+    userRoutes <+> memberRoutes <+> paymentRoutes <+> arrivalRoutes <+> messageRoutes <+> authRoutes
 
   private[this] val routes: HttpRoutes[F] = Router(
     baseURL -> openRoutes
