@@ -36,7 +36,7 @@ final class MemberRoutes[F[_]: Async](members: Members[F], s3Client: S3Client[F]
 
     case aR @ POST -> Root / "sent-code" as user =>
       aR.req.decodeR[Validation] { validationPhone =>
-        members.sendValidationCode(user.id, validationPhone.phone).flatMap(Created(_))
+        members.sendValidationCode(user.id, validationPhone.phone).flatMap(Ok(_))
       }
 
     case aR @ POST -> Root as user =>
@@ -72,7 +72,7 @@ final class MemberRoutes[F[_]: Async](members: Members[F], s3Client: S3Client[F]
             case phoneInUseError: PhoneInUse =>
               logger.error(s"Phone is already in use. Error: ${phoneInUseError.phone.value}") >>
                 NotAcceptable("Phone is already in use. Please try again with other phone number")
-            case calCodeError: ValidationCodeError =>
+            case calCodeError: ValidationCodeIncorrect =>
               logger.error(s"Validation code is wrong. Error: ${calCodeError.code.value}") >>
                 NotAcceptable("Validation code is wrong. Please try again")
             case error: MultipartDecodeError =>
@@ -83,7 +83,6 @@ final class MemberRoutes[F[_]: Async](members: Members[F], s3Client: S3Client[F]
                 BadRequest("Error occurred creating member. Please try again!")
           }
       }
-
   }
 
   private val publicRoutes: HttpRoutes[F] = HttpRoutes.of[F] { case GET -> Root / "image" / imageUrl =>

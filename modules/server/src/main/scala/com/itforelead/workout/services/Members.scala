@@ -5,7 +5,7 @@ import cats.effect.{Resource, Sync}
 import cats.implicits._
 import com.itforelead.workout.domain.Member.{CreateMember, MemberWithTotal}
 import com.itforelead.workout.domain.Message.CreateMessage
-import com.itforelead.workout.domain.custom.exception.{PhoneInUse, ValidationCodeExpired}
+import com.itforelead.workout.domain.custom.exception.{PhoneInUse, ValidationCodeExpired, ValidationCodeIncorrect}
 import com.itforelead.workout.domain.custom.refinements.{FileKey, Tel}
 import com.itforelead.workout.domain.types.{MemberId, MessageText, UserId}
 import com.itforelead.workout.domain.{DeliveryStatus, ID, Member}
@@ -69,16 +69,20 @@ object Members {
         } yield ()
 
       override def validateAndCreate(userId: UserId, createMember: CreateMember, key: FileKey): F[Member] =
-        (for {
-          code <- OptionT(redis.get(createMember.phone.value))
-          member <- OptionT.whenF(code == createMember.code.value)(
-            OptionT(findMemberByPhone(createMember.phone))
-              .semiflatMap(_ => PhoneInUse(createMember.phone).raiseError[F, Member])
-              .getOrElseF(create(userId, createMember, key))
-          )
-        } yield member).getOrElseF {
-          ValidationCodeExpired(createMember.phone).raiseError[F, Member]
-        }
+        for {
+          code <- OptionT(redis.get(createMember.phone.value)).getOrElseF {
+            ValidationCodeExpired(createMember.phone).raiseError[F, String]
+          }
+          member <- OptionT
+            .whenF(code == createMember.code.value)(
+              OptionT(findMemberByPhone(createMember.phone))
+                .semiflatMap(_ => PhoneInUse(createMember.phone).raiseError[F, Member])
+                .getOrElseF(create(userId, createMember, key))
+            )
+            .getOrElseF {
+              ValidationCodeIncorrect(createMember.code).raiseError[F, Member]
+            }
+        } yield member
     }
 
 }
