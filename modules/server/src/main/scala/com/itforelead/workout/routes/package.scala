@@ -9,32 +9,28 @@ import org.http4s.circe.{JsonDecoder, jsonEncoderOf, jsonOf, toMessageSyntax}
 import org.http4s.dsl.Http4sDsl
 import org.http4s.headers.`Content-Type`
 import org.http4s.{EntityDecoder, EntityEncoder, MediaType, Request, Response}
-import com.itforelead.workout.domain.custom.refinements.{FileName, FilePath, FileKey}
+import com.itforelead.workout.domain.custom.refinements.{FileKey, FileName, FilePath}
 import com.itforelead.workout.effects.GenUUID
 
 package object routes {
 
-  def getFileType(filename: String): String = {
-    val extensionStartIndex = filename.lastIndexOf(".")
-    val dropIndex           = if (extensionStartIndex > 0) extensionStartIndex else filename.length
-    filename.drop(dropIndex)
-  }
+  def getFileType(filename: FileName): String = filename.value.drop(filename.lastIndexOf(".") + 1)
 
   def filePath(fileId: String): FilePath = FilePath.unsafeFrom(fileId)
 
-  def genFileKey[F[_]: Sync](orgFilename: String): F[FileKey] =
+  def genFileKey[F[_]: Sync](orgFilename: FileName): F[FileKey] =
     GenUUID[F].make.map { uuid =>
-      FileKey.unsafeFrom(uuid.toString + getFileType(orgFilename))
+      FileKey.unsafeFrom(uuid.toString + "." + getFileType(orgFilename))
     }
 
   implicit def deriveEntityEncoder[F[_]: Async, A: Encoder]: EntityEncoder[F, A] = jsonEncoderOf[F, A]
 
   implicit def deriveEntityDecoder[F[_]: Async, A: Decoder]: EntityDecoder[F, A] = jsonOf[F, A]
 
-  def nameToContentType(filename: String): Option[`Content-Type`] =
+  def nameToContentType(filename: FileName): Option[`Content-Type`] =
     filename.lastIndexOf('.') match {
       case -1 => None
-      case i  => MediaType.forExtension(filename.substring(i + 1)).map(`Content-Type`(_))
+      case i  => MediaType.forExtension(filename.value.substring(i + 1)).map(`Content-Type`(_))
     }
 
   implicit class RefinedRequestDecoder[F[_]: JsonDecoder: MonadThrow](req: Request[F]) extends Http4sDsl[F] {

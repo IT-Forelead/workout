@@ -3,10 +3,11 @@ package com.itforelead.workout.services.sql
 import com.itforelead.workout.domain.Payment
 import com.itforelead.workout.domain.Payment.PaymentWithMember
 import com.itforelead.workout.domain.types.{PaymentId, UserId}
+import com.itforelead.workout.domain.{Member, Payment}
 import com.itforelead.workout.services.sql.UserSQL.userId
+import skunk._
 import skunk.codec.all.{bool, timestamp}
 import skunk.implicits._
-import skunk._
 
 object PaymentSQL {
   val paymentId: Codec[PaymentId] = identity[PaymentId]

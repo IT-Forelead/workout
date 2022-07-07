@@ -2,6 +2,7 @@ package workout.utils
 
 import com.itforelead.workout.domain.{ArrivalType, DeliveryStatus, PaymentType}
 import com.itforelead.workout.domain.custom.refinements._
+import eu.timepit.refined.types.string.NonEmptyString
 import org.http4s.MediaType
 import org.scalacheck.Gen._
 import org.scalacheck.{Arbitrary, Gen}
@@ -19,10 +20,9 @@ object Arbitraries {
 
   implicit lazy val arbFilePath: Arbitrary[FilePath] = Arbitrary(
     for {
-      s0 <- uuid
       s1 <- uuid
-      s2 <- oneOf("png","jpg","jpeg","bmp")
-    } yield FilePath.unsafeFrom(s"$s0/$s1.$s2")
+      s2 <- oneOf("png","jpg","jpeg","bmp","webp")
+    } yield FilePath.unsafeFrom(s"$s1.$s2")
   )
 
   implicit lazy val arbLocalDateTime: Arbitrary[LocalDateTime] = Arbitrary(
@@ -41,6 +41,10 @@ object Arbitraries {
       s1 <- nonEmptyStringGen(3, 5)
       s2 <- nonEmptyStringGen(2, 3)
     } yield EmailAddress.unsafeFrom(s"$s0@$s1.$s2")
+  )
+
+  implicit lazy val arbNonEmptyString: Arbitrary[NonEmptyString] = Arbitrary(
+    nonEmptyStringGen(4, 15).map(NonEmptyString.unsafeFrom)
   )
 
   implicit lazy val arbPassword: Arbitrary[Password] = Arbitrary(
@@ -67,7 +71,7 @@ object Arbitraries {
 
   implicit lazy val arbValidationCode: Arbitrary[ValidationCode] = Arbitrary(
     for {
-      s0 <- numberGen(6)
+      s0 <- numberGen(4)
     } yield ValidationCode.unsafeFrom(s"$s0")
   )
 }

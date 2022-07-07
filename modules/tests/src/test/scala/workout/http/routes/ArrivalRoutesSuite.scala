@@ -1,12 +1,11 @@
 package workout.http.routes
 
 import cats.effect.{IO, Sync}
+import com.itforelead.workout.domain.Arrival
 import com.itforelead.workout.domain.Arrival.CreateArrival
-import com.itforelead.workout.domain.Payment.CreatePayment
 import com.itforelead.workout.domain.types.UserId
-import com.itforelead.workout.domain.{Arrival, User}
 import com.itforelead.workout.effects.GenUUID
-import com.itforelead.workout.routes.{ArrivalRoutes, PaymentRoutes, deriveEntityEncoder}
+import com.itforelead.workout.routes.{ArrivalRoutes, deriveEntityEncoder}
 import org.http4s.Method.{GET, POST}
 import org.http4s.Status
 import org.http4s.client.dsl.io._
@@ -17,8 +16,8 @@ import workout.utils.HttpSuite
 
 object ArrivalRoutesSuite extends HttpSuite {
   private def arrivalMethod[F[_]: Sync: GenUUID](arrival: Arrival): ArrivalStub[F] = new ArrivalStub[F] {
-    override def create(createArrival: CreateArrival): F[Arrival] = Sync[F].delay(arrival)
-    override def get(userId: UserId): F[List[Arrival]]            = Sync[F].delay(List(arrival))
+    override def create(userId: UserId, createArrival: CreateArrival): F[Arrival] = Sync[F].delay(arrival)
+    override def get(userId: UserId): F[List[Arrival]]                            = Sync[F].delay(List(arrival))
   }
 
   test("GET Arrival") {

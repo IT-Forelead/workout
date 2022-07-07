@@ -4,12 +4,13 @@ import cats.effect.std.Supervisor
 import cats.effect.{Async, IO, Resource}
 import cats.implicits._
 import ciris.Secret
-import com.itforelead.workout.config.{AppConfig, BrokerConfig, ConfigLoader}
+import com.itforelead.workout.config.{AWSConfig, AppConfig, BrokerConfig, ConfigLoader}
 import com.itforelead.workout.domain.AppEnv.TEST
 import com.itforelead.workout.effects.Background
 import com.itforelead.workout.modules.{HttpApi, Security, Services}
 import com.itforelead.workout.resources.AppResources
 import com.itforelead.workout.services.redis.RedisClient
+import com.itforelead.workout.services.s3.S3Client
 import com.itforelead.workout.services.{Members, Payments, UserSettings}
 import dev.profunktor.redis4cats.effect.Log.NoOp.instance
 import eu.timepit.refined.cats.refTypeShow
@@ -32,9 +33,9 @@ trait ClientSuite extends IOSuite with Checkers with Container {
       .evalMap { res =>
         implicit val session: Resource[IO, Session[IO]] = res.postgres
 
-        val services     = Services[IO](config.messageBroker, res.httpClient, res.redis)
+        val services     = Services[IO](config.messageBroker, config.scheduler, res.httpClient, res.redis)
         Security[IO](config, services.users, res.redis).map { security =>
-          HttpApi[IO](security, services, res.redis, config.logConfig).httpApp
+          HttpApi[IO](security, services, res.s3Client, res.redis, config.logConfig).httpApp
         }
       }
 

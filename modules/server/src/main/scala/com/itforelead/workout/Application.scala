@@ -28,7 +28,7 @@ object Application extends IOApp.Simple {
               services.notificationMessage.start >>
                 modules.Security[IO](cfg, services.users, res.redis).map { security =>
                   cfg.serverConfig -> modules
-                    .HttpApi[IO](security, services, S3Client.stream(cfg.awsConfig), res.redis, cfg.logConfig)
+                    .HttpApi[IO](security, services, res.s3Client, res.redis, cfg.logConfig)
                     .httpApp
                 }
             }

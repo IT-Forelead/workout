@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS members(
     phone           VARCHAR UNIQUE NOT NULL,
     birthday        DATE           NOT NULL,
     active_time     TIMESTAMP      NOT NULL,
-    image           VARCHAR        NULL,
+    image           VARCHAR        NOT NULL,
     deleted         BOOLEAN        NOT NULL DEFAULT false
 );
 
@@ -62,13 +62,14 @@ CREATE TABLE IF NOT EXISTS arrival_event(
     deleted    BOOLEAN      NOT NULL DEFAULT false
 );
 
-CREATE TABLE IF NOT EXISTS messages(
+CREATE TABLE IF NOT EXISTS messages
+(
     id              UUID PRIMARY KEY,
-    user_id         UUID NOT NULL
+    user_id         UUID            NOT NULL
         CONSTRAINT fk_user_id REFERENCES users (id) ON UPDATE NO ACTION ON DELETE NO ACTION,
-    member_id       UUID NOT NULL
+    member_id       UUID            NOT NULL
         CONSTRAINT fk_member_id REFERENCES members (id) ON UPDATE CASCADE ON DELETE CASCADE,
-    text            VARCHAR NOT NULL,
-    sent_date       TIMESTAMP NOT NULL,
+    text            VARCHAR         NOT NULL,
+    sent_date       TIMESTAMP       NOT NULL,
     delivery_status DELIVERY_STATUS NOT NULL
 );

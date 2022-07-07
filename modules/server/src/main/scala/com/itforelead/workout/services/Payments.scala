@@ -17,7 +17,7 @@ import java.time.LocalDateTime
 
 trait Payments[F[_]] {
   def payments(userId: UserId): F[List[PaymentWithMember]]
-  def create(payment: CreatePayment): F[Payment]
+  def create(userId: UserId, payment: CreatePayment): F[Payment]
 }
 
 object Payments {
@@ -27,7 +27,7 @@ object Payments {
     members: Members[F]
   )(implicit session: Resource[F, Session[F]]): Payments[F] = new Payments[F] with SkunkHelper[F] {
 
-    override def create(payment: CreatePayment): F[Payment] = {
+    override def create(userId: UserId, payment: CreatePayment): F[Payment] = {
       def createPay(payment: CreatePayment, activeTime: LocalDateTime): F[Payment] =
         for {
           id           <- ID.make[F, PaymentId]

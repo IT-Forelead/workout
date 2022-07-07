@@ -11,7 +11,7 @@ object DeliveryStatus {
   case object FAILED    extends DeliveryStatus("failed")
   case object UNKNOWN   extends DeliveryStatus("unknown")
 
-  val statuses = List(SENT, DELIVERED, FAILED, UNKNOWN)
+  val statuses: List[DeliveryStatus] = List(SENT, DELIVERED, FAILED, UNKNOWN)
 
   def find(value: String): Option[DeliveryStatus] =
     statuses.find(_.value == value.toLowerCase)

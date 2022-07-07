@@ -15,7 +15,6 @@ import eu.timepit.refined.types.string.NonEmptyString
 
 import java.time.{LocalDate, LocalDateTime}
 import java.time.LocalDate
-import java.util.UUID
 
 @derive(decoder, encoder, show)
 case class Member(
@@ -32,7 +31,6 @@ case class Member(
 object Member {
   @derive(decoder, encoder, show)
   case class CreateMember(
-    userId: UserId,
     firstname: FirstName,
     lastname: LastName,
     phone: Tel,
@@ -41,15 +39,11 @@ object Member {
   )
 
   @derive(decoder, encoder, show)
-  case class MemberWithTotal(member: Member, total: Int)
+  case class MemberWithTotal(member: List[Member], total: Long)
 
   implicit def decodeMap[F[_]: Sync]: MapConvert[F, ValidationResult[CreateMember]] =
     (values: Map[String, String]) =>
       (
-        values
-          .get("userId")
-          .map(id => UserId(UUID.fromString(id)).validNec)
-          .getOrElse("Field [ userId ] isn't defined".invalidNec),
         values
           .get("firstname")
           .map(str => FirstName(NonEmptyString.unsafeFrom(str)).validNec)
@@ -64,7 +58,7 @@ object Member {
           .getOrElse("Field [ phone ] isn't defined".invalidNec),
         values
           .get("birthday")
-          .map(s => LocalDate.now.validNec)
+          .map(birthday => LocalDate.parse(birthday).validNec)
           .getOrElse("Field [ birthday ] isn't defined".invalidNec),
         values
           .get("code")

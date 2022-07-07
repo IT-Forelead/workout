@@ -13,6 +13,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import skunk.Codec
 import skunk.data.Type
 import skunk.codec.all._
+import squants.Money
 import squants.market.Currency
 
 import java.util.UUID
@@ -44,7 +45,7 @@ object types {
   @newtype case class GymName(value: NonEmptyString)
 
   @derive(decoder, encoder, eqv, show)
-  @newtype case class Text(value: NonEmptyString)
+  @newtype case class MessageText(value: NonEmptyString)
 
   @derive(decoder, encoder, eqv, show)
   @newtype case class Duration(value: NonNegShort)
@@ -54,9 +55,6 @@ object types {
 
   @derive(decoder, encoder, eqv, show)
   @newtype case class EncryptedPassword(value: String)
-
-  val arrivalType: Codec[ArrivalType] =
-    `enum`[ArrivalType](_.value, ArrivalType.find, Type("arrival_type"))
 
   @newtype case class EncryptCipher(value: Cipher)
 
