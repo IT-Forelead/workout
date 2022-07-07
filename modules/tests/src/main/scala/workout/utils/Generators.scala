@@ -53,6 +53,8 @@ object Generators {
 
   val firstNameGen: Gen[FirstName] = arbitrary[NonEmptyString].map(FirstName.apply)
 
+  val gymNameGen: Gen[GymName] = arbitrary[NonEmptyString].map(GymName.apply)
+
   val lastNameGen: Gen[LastName] = arbitrary[NonEmptyString].map(LastName.apply)
 
   val textGen: Gen[MessageText] = arbitrary[NonEmptyString].map(MessageText.apply)
@@ -94,6 +96,14 @@ object Generators {
       ln <- lastNameGen
       ph <- phoneGen
     } yield User(i, fn, ln, ph)
+
+  val userSettingGen: Gen[UserSetting] =
+    for {
+      uId <- userIdGen
+      gName <- gymNameGen
+      dPrice <- priceGen
+      mPrice <- priceGen
+    } yield UserSetting(uId, gName, dPrice, mPrice)
 
   val createUserGen: Gen[CreateUser] =
     for {

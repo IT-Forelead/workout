@@ -13,6 +13,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import skunk.Codec
 import skunk.data.Type
 import skunk.codec.all._
+import squants.Money
 import squants.market.Currency
 
 import java.util.UUID
