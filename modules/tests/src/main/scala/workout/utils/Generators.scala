@@ -168,6 +168,16 @@ object Generators {
       ds <- deliveryStatusGen
     } yield CreateMessage(userId.getOrElse(ui), mi, t, dt, ds)
 
+  def createMessageWithStatusGen(userId: Option[UserId] = None): Gen[(CreateMessage, DeliveryStatus)] =
+    for {
+      ui <- userIdGen
+      mi <- option(memberIdGen)
+      t  <- textGen
+      dt <- timestampGen
+      ds1 <- deliveryStatusGen
+      ds2 <- deliveryStatusGen
+    } yield (CreateMessage(userId.getOrElse(ui), mi, t, dt, ds1), ds2)
+
   val userCredentialGen: Gen[Credentials] =
     for {
       e <- phoneGen
