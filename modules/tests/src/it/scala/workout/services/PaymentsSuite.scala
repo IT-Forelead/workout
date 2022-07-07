@@ -1,35 +1,35 @@
 package workout.services
 
 import cats.effect.IO
-import com.itforelead.workout.domain.custom.refinements.FileKey
-import com.itforelead.workout.domain.types.UserId
-import com.itforelead.workout.services.{Members, Payments, UserSettings, Users}
-import eu.timepit.refined.auto.autoUnwrap
-import tsec.passwordhashers.jca.SCrypt
+import com.itforelead.workout.domain.custom.refinements.{FileKey, Tel, ValidationCode}
+import com.itforelead.workout.domain.types.MessageId
+import com.itforelead.workout.services._
 import workout.utils.DBSuite
-import workout.utils.Generators.{createMemberGen, createPaymentGen, createUserGen, userGen}
-
-import java.util.UUID
+import workout.utils.Generators.{createMemberGen, createPaymentGen, defaultUserId}
 
 object PaymentsSuite extends DBSuite {
 
   test("Create Payment") { implicit postgres =>
-    val members      = Members[IO]
+    val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
+
+    val members      = Members[IO](messageBroker, Messages[IO], RedisClient)
     val userSettings = UserSettings[IO]
     val payments     = Payments[IO](userSettings)
     val gen = for {
-      m  <- createMemberGen
+      m  <- createMemberGen()
       cp <- createPaymentGen
     } yield (m, cp)
     forall(gen) { case (createMember, createPayment) =>
-      val userId = UserId(UUID.fromString("76c2c44c-8fbf-4184-9199-19303a042fa0"))
       for {
-        member1 <- members.create(
-          createMember.copy(userId = userId),
-          filePath = FileKey.unsafeFrom("e8bcab0c-ef16-45b5-842d-7ec35468195e.jpg")
+        _              <- members.sendValidationCode(defaultUserId, createMember.phone)
+        validationCode <- RedisClient.get(createMember.phone.value)
+        member1 <- members.validateAndCreate(
+          defaultUserId,
+          createMember.copy(code = ValidationCode.unsafeFrom(validationCode.get)),
+          FileKey.unsafeFrom("e8bcab0c-ef16-45b5-842d-7ec35468195e.jpg")
         )
-        payment     <- payments.create(createPayment.copy(userId = userId, memberId = member1.id))
-        getPayments <- payments.payments(userId)
+        payment     <- payments.create(defaultUserId, createPayment.copy(memberId = member1.id))
+        getPayments <- payments.payments(defaultUserId)
       } yield assert(getPayments.exists(_.payment == payment))
     }
   }

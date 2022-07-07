@@ -2,7 +2,7 @@ package com.itforelead.workout.domain
 
 import cats.effect.Sync
 import cats.implicits._
-import com.itforelead.workout.domain.custom.refinements.{FileKey, FilePath, Tel, ValidationCode}
+import com.itforelead.workout.domain.custom.refinements.{FileKey, Tel, ValidationCode}
 import com.itforelead.workout.domain.custom.utils.MapConvert
 import com.itforelead.workout.domain.custom.utils.MapConvert.ValidationResult
 import com.itforelead.workout.domain.types._
@@ -14,7 +14,6 @@ import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 
 import java.time.LocalDate
-import java.util.UUID
 
 @derive(decoder, encoder, show)
 case class Member(
@@ -30,7 +29,6 @@ case class Member(
 object Member {
   @derive(decoder, encoder, show)
   case class CreateMember(
-    userId: UserId,
     firstname: FirstName,
     lastname: LastName,
     phone: Tel,
@@ -45,10 +43,6 @@ object Member {
     (values: Map[String, String]) =>
       (
         values
-          .get("userId")
-          .map(id => UserId(UUID.fromString(id)).validNec)
-          .getOrElse("Field [ userId ] isn't defined".invalidNec),
-        values
           .get("firstname")
           .map(str => FirstName(NonEmptyString.unsafeFrom(str)).validNec)
           .getOrElse("Field [ firstname ] isn't defined".invalidNec),
@@ -62,7 +56,7 @@ object Member {
           .getOrElse("Field [ phone ] isn't defined".invalidNec),
         values
           .get("birthday")
-          .map(s => LocalDate.now.validNec)
+          .map(birthday => LocalDate.parse(birthday).validNec)
           .getOrElse("Field [ birthday ] isn't defined".invalidNec),
         values
           .get("code")

@@ -1,13 +1,13 @@
 package workout.http.routes
 
 import cats.effect.{IO, Sync}
-import com.itforelead.workout.Application.logger
-import com.itforelead.workout.domain.{DeliveryStatus, Member, Message, types}
-import com.itforelead.workout.domain.Message.{CreateMessage, MessageWithMember}
+import cats.implicits.catsSyntaxOptionId
+import com.itforelead.workout.domain.Message.MessageWithMember
 import com.itforelead.workout.domain.types.UserId
+import com.itforelead.workout.domain.{Member, Message}
 import com.itforelead.workout.effects.GenUUID
-import com.itforelead.workout.routes.{MessageRoutes, deriveEntityEncoder}
-import org.http4s.Method.{GET, POST}
+import com.itforelead.workout.routes.MessageRoutes
+import org.http4s.Method.GET
 import org.http4s.Status
 import org.http4s.client.dsl.io._
 import org.http4s.implicits.http4sLiteralsSyntax
@@ -18,7 +18,8 @@ import workout.utils.HttpSuite
 object MessageRoutesSuite extends HttpSuite {
   private def messages[F[_]: Sync: GenUUID](message: Message, member: Member): MessagesStub[F] = new MessagesStub[F] {
 //    override def create(msg: CreateMessage): F[Message] = Sync[F].delay(message)
-    override def get(userId: UserId): F[List[MessageWithMember]] = Sync[F].delay(List(MessageWithMember(message, member)))
+    override def get(userId: UserId): F[List[MessageWithMember]] =
+      Sync[F].delay(List(MessageWithMember(message, member.some)))
 //    override def changeStatus(id: types.MessageId, status: DeliveryStatus): F[Message] = Sync[F].delay(message)
   }
 

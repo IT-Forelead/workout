@@ -24,7 +24,6 @@ case class Payment(
 object Payment {
   @derive(decoder, encoder, show)
   case class CreatePayment(
-    userId: UserId,
     memberId: MemberId,
     paymentType: PaymentType,
     cost: Money

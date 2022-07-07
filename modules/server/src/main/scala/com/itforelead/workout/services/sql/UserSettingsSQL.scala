@@ -10,9 +10,6 @@ object UserSettingsSQL {
 
   private val Columns = userId ~ gymName ~ price ~ price
 
-  val userSettingEncoder: Encoder[UserSetting] =
-    Columns.contramap { u => u.userId ~ u.gymName ~ u.dailyPrice ~ u.monthlyPrice }
-
   val userSetting: Decoder[UserSetting] =
     Columns.map { case ui ~ gn ~ dp ~ mp =>
       UserSetting(ui, gn, dp, mp)

@@ -1,7 +1,7 @@
 package com.itforelead.workout.services
 
 import cats.implicits._
-import com.itforelead.workout.domain.{DeliveryStatus, PaymentType}
+import com.itforelead.workout.domain.{ArrivalType, DeliveryStatus, PaymentType}
 import com.itforelead.workout.domain.custom.refinements.{FileKey, Tel}
 import com.itforelead.workout.domain.types._
 import com.itforelead.workout.types.IsUUID
@@ -53,6 +53,9 @@ package object sql {
   val duration: Codec[Duration] = int2.imap[Duration](duration => Duration(NonNegShort.unsafeFrom(duration)))(_.value)
 
   val fileKey: Codec[FileKey] = varchar.imap[FileKey](fileKey => FileKey.unsafeFrom(fileKey))(_.value)
+
+  val arrivalType: Codec[ArrivalType] =
+    `enum`[ArrivalType](_.value, ArrivalType.find, Type("arrival_type"))
 
   final implicit class FragmentOps(af: AppliedFragment) {
     def paginate(lim: Int, index: Int): AppliedFragment = {

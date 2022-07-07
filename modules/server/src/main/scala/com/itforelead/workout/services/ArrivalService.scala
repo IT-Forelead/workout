@@ -12,7 +12,7 @@ import skunk.Session
 import java.time.LocalDateTime
 
 trait ArrivalService[F[_]] {
-  def create(form: CreateArrival): F[Arrival]
+  def create(userId: UserId, form: CreateArrival): F[Arrival]
   def get(userId: UserId): F[List[Arrival]]
 }
 
@@ -23,13 +23,13 @@ object ArrivalService {
   ): ArrivalService[F] =
     new ArrivalService[F] with SkunkHelper[F] {
 
-      override def create(form: CreateArrival): F[Arrival] =
+      override def create(userId: UserId, form: CreateArrival): F[Arrival] =
         for {
           id  <- ID.make[F, ArrivalId]
           now <- Sync[F].delay(LocalDateTime.now())
           arrival <- prepQueryUnique(
             insertSql,
-            Arrival(id, form.userId, form.memberId, now, form.arrivalType)
+            Arrival(id, userId, form.memberId, now, form.arrivalType)
           )
         } yield arrival
 

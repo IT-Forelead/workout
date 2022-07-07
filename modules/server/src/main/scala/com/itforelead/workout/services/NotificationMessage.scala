@@ -48,7 +48,7 @@ object NotificationMessage {
 
       private def createMessage(userId: UserId, memberId: MemberId, text: NonEmptyString): F[Message] = {
         Sync[F].delay(LocalDateTime.now()).flatMap { now =>
-          messages.create(CreateMessage(userId, memberId, MessageText(text), now, DeliveryStatus.SENT))
+          messages.create(CreateMessage(userId, memberId.some, MessageText(text), now, DeliveryStatus.SENT))
         }
       }
 

@@ -9,13 +9,11 @@ import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.routes.MemberRoutes
 import org.http4s.Method.GET
-import org.http4s.{Status, Uri}
 import org.http4s.client.dsl.io._
-import org.http4s.implicits.http4sLiteralsSyntax
+import org.http4s.{Status, Uri}
 import workout.stub_services.{MembersStub, S3ClientMock}
 import workout.utils.Generators._
 import workout.utils.HttpSuite
-
 
 object MemberRoutesSuite extends HttpSuite {
 
@@ -23,29 +21,29 @@ object MemberRoutesSuite extends HttpSuite {
     override def downloadObject(key: FilePath): fs2.Stream[F, Byte] = fs2.Stream.empty
   }
 
-  private def members[F[_]: Sync: GenUUID](member: Member, memberWithTotal: MemberWithTotal): MembersStub[F] = new MembersStub[F] {
-    override def create(memberParam: CreateMember, filePath: FileKey): F[Member] = Sync[F].delay(member)
+  private def members[F[_]: Sync: GenUUID](member: Member, memberWithTotal: MemberWithTotal): MembersStub[F] =
+    new MembersStub[F] {
+      override def findMemberByPhone(phone: Tel): F[Option[Member]] = Sync[F].delay(Option(member))
 
-    override def findMemberByPhone(phone: Tel): F[Option[Member]] = Sync[F].delay(Option(member))
+      override def findByUserId(userId: UserId, page: Int): F[Member.MemberWithTotal] = Sync[F].delay(memberWithTotal)
 
-    override def findByUserId(userId: UserId, page: Int): F[Member.MemberWithTotal] = Sync[F].delay(memberWithTotal)
+      override def sendValidationCode(userId: UserId, phone: Tel): F[Unit] = Sync[F].unit
 
-    override def sendValidationCode(phone: Tel): F[Unit] = Sync[F].unit
-
-    override def validatePhone(createMember: CreateMember, key: FileKey): F[Member] = Sync[F].delay(member)
-  }
+      override def validateAndCreate(userId: UserId, createMember: CreateMember, key: FileKey): F[Member] =
+        Sync[F].delay(member)
+    }
 
   test("GET Member By User ID") {
     val gen = for {
-      u <- userGen
-      m <- memberGen
+      u  <- userGen
+      m  <- memberGen
       mt <- memberWithTotalGen
     } yield (u, m, mt)
 
     forall(gen) { case (user, member, memberWithTotal) =>
       for {
         token <- authToken(user)
-        req    = GET(Uri.unsafeFromString(s"/member/${user.id}/1")).putHeaders(token)
+        req    = GET(Uri.unsafeFromString(s"/member/1")).putHeaders(token)
         routes = new MemberRoutes[IO](members(member, memberWithTotal), s3Client()).routes(usersMiddleware)
         res <- expectHttpBodyAndStatus(routes, req)(memberWithTotal, Status.Ok)
       } yield res

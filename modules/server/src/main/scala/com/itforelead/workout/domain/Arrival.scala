@@ -20,7 +20,6 @@ object Arrival {
 
   @derive(decoder, encoder, show)
   case class CreateArrival(
-    userId: UserId,
     memberId: MemberId,
     arrivalType: ArrivalType
   )

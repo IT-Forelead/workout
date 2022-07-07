@@ -10,7 +10,7 @@ import org.http4s.dsl.Http4sDsl
 import org.http4s.server.{AuthMiddleware, Router}
 import org.typelevel.log4cats.Logger
 
-final class MessageRoutes[F[_]: Async](messages: Messages[F])(implicit logger: Logger[F]) extends Http4sDsl[F] {
+final class MessageRoutes[F[_]: Async](messages: Messages[F]) extends Http4sDsl[F] {
 
   private[routes] val prefixPath = "/message"
 

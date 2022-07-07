@@ -15,7 +15,7 @@ import java.time.LocalDateTime
 
 trait Payments[F[_]] {
   def payments(userId: UserId): F[List[PaymentWithMember]]
-  def create(payment: CreatePayment): F[Payment]
+  def create(userId: UserId, payment: CreatePayment): F[Payment]
   def findExpireDateShort: F[List[Member]]
 }
 
@@ -25,10 +25,10 @@ object Payments {
     userSettings: UserSettings[F]
   )(implicit session: Resource[F, Session[F]]): Payments[F] = new Payments[F] with SkunkHelper[F] {
 
-    override def create(payment: CreatePayment): F[Payment] = {
+    override def create(userId: UserId, payment: CreatePayment): F[Payment] = {
       (for {
         id           <- ID.make[F, PaymentId]
-        userSettings <- userSettings.settings(payment.userId)
+        userSettings <- userSettings.settings(userId)
         now          <- Sync[F].delay(LocalDateTime.now())
         expiredAt = payment.paymentType match {
           case MONTHLY => now.plusMonths(1)
@@ -42,7 +42,7 @@ object Payments {
           insert,
           Payment(
             id = id,
-            userId = payment.userId,
+            userId = userId,
             memberId = payment.memberId,
             paymentType = payment.paymentType,
             cost = cost,
@@ -51,7 +51,7 @@ object Payments {
           )
         )
       } yield payment).recoverWith { case SqlState.ForeignKeyViolation(_) =>
-        UserIdIncorrect(payment.userId).raiseError[F, Payment]
+        UserIdIncorrect(userId).raiseError[F, Payment]
       }
     }
 

@@ -56,9 +56,6 @@ object types {
   @derive(decoder, encoder, eqv, show)
   @newtype case class EncryptedPassword(value: String)
 
-  val arrivalType: Codec[ArrivalType] =
-    `enum`[ArrivalType](_.value, ArrivalType.find, Type("arrival_type"))
-
   @newtype case class EncryptCipher(value: Cipher)
 
   @newtype case class DecryptCipher(value: Cipher)

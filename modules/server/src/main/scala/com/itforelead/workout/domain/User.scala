@@ -30,12 +30,6 @@ object User {
     password: Password
   )
 
-  @derive(decoder, encoder, show)
-  case class UserWithSettings(
-    user: User,
-    gymSettings: GymSettings
-  )
-
   @derive(decoder, encoder)
   case class UserWithPassword(user: User, password: PasswordHash[SCrypt])
 

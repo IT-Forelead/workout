@@ -3,7 +3,7 @@ package com.itforelead.workout.modules
 import cats.data.OptionT
 import cats.effect._
 import cats.syntax.all._
-import com.itforelead.workout.config.{AWSConfig, LogConfig}
+import com.itforelead.workout.config.LogConfig
 import com.itforelead.workout.domain.User
 import com.itforelead.workout.implicits.CirceDecoderOps
 import com.itforelead.workout.routes._
@@ -27,7 +27,7 @@ object HttpApi {
     s3Client: S3Client[F],
     redis: RedisClient[F],
     logConfig: LogConfig
-  )(implicit F: Sync[F]): HttpApi[F] =
+  ): HttpApi[F] =
     new HttpApi[F](security, services, s3Client, redis, logConfig)
 }
 
@@ -49,21 +49,16 @@ final class HttpApi[F[_]: Async: Logger] private (
     JwtAuthMiddleware[F, User](security.userJwtAuth.value, findUser)
 
   // Auth routes
-  private[this] val authRoutes   = AuthRoutes[F](security.auth).routes(usersMiddleware)
-  private[this] val userRoutes   = new UserRoutes[F].routes(usersMiddleware)
-  private[this] val memberRoutes = new MemberRoutes[F](services.members, s3Client).routes(usersMiddleware)
-  private[this] val userValidationRoutes =
-    new UserValidationRoutes[F](s3Client, services.userValidation, services.members).routes(usersMiddleware)
+  private[this] val authRoutes    = AuthRoutes[F](security.auth).routes(usersMiddleware)
+  private[this] val userRoutes    = new UserRoutes[F](services.userSettings).routes(usersMiddleware)
+  private[this] val memberRoutes  = new MemberRoutes[F](services.members, s3Client).routes(usersMiddleware)
   private[this] val arrivalRoutes = new ArrivalRoutes[F](services.arrivalService).routes(usersMiddleware)
   private[this] val messageRoutes = new MessageRoutes[F](services.messages).routes(usersMiddleware)
-
-  // Service routes
-  private[this] val paymentRoutes     = new PaymentRoutes[F](services.payments).routes(usersMiddleware)
-  private[this] val userSettingRoutes = new UserSettingRoutes[F](services.userSettings).routes(usersMiddleware)
+  private[this] val paymentRoutes = new PaymentRoutes[F](services.payments).routes(usersMiddleware)
 
   // Open routes
   private[this] val openRoutes: HttpRoutes[F] =
-    userRoutes <+> memberRoutes <+> userValidationRoutes <+> paymentRoutes <+> arrivalRoutes <+> messageRoutes <+> userSettingRoutes <+> authRoutes
+    userRoutes <+> memberRoutes <+> paymentRoutes <+> arrivalRoutes <+> messageRoutes <+> authRoutes
 
   private[this] val routes: HttpRoutes[F] = Router(
     baseURL -> openRoutes

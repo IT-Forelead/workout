@@ -1,13 +1,12 @@
 package com.itforelead.workout.services.sql
 
-import com.itforelead.workout.domain.{Member, Payment}
 import com.itforelead.workout.domain.Payment.PaymentWithMember
 import com.itforelead.workout.domain.types.{PaymentId, UserId}
-import com.itforelead.workout.services.sql.MemberSQL.memberDecoder
+import com.itforelead.workout.domain.{Member, Payment}
 import com.itforelead.workout.services.sql.UserSQL.userId
+import skunk._
 import skunk.codec.all.{bool, timestamp}
 import skunk.implicits._
-import skunk._
 
 object PaymentSQL {
   val paymentId: Codec[PaymentId] = identity[PaymentId]
@@ -24,7 +23,7 @@ object PaymentSQL {
     }
 
   val decPaymentWithMember: Decoder[PaymentWithMember] =
-    (decoder ~ memberDecoder).map { case payment ~ member =>
+    (decoder ~ MemberSQL.decoder).map { case payment ~ member =>
       PaymentWithMember(payment, member)
     }
 
@@ -42,6 +41,6 @@ object PaymentSQL {
     sql"""SELECT members.* FROM payments
       INNER JOIN members ON members.id = payments.member_id
       WHERE payments.expired_at - INTERVAL '7 DAY' < NOW() AND
-      NOW() < payments.expired_at""".query(memberDecoder)
+      NOW() < payments.expired_at""".query(MemberSQL.decoder)
 
 }

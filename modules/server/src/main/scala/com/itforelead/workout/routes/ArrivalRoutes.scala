@@ -23,7 +23,7 @@ final class ArrivalRoutes[F[_]: JsonDecoder: MonadThrow](arrivalService: Arrival
 
     case ar @ POST -> Root as user =>
       ar.req.decodeR[CreateArrival] { form =>
-        arrivalService.create(form).flatMap(Created(_))
+        arrivalService.create(user.id, form).flatMap(Created(_))
       }
 
   }

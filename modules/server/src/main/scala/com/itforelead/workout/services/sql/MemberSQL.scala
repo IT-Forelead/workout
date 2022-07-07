@@ -14,12 +14,12 @@ object MemberSQL {
 
   private val Columns = memberId ~ userId ~ firstName ~ lastName ~ tel ~ date ~ fileKey ~ bool
 
-  val encoder: Encoder[MemberId ~ CreateMember ~ FileKey] =
-    Columns.contramap { case i ~ u ~ key =>
-      i ~ u.userId ~ u.firstname ~ u.lastname ~ u.phone ~ u.birthday ~ key ~ false
+  val encoder: Encoder[MemberId ~ UserId ~ CreateMember ~ FileKey] =
+    Columns.contramap { case i ~ userId ~ m ~ key =>
+      i ~ userId ~ m.firstname ~ m.lastname ~ m.phone ~ m.birthday ~ key ~ false
     }
 
-  val memberDecoder: Decoder[Member] =
+  val decoder: Decoder[Member] =
     Columns.map { case i ~ ui ~ fn ~ ln ~ p ~ b ~ fp ~ _ =>
       Member(i, ui, fn, ln, p, b, fp)
     }
@@ -34,9 +34,9 @@ object MemberSQL {
     sql"""SELECT count(*) FROM members WHERE user_id = $userId AND deleted = false""".query(int8)
 
     val selectByPhone: Query[Tel, Member] =
-      sql"""SELECT * FROM members WHERE phone = $tel AND deleted = false""".query(memberDecoder)
+      sql"""SELECT * FROM members WHERE phone = $tel AND deleted = false""".query(decoder)
 
-  val insertMember: Query[MemberId ~ CreateMember ~ FileKey, Member] =
-    sql"""INSERT INTO members VALUES ($encoder) RETURNING *""".query(memberDecoder)
+  val insertMember: Query[MemberId ~ UserId ~ CreateMember ~ FileKey, Member] =
+    sql"""INSERT INTO members VALUES ($encoder) RETURNING *""".query(decoder)
 
 }
