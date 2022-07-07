@@ -12,7 +12,7 @@ import com.itforelead.workout.domain.custom.exception.{
   ValidationCodeError,
   ValidationCodeExpired
 }
-import com.itforelead.workout.domain.custom.refinements.FileKey
+import com.itforelead.workout.domain.custom.refinements.{FileKey, FileName}
 import com.itforelead.workout.domain.{User, Validation}
 import com.itforelead.workout.services.{Members, Validations}
 import com.itforelead.workout.services.s3.S3Client
@@ -25,7 +25,7 @@ import org.http4s.server.{AuthMiddleware, Router}
 import org.typelevel.log4cats.Logger
 
 final class UserValidationRoutes[F[_]: Async: Logger: JsonDecoder: MonadThrow](
-  s3ClientStream: fs2.Stream[F, S3Client[F]],
+  s3Client: S3Client[F],
   userValidation: Validations[F],
   members: Members[F]
 )(implicit logger: Logger[F], F: Sync[F])
@@ -43,9 +43,8 @@ final class UserValidationRoutes[F[_]: Async: Logger: JsonDecoder: MonadThrow](
       aR.req.decode[Multipart[F]] { multipart =>
         def uploadToS3(filename: String): fs2.Pipe[F, Byte, FileKey] = body =>
           for {
-            s3Client <- s3ClientStream
-            key      <- fs2.Stream.eval(genFileKey(filename))
-            _        <- body.through(s3Client.putObject(filePath(key.value)))
+            key <- fs2.Stream.eval(genFileKey(FileName.unsafeFrom(filename)))
+            _   <- body.through(s3Client.putObject(filePath(key.value)))
           } yield key
 
         def createMember(form: CreateMember): F[Unit] =

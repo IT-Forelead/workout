@@ -24,7 +24,7 @@ object HttpApi {
   def apply[F[_]: Async: Logger](
     security: Security[F],
     services: Services[F],
-    s3Client: fs2.Stream[F, S3Client[F]],
+    s3Client: S3Client[F],
     redis: RedisClient[F],
     logConfig: LogConfig
   )(implicit F: Sync[F]): HttpApi[F] =
@@ -34,7 +34,7 @@ object HttpApi {
 final class HttpApi[F[_]: Async: Logger] private (
   security: Security[F],
   services: Services[F],
-  s3Client: fs2.Stream[F, S3Client[F]],
+  s3Client: S3Client[F],
   redis: RedisClient[F],
   logConfig: LogConfig
 ) {

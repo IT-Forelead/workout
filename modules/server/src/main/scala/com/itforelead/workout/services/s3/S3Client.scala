@@ -48,7 +48,7 @@ object S3Client {
       .build()
   }
 
-  def resource[F[_]: Async: Sync](awsConfig: AWSConfig): Resource[F, S3Client[F]] =
+  def resource[F[_]: Async](awsConfig: AWSConfig): Resource[F, S3Client[F]] =
     for {
       transferManager <- Resource.make(acquireTransferManager[F](awsConfig))(shutdown[F])
     } yield new S3ClientImpl[F](awsConfig, transferManager)

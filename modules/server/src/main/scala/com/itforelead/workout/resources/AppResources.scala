@@ -14,14 +14,16 @@ import skunk._
 import skunk.codec.text._
 import skunk.implicits._
 import skunk.util.Typer
-import com.itforelead.workout.config.{AppConfig, DBConfig, RedisConfig}
+import com.itforelead.workout.config.{AWSConfig, AppConfig, DBConfig, RedisConfig}
+import com.itforelead.workout.services.s3.S3Client
 import org.http4s.client.Client
 import org.http4s.ember.client.EmberClientBuilder
 
 case class AppResources[F[_]](
   postgres: Resource[F, Session[F]],
   redis: RedisClient[F],
-  httpClient: Client[F]
+  httpClient: Client[F],
+  s3Client: S3Client[F]
 )
 
 object AppResources {
@@ -63,13 +65,16 @@ object AppResources {
   private def httpClient[F[_]: Async]: Resource[F, Client[F]] =
     EmberClientBuilder.default[F].build
 
+  private def s3Client[F[_]: Async](awsConfig: AWSConfig): Resource[F, S3Client[F]] = S3Client.resource(awsConfig)
+
   def apply[F[_]: Async: Console: Logger: MkRedis: Network](
     cfg: AppConfig
   ): Resource[F, AppResources[F]] =
     (
       postgresSqlResource(cfg.dbConfig),
       redisResource(cfg.redis),
-      httpClient
+      httpClient,
+      s3Client(cfg.awsConfig)
     ).parMapN(AppResources[F])
 
 }

@@ -14,15 +14,11 @@ import com.itforelead.workout.effects.GenUUID
 
 package object routes {
 
-  def getFileType(filename: String): String = {
-    val extensionStartIndex = filename.lastIndexOf(".")
-    val dropIndex           = if (extensionStartIndex > 0) extensionStartIndex else filename.length
-    filename.drop(dropIndex)
-  }
+  def getFileType(filename: FileName): String = filename.value.drop(filename.lastIndexOf(".") + 1)
 
   def filePath(fileId: String): FilePath = FilePath.unsafeFrom(fileId)
 
-  def genFileKey[F[_]: Sync](orgFilename: String): F[FileKey] =
+  def genFileKey[F[_]: Sync](orgFilename: FileName): F[FileKey] =
     GenUUID[F].make.map { uuid =>
       FileKey.unsafeFrom(uuid.toString + getFileType(orgFilename))
     }
@@ -31,11 +27,8 @@ package object routes {
 
   implicit def deriveEntityDecoder[F[_]: Async, A: Decoder]: EntityDecoder[F, A] = jsonOf[F, A]
 
-  def nameToContentType(filename: String): Option[`Content-Type`] =
-    filename.lastIndexOf('.') match {
-      case -1 => None
-      case i  => MediaType.forExtension(filename.substring(i + 1)).map(`Content-Type`(_))
-    }
+  def nameToContentType(filename: FileName): Option[`Content-Type`] =
+    MediaType.forExtension(filename.substring(filename.lastIndexOf('.') + 1)).map(`Content-Type`(_))
 
   implicit class RefinedRequestDecoder[F[_]: JsonDecoder: MonadThrow](req: Request[F]) extends Http4sDsl[F] {
 

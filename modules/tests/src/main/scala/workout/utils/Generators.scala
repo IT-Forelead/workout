@@ -9,7 +9,7 @@ import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 import Arbitraries._
 import com.itforelead.workout.domain.Arrival.CreateArrival
-import com.itforelead.workout.domain.Member.CreateMember
+import com.itforelead.workout.domain.Member.{CreateMember, MemberWithTotal}
 import com.itforelead.workout.domain.Message.CreateMessage
 import com.itforelead.workout.domain.Payment.CreatePayment
 import eu.timepit.refined.scalacheck.all.greaterEqualArbitrary
@@ -85,6 +85,8 @@ object Generators {
 
   val durationGen: Gen[Duration] = arbitrary[NonNegShort].map(Duration.apply)
 
+  val totalGen: Gen[Long] = arbitrary[Long]
+
   val userGen: Gen[User] =
     for {
       i <- userIdGen
@@ -112,6 +114,12 @@ object Generators {
       im <- filePathGen
     } yield Member(i, ui, fn, ln, ph, d, im)
 
+  val memberWithTotalGen: Gen[MemberWithTotal] =
+    for {
+     m <- memberGen
+     t <- totalGen
+    } yield MemberWithTotal(List(m), t)
+
   val createMemberGen: Gen[CreateMember] =
     for {
       ui <- userIdGen
@@ -119,9 +127,8 @@ object Generators {
       ln <- lastNameGen
       ph <- phoneGen
       d  <- dateGen
-      im <- filePathGen
       vc <- validationCodeGen
-    } yield CreateMember(ui, fn, ln, ph, d, im, vc)
+    } yield CreateMember(ui, fn, ln, ph, d, vc)
 
   val arrivalGen: Gen[Arrival] =
     for {

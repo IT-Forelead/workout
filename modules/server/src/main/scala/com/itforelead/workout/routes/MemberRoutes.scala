@@ -2,7 +2,7 @@ package com.itforelead.workout.routes
 
 import cats.data.NonEmptyList
 import cats.effect.kernel.Async
-import cats.implicits._
+import cats.implicits.{toFlatMapOps, _}
 import com.itforelead.workout.domain.Member.CreateMember
 import com.itforelead.workout.domain.User
 import com.itforelead.workout.domain.custom.refinements.{FileName, FilePath}
@@ -15,7 +15,7 @@ import org.http4s.dsl.Http4sDsl
 import org.http4s.server.{AuthMiddleware, Router}
 import org.typelevel.log4cats.Logger
 
-final class MemberRoutes[F[_]: Async](members: Members[F], s3ClientStream: fs2.Stream[F, S3Client[F]])(implicit
+final class MemberRoutes[F[_]: Async](members: Members[F], s3Client: S3Client[F])(implicit
   logger: Logger[F]
 ) extends Http4sDsl[F] {
 
@@ -41,11 +41,11 @@ final class MemberRoutes[F[_]: Async](members: Members[F], s3ClientStream: fs2.S
 
   private val publicRoutes: HttpRoutes[F] = HttpRoutes.of[F] { case GET -> Root / "image" / imageUrl =>
     val imageStream =
-      s3ClientStream.flatMap(_.downloadObject(FilePath.unsafeFrom(imageUrl)))
+      s3Client.downloadObject(FilePath.unsafeFrom(imageUrl))
     Response(
       body = imageStream,
       headers = Headers(
-        nameToContentType(imageUrl),
+        nameToContentType(FileName.unsafeFrom(imageUrl)),
         `Transfer-Encoding`(TransferCoding.chunked.pure[NonEmptyList])
       )
     ).pure[F]

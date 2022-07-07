@@ -35,7 +35,7 @@ trait ClientSuite extends IOSuite with Checkers with Container {
 
         val services     = Services[IO](config.messageBroker, config.scheduler, res.httpClient, res.redis)
         Security[IO](config, services.users, res.redis).map { security =>
-          HttpApi[IO](security, services, S3Client.stream(config.awsConfig), res.redis, config.logConfig).httpApp
+          HttpApi[IO](security, services, res.s3Client, res.redis, config.logConfig).httpApp
         }
       }
 
