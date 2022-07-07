@@ -19,8 +19,7 @@ lazy val server = (project in file("modules/server"))
   .settings(
     name              := "workout",
     scalafmtOnCompile := true,
-    libraryDependencies ++= coreLibraries,
-    libraryDependencies ++= s3Libraries,
+    libraryDependencies ++= coreLibraries ++ s3Libraries,
     scalacOptions ++= CompilerOptions.cOptions,
     Test / compile / coverageEnabled    := true,
     Compile / compile / coverageEnabled := false
@@ -40,7 +39,7 @@ lazy val tests = project
     testFrameworks += new TestFramework("weaver.framework.CatsEffect"),
     Defaults.itSettings,
     scalacOptions ++= CompilerOptions.cOptions,
-    libraryDependencies ++= testLibraries,
+    libraryDependencies ++= testLibraries ++ s3Libraries,
     scalacOptions ++= CompilerOptions.cOptions
   )
   .dependsOn(server)
