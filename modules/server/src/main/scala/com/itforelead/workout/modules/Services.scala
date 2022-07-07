@@ -21,7 +21,6 @@ object Services {
     val messages      = Messages[F]
     val members       = Members[F](messageBroker, messages, redisClient)
     val userSetting   = UserSettings[F]
-    val messages      = Messages[F]
 
     new Services[F](
       users = Users[F],

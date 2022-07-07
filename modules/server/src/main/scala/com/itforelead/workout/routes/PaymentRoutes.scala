@@ -26,7 +26,7 @@ final class PaymentRoutes[F[_]: JsonDecoder: MonadThrow](payments: Payments[F])(
     case ar @ POST -> Root as user =>
       ar.req
         .decodeR[CreatePayment] { createPayment =>
-          payments.create(user.id, createPayment.copy(userId = user.id)).flatMap(Created(_))
+          payments.create(user.id, createPayment).flatMap(Created(_))
         }
         .recoverWith {
           case userAccessError: MemberCurrentActiveTime.type =>

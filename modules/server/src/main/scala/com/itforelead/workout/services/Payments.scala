@@ -31,7 +31,7 @@ object Payments {
       def createPay(payment: CreatePayment, activeTime: LocalDateTime): F[Payment] =
         for {
           id           <- ID.make[F, PaymentId]
-          userSettings <- userSettings.settings(payment.userId)
+          userSettings <- userSettings.settings(userId)
           cost = payment.paymentType match {
             case MONTHLY => userSettings.monthlyPrice
             case DAILY   => userSettings.dailyPrice
@@ -41,7 +41,7 @@ object Payments {
             insert,
             Payment(
               id = id,
-              userId = payment.userId,
+              userId = userId,
               memberId = payment.memberId,
               paymentType = payment.paymentType,
               cost = cost,

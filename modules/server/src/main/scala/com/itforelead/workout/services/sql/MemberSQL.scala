@@ -6,7 +6,7 @@ import com.itforelead.workout.domain.custom.refinements.{FileKey, Tel}
 import com.itforelead.workout.domain.types._
 import com.itforelead.workout.services.sql.UserSQL.userId
 import skunk._
-import skunk.codec.all.{bool, date,timestamp, int8}
+import skunk.codec.all.{bool, date, int8, timestamp}
 import skunk.implicits._
 
 import java.time.LocalDateTime
@@ -24,13 +24,6 @@ object MemberSQL {
   val decoder: Decoder[Member] =
     Columns.map { case i ~ ui ~ fn ~ ln ~ p ~ b ~ at ~ fp ~ _ =>
       Member(i, ui, fn, ln, p, b, at, fp)
-    }
-
-<<<<<<<<< Temporary merge branch 1
-  val memberDecoderWithTotal: Decoder[MemberWithTotal] =
-    (memberId ~ userId ~ firstName ~ lastName ~ tel ~ date ~ timestamp ~ fileKey ~ bool ~ int4).map {
-      case i ~ ui ~ fn ~ ln ~ p ~ b ~ at ~ fp ~ _ ~ t =>
-        MemberWithTotal(Member(i, ui, fn, ln, p, b, at ~ fp), t)
     }
 
   def selectByUserId(id: UserId, page: Int): AppliedFragment = {

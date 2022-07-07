@@ -12,13 +12,14 @@ import com.itforelead.workout.domain.{DeliveryStatus, ID, Member}
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.services.sql.MemberSQL._
 import com.itforelead.workout.services.redis.RedisClient
+import com.itforelead.workout.services.sql.MemberSQL
 import eu.timepit.refined.types.string.NonEmptyString
 import skunk.implicits._
 import skunk.{Session, SqlState, Void}
 
 import java.time.LocalDateTime
-import skunk.{Session, SqlState}
 import eu.timepit.refined.auto._
+
 import scala.concurrent.duration.DurationInt
 
 trait Members[F[_]] {
@@ -26,7 +27,6 @@ trait Members[F[_]] {
   def findMemberByPhone(phone: Tel): F[Option[Member]]
   def sendValidationCode(userId: UserId, phone: Tel): F[Unit]
   def validateAndCreate(userId: UserId, createMember: CreateMember, key: FileKey): F[Member]
-  def create(memberParam: CreateMember, filePath: FileKey): F[Member]
   def findActiveTimeShort: F[List[Member]]
   def findMemberById(memberId: MemberId): F[Option[Member]]
   def updateActiveTime(memberId: MemberId, activeTime: LocalDateTime): F[Member]
@@ -83,12 +83,6 @@ object Members {
         } yield member).getOrElseF {
           ValidationCodeExpired(createMember.phone).raiseError[F, Member]
         }
-    }
-
-      override def findByUserId(userId: UserId, page: Int): F[List[MemberWithTotal]] = {
-        val af = selectByUserId(userId, page)
-        prepQueryList(af.fragment.query(memberDecoderWithTotal), af.argument)
-      }
 
       override def findActiveTimeShort: F[List[Member]] =
         prepQueryList(selectExpiredMember, Void)
@@ -98,7 +92,5 @@ object Members {
 
       override def updateActiveTime(memberId: MemberId, activeTime: LocalDateTime): F[Member] =
         prepQueryUnique(changeActiveTimeSql, activeTime ~ memberId)
-
     }
-
 }

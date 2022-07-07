@@ -49,17 +49,14 @@ final class HttpApi[F[_]: Async: Logger] private (
     JwtAuthMiddleware[F, User](security.userJwtAuth.value, findUser)
 
   // Auth routes
-  private[this] val authRoutes   = AuthRoutes[F](security.auth).routes(usersMiddleware)
-  private[this] val userRoutes   = new UserRoutes[F](services.userSettings).routes(usersMiddleware)
-  private[this] val memberRoutes = new MemberRoutes[F](services.members, s3Client).routes(usersMiddleware)
-  private[this] val userValidationRoutes =
-    new UserValidationRoutes[F](s3Client, services.userValidation, services.members).routes(usersMiddleware)
+  private[this] val authRoutes    = AuthRoutes[F](security.auth).routes(usersMiddleware)
+  private[this] val userRoutes    = new UserRoutes[F](services.userSettings).routes(usersMiddleware)
+  private[this] val memberRoutes  = new MemberRoutes[F](services.members, s3Client).routes(usersMiddleware)
   private[this] val arrivalRoutes = new ArrivalRoutes[F](services.arrivalService).routes(usersMiddleware)
   private[this] val messageRoutes = new MessageRoutes[F](services.messages).routes(usersMiddleware)
 
   // Service routes
-  private[this] val paymentRoutes     = new PaymentRoutes[F](services.payments).routes(usersMiddleware)
-  private[this] val userSettingRoutes = new UserSettingRoutes[F](services.userSettings).routes(usersMiddleware)
+  private[this] val paymentRoutes = new PaymentRoutes[F](services.payments).routes(usersMiddleware)
 
   // Open routes
   private[this] val openRoutes: HttpRoutes[F] =

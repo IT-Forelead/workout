@@ -3,6 +3,7 @@ package com.itforelead.workout.routes
 import cats.data.NonEmptyList
 import cats.effect.kernel.Async
 import cats.implicits._
+import com.itforelead.workout.domain.Member.CreateMember
 import com.itforelead.workout.domain.custom.exception._
 import com.itforelead.workout.domain.custom.refinements.{FileKey, FileName, FilePath}
 import com.itforelead.workout.domain.{User, Validation}
