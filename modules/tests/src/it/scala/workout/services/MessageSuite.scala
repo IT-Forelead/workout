@@ -6,7 +6,7 @@ import com.itforelead.workout.domain.DeliveryStatus
 import com.itforelead.workout.domain.types.MemberId
 import com.itforelead.workout.services.Messages
 import workout.utils.DBSuite
-import workout.utils.Generators.{createMessageGen, createMessageWithStatusGen, defaultUserId}
+import workout.utils.Generators.{createMessageGen, createMessageWithStatusGen, defaultUserId, deliveryStatusGen}
 
 import java.util.UUID
 
@@ -28,7 +28,12 @@ object MessageSuite extends DBSuite {
 
   test("Change status") { implicit postgres =>
     val messages = Messages[IO]
-    forall(createMessageWithStatusGen(defaultUserId.some)) { case (createMessage, statusGen) =>
+    val gen = for {
+      cm <- createMessageGen(defaultUserId.some)
+      s <- deliveryStatusGen
+    } yield cm -> s
+
+    forall(gen) { case createMessage -> statusGen =>
       for {
         message1 <- messages.create(
           createMessage.copy(

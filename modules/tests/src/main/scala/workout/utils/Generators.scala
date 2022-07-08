@@ -93,12 +93,13 @@ object Generators {
       ph <- phoneGen
     } yield User(i, fn, ln, ph)
 
-  val userSettingGen: Gen[UserSetting] =
+  def userSettingGen(userId: Option[UserId] = None): Gen[UserSetting] =
     for {
+      ui <- userIdGen
       gName <- gymNameGen
       dPrice <- priceGen
       mPrice <- priceGen
-    } yield UserSetting(defaultUserId, gName, dPrice, mPrice)
+    } yield UserSetting(userId.getOrElse(ui), gName, dPrice, mPrice)
 
   val createUserGen: Gen[CreateUser] =
     for {
@@ -167,16 +168,6 @@ object Generators {
       dt <- timestampGen
       ds <- deliveryStatusGen
     } yield CreateMessage(userId.getOrElse(ui), mi, t, dt, ds)
-
-  def createMessageWithStatusGen(userId: Option[UserId] = None): Gen[(CreateMessage, DeliveryStatus)] =
-    for {
-      ui <- userIdGen
-      mi <- option(memberIdGen)
-      t  <- textGen
-      dt <- timestampGen
-      ds1 <- deliveryStatusGen
-      ds2 <- deliveryStatusGen
-    } yield (CreateMessage(userId.getOrElse(ui), mi, t, dt, ds1), ds2)
 
   val userCredentialGen: Gen[Credentials] =
     for {
