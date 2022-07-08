@@ -10,6 +10,8 @@ import java.time.LocalDateTime
 
 class MembersStub[F[_]] extends Members[F] {
 
+  override def get(userId: UserId): F[List[Member]] = ???
+
   override def findMemberByPhone(phone: Tel): F[Option[Member]] = ???
 
   override def findByUserId(userId: UserId, page: Int): F[Member.MemberWithTotal] = ???

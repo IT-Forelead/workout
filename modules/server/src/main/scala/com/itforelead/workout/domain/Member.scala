@@ -14,7 +14,7 @@ import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 
 import java.time.{LocalDate, LocalDateTime}
-import java.time.LocalDate
+import java.time.{LocalDate, LocalDateTime}
 
 @derive(decoder, encoder, show)
 case class Member(

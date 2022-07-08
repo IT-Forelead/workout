@@ -23,6 +23,7 @@ import eu.timepit.refined.auto._
 import scala.concurrent.duration.DurationInt
 
 trait Members[F[_]] {
+  def get(userId: UserId): F[List[Member]]
   def findByUserId(userId: UserId, page: Int): F[MemberWithTotal]
   def findMemberByPhone(phone: Tel): F[Option[Member]]
   def sendValidationCode(userId: UserId, phone: Tel): F[Unit]
@@ -51,6 +52,9 @@ object Members {
           .recoverWith { case SqlState.UniqueViolation(_) =>
             PhoneInUse(memberParam.phone).raiseError[F, Member]
           }
+
+      override def get(userId: UserId): F[List[Member]] =
+        prepQueryList(selectMembers, userId)
 
       override def findByUserId(userId: UserId, page: Int): F[MemberWithTotal] =
         for {

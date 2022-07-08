@@ -23,6 +23,9 @@ object MemberRoutesSuite extends HttpSuite {
 
   private def members[F[_]: Sync: GenUUID](member: Member, memberWithTotal: MemberWithTotal): MembersStub[F] =
     new MembersStub[F] {
+
+      override def get(userId: UserId): F[List[Member]] = Sync[F].delay(List(member))
+
       override def findMemberByPhone(phone: Tel): F[Option[Member]] = Sync[F].delay(Option(member))
 
       override def findByUserId(userId: UserId, page: Int): F[Member.MemberWithTotal] = Sync[F].delay(memberWithTotal)
@@ -32,6 +35,23 @@ object MemberRoutesSuite extends HttpSuite {
       override def validateAndCreate(userId: UserId, createMember: CreateMember, key: FileKey): F[Member] =
         Sync[F].delay(member)
     }
+
+  test("GET Members") {
+    val gen = for {
+      u  <- userGen
+      m  <- memberGen
+      mt <- memberWithTotalGen
+    } yield (u, m, mt)
+
+    forall(gen) { case (user, member, memberWithTotal) =>
+      for {
+        token <- authToken(user)
+        req    = GET(Uri.unsafeFromString(s"/member")).putHeaders(token)
+        routes = new MemberRoutes[IO](members(member, memberWithTotal), s3Client()).routes(usersMiddleware)
+        res <- expectHttpStatus(routes, req)(Status.Ok)
+      } yield res
+    }
+  }
 
   test("GET Member By User ID") {
     val gen = for {
