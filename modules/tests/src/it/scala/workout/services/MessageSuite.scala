@@ -2,11 +2,10 @@ package workout.services
 
 import cats.effect.IO
 import cats.implicits.catsSyntaxOptionId
-import com.itforelead.workout.domain.DeliveryStatus
 import com.itforelead.workout.domain.types.MemberId
 import com.itforelead.workout.services.Messages
 import workout.utils.DBSuite
-import workout.utils.Generators.{createMessageGen, createMessageWithStatusGen, defaultUserId, deliveryStatusGen}
+import workout.utils.Generators.{createMessageGen, defaultUserId, deliveryStatusGen}
 
 import java.util.UUID
 
