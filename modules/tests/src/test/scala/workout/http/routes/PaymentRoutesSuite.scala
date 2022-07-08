@@ -1,12 +1,13 @@
 package workout.http.routes
 
 import cats.effect.{IO, Sync}
+import com.itforelead.workout.Application.logger
 import com.itforelead.workout.domain.Payment.{CreatePayment, PaymentWithMember}
 import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.domain.{Member, Payment}
 import com.itforelead.workout.effects.GenUUID
-import com.itforelead.workout.routes.PaymentRoutes
-import org.http4s.Method.GET
+import com.itforelead.workout.routes.{PaymentRoutes, deriveEntityEncoder}
+import org.http4s.Method.{GET, POST}
 import org.http4s.Status
 import org.http4s.client.dsl.io._
 import org.http4s.implicits.http4sLiteralsSyntax
@@ -38,21 +39,21 @@ object PaymentRoutesSuite extends HttpSuite {
     }
   }
 
-//  test("CREATE Payment") {
-//    val gen = for {
-//      u  <- userGen
-//      m  <- memberGen
-//      cp <- createPaymentGen
-//      p  <- paymentGen
-//    } yield (u, m, cp, p)
-//
-//    forall(gen) { case (user, member, createPay, payment) =>
-//      for {
-//        token <- authToken(user)
-//        req    = POST(createPay, uri"/payment").putHeaders(token)
-//        routes = new PaymentRoutes[IO](paymentS(payment, member)).routes(usersMiddleware)
-//        res <- expectHttpStatus(routes, req)(Status.Created)
-//      } yield res
-//    }
-//  }
+  test("CREATE Payment") {
+    val gen = for {
+      u  <- userGen
+      m  <- memberGen
+      cp <- createPaymentGen
+      p  <- paymentGen
+    } yield (u, m, cp, p)
+
+    forall(gen) { case (user, member, createPay, payment) =>
+      for {
+        token <- authToken(user)
+        req    = POST(createPay, uri"/payment").putHeaders(token)
+        routes = new PaymentRoutes[IO](paymentS(payment, member)).routes(usersMiddleware)
+        res <- expectHttpStatus(routes, req)(Status.Created)
+      } yield res
+    }
+  }
 }
