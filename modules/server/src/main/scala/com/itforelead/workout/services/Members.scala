@@ -10,15 +10,16 @@ import com.itforelead.workout.domain.custom.refinements.{FileKey, Tel}
 import com.itforelead.workout.domain.types.{MemberId, MessageText, UserId}
 import com.itforelead.workout.domain.{DeliveryStatus, ID, Member}
 import com.itforelead.workout.effects.GenUUID
+import com.itforelead.workout.services.sql.MemberSQL._
 import com.itforelead.workout.services.redis.RedisClient
 import com.itforelead.workout.services.sql.MemberSQL
-import com.itforelead.workout.services.sql.MemberSQL.{insertMember, selectByPhone, selectByUserId, total}
 import eu.timepit.refined.types.string.NonEmptyString
 import skunk.implicits._
-import skunk.{Session, SqlState}
-import eu.timepit.refined.auto._
+import skunk.{Session, SqlState, Void}
 
 import java.time.LocalDateTime
+import eu.timepit.refined.auto._
+
 import scala.concurrent.duration.DurationInt
 
 trait Members[F[_]] {
@@ -26,10 +27,12 @@ trait Members[F[_]] {
   def findMemberByPhone(phone: Tel): F[Option[Member]]
   def sendValidationCode(userId: UserId, phone: Tel): F[Unit]
   def validateAndCreate(userId: UserId, createMember: CreateMember, key: FileKey): F[Member]
+  def findActiveTimeShort: F[List[Member]]
+  def findMemberById(memberId: MemberId): F[Option[Member]]
+  def updateActiveTime(memberId: MemberId, activeTime: LocalDateTime): F[Member]
 }
 
 object Members {
-
   def apply[F[_]: GenUUID: Sync](
     messageBroker: MessageBroker[F],
     messages: Messages[F],
@@ -40,10 +43,11 @@ object Members {
     new Members[F] with SkunkHelper[F] {
 
       private def create(userId: UserId, memberParam: CreateMember, filePath: FileKey): F[Member] =
-        ID.make[F, MemberId]
-          .flatMap { id =>
-            prepQueryUnique(insertMember, id ~ userId ~ memberParam ~ filePath)
-          }
+        (for {
+          id     <- ID.make[F, MemberId]
+          now    <- Sync[F].delay(LocalDateTime.now())
+          member <- prepQueryUnique(insertMember, id ~ userId ~ memberParam ~ now ~ filePath)
+        } yield member)
           .recoverWith { case SqlState.UniqueViolation(_) =>
             PhoneInUse(memberParam.phone).raiseError[F, Member]
           }
@@ -79,6 +83,14 @@ object Members {
         } yield member).getOrElseF {
           ValidationCodeExpired(createMember.phone).raiseError[F, Member]
         }
-    }
 
+      override def findActiveTimeShort: F[List[Member]] =
+        prepQueryList(selectExpiredMember, Void)
+
+      override def findMemberById(memberId: MemberId): F[Option[Member]] =
+        OptionT(prepOptQuery(selectMemberByIdSql, memberId)).value
+
+      override def updateActiveTime(memberId: MemberId, activeTime: LocalDateTime): F[Member] =
+        prepQueryUnique(changeActiveTimeSql, activeTime ~ memberId)
+    }
 }

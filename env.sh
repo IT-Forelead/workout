@@ -21,6 +21,8 @@ export MESSAGE_BROKER_API="https://api.playmobile.uz"
 export MESSAGE_BROKER_USERNAME="test"
 export MESSAGE_BROKER_PASSWORD="test_secret"
 export MESSAGE_BROKER_ENABLED=false
+export SCHEDULER_START_TIME="9:00 AM"
+export SCHEDULER_PERIOD=1.day
 export AWS_ACCESS_KEY="test"
 export AWS_SECRET_KEY="test"
 export AWS_ENDPOINT="http://localhost:4566"
@@ -28,6 +30,4 @@ export AWS_SIGNING_REGION="us-east-2"
 export AWS_BUCKET_NAME="s3-bucket/"
 export KAFKA_BOOTSTRAP_SERVER="http://localhost:9092"
 export REDIS_SERVER_URI="redis://localhost"
-export SCHEDULER_START_TIME="9:00 AM"
-export SCHEDULER_PERIOD=1.day
 source local_env.sh

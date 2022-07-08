@@ -117,8 +117,9 @@ object Generators {
       ln <- lastNameGen
       ph <- phoneGen
       d  <- dateGen
+      at <- timestampGen
       im <- filePathGen
-    } yield Member(i, ui, fn, ln, ph, d, im)
+    } yield Member(i, ui, fn, ln, ph, d, at, im)
 
   val memberWithTotalGen: Gen[MemberWithTotal] =
     for {
@@ -183,13 +184,11 @@ object Generators {
       pt <- paymentTypeGen
       p  <- priceGen
       ca <- timestampGen
-      ea <- timestampGen
-    } yield Payment(i, ui, mi, pt, p, ca, ea)
+    } yield Payment(i, ui, mi, pt, p, ca)
 
   val createPaymentGen: Gen[CreatePayment] =
     for {
       mi <- memberIdGen
       pt <- paymentTypeGen
-      p  <- priceGen
-    } yield CreatePayment(mi, pt, p)
+    } yield CreatePayment(mi, pt)
 }

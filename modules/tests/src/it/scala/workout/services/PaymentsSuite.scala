@@ -14,7 +14,7 @@ object PaymentsSuite extends DBSuite {
 
     val members      = Members[IO](messageBroker, Messages[IO], RedisClient)
     val userSettings = UserSettings[IO]
-    val payments     = Payments[IO](userSettings)
+    val payments     = Payments[IO](userSettings, members)
     val gen = for {
       m  <- createMemberGen()
       cp <- createPaymentGen

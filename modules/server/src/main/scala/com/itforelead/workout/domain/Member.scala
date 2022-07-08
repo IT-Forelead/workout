@@ -13,6 +13,7 @@ import io.circe.refined._
 import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 
+import java.time.{LocalDate, LocalDateTime}
 import java.time.LocalDate
 
 @derive(decoder, encoder, show)
@@ -23,6 +24,7 @@ case class Member(
   lastname: LastName,
   phone: Tel,
   birthday: LocalDate,
+  activeTime: LocalDateTime,
   image: FileKey
 )
 

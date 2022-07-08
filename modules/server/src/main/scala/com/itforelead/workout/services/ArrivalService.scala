@@ -2,7 +2,7 @@ package com.itforelead.workout.services
 
 import cats.effect.{Resource, Sync}
 import cats.implicits._
-import com.itforelead.workout.domain.Arrival.CreateArrival
+import com.itforelead.workout.domain.Arrival.{ArrivalWithMember, CreateArrival}
 import com.itforelead.workout.domain.{Arrival, ID}
 import com.itforelead.workout.domain.types.{ArrivalId, UserId}
 import com.itforelead.workout.services.sql.ArrivalSQL._
@@ -13,7 +13,7 @@ import java.time.LocalDateTime
 
 trait ArrivalService[F[_]] {
   def create(userId: UserId, form: CreateArrival): F[Arrival]
-  def get(userId: UserId): F[List[Arrival]]
+  def get(userId: UserId): F[List[ArrivalWithMember]]
 }
 
 object ArrivalService {
@@ -33,7 +33,7 @@ object ArrivalService {
           )
         } yield arrival
 
-      override def get(userId: UserId): F[List[Arrival]] =
+      override def get(userId: UserId): F[List[ArrivalWithMember]] =
         prepQueryList(selectSql, userId)
 
     }

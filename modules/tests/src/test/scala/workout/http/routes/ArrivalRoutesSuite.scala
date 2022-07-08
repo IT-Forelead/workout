@@ -1,8 +1,8 @@
 package workout.http.routes
 
 import cats.effect.{IO, Sync}
-import com.itforelead.workout.domain.Arrival
-import com.itforelead.workout.domain.Arrival.CreateArrival
+import com.itforelead.workout.domain.{Arrival, Member}
+import com.itforelead.workout.domain.Arrival.{ArrivalWithMember, CreateArrival}
 import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.routes.{ArrivalRoutes, deriveEntityEncoder}
@@ -15,22 +15,24 @@ import workout.utils.Generators._
 import workout.utils.HttpSuite
 
 object ArrivalRoutesSuite extends HttpSuite {
-  private def arrivalMethod[F[_]: Sync: GenUUID](arrival: Arrival): ArrivalStub[F] = new ArrivalStub[F] {
-    override def create(userId: UserId, createArrival: CreateArrival): F[Arrival] = Sync[F].delay(arrival)
-    override def get(userId: UserId): F[List[Arrival]]                            = Sync[F].delay(List(arrival))
+  private def arrivalMethod[F[_]: Sync: GenUUID](arrival: Arrival, member: Member): ArrivalStub[F] = new ArrivalStub[F] {
+    override def create(userId: UserId, createArrival: CreateArrival): F[Arrival]  = Sync[F].delay(arrival)
+    override def get(userId: UserId): F[List[ArrivalWithMember]] =
+      Sync[F].delay(List(ArrivalWithMember(arrival, member)))
   }
 
   test("GET Arrival") {
     val gen = for {
       u <- userGen
       a <- arrivalGen
-    } yield (u, a)
+      m <- memberGen
+    } yield (u, a, m)
 
-    forall(gen) { case (user, arrival) =>
+    forall(gen) { case (user, arrival, member) =>
       for {
         token <- authToken(user)
         req    = GET(uri"/arrival").putHeaders(token)
-        routes = new ArrivalRoutes[IO](arrivalMethod(arrival)).routes(usersMiddleware)
+        routes = new ArrivalRoutes[IO](arrivalMethod(arrival, member)).routes(usersMiddleware)
         res <- expectHttpStatus(routes, req)(Status.Ok)
       } yield res
     }
@@ -41,13 +43,14 @@ object ArrivalRoutesSuite extends HttpSuite {
       u  <- userGen
       ca <- createArrivalGen
       a  <- arrivalGen
-    } yield (u, ca, a)
+      m  <- memberGen
+    } yield (u, ca, a, m)
 
-    forall(gen) { case (user, createArrival, arrival) =>
+    forall(gen) { case (user, createArrival, arrival, member) =>
       for {
         token <- authToken(user)
         req    = POST(createArrival, uri"/arrival").putHeaders(token)
-        routes = new ArrivalRoutes[IO](arrivalMethod(arrival)).routes(usersMiddleware)
+        routes = new ArrivalRoutes[IO](arrivalMethod(arrival, member)).routes(usersMiddleware)
         res <- expectHttpStatus(routes, req)(Status.Created)
       } yield res
     }

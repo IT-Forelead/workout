@@ -8,5 +8,4 @@ import com.itforelead.workout.services.Payments
 class PaymentsStub[F[_]] extends Payments[F] {
   override def create(userId: UserId, payment: CreatePayment): F[Payment] = ???
   override def payments(userId: UserId): F[List[PaymentWithMember]] = ???
-  override def findExpireDateShort: F[List[Member]] = ???
 }

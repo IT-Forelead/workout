@@ -6,22 +6,24 @@ import com.itforelead.workout.domain.custom.refinements.{FileKey, Tel}
 import com.itforelead.workout.domain.types._
 import com.itforelead.workout.services.sql.UserSQL.userId
 import skunk._
-import skunk.codec.all.{bool, date, int8}
+import skunk.codec.all.{bool, date, int8, timestamp}
 import skunk.implicits._
+
+import java.time.LocalDateTime
 
 object MemberSQL {
   val memberId: Codec[MemberId] = identity[MemberId]
 
-  private val Columns = memberId ~ userId ~ firstName ~ lastName ~ tel ~ date ~ fileKey ~ bool
+  private val Columns = memberId ~ userId ~ firstName ~ lastName ~ tel ~ date ~ timestamp ~ fileKey ~ bool
 
-  val encoder: Encoder[MemberId ~ UserId ~ CreateMember ~ FileKey] =
-    Columns.contramap { case i ~ userId ~ m ~ key =>
-      i ~ userId ~ m.firstname ~ m.lastname ~ m.phone ~ m.birthday ~ key ~ false
+  val encoder: Encoder[MemberId ~ UserId ~ CreateMember ~ LocalDateTime ~ FileKey] =
+    Columns.contramap { case i ~ userId ~ m ~ dt ~ key =>
+      i ~ userId ~ m.firstname ~ m.lastname ~ m.phone ~ m.birthday ~ dt ~ key ~ false
     }
 
   val decoder: Decoder[Member] =
-    Columns.map { case i ~ ui ~ fn ~ ln ~ p ~ b ~ fp ~ _ =>
-      Member(i, ui, fn, ln, p, b, fp)
+    Columns.map { case i ~ ui ~ fn ~ ln ~ p ~ b ~ at ~ fp ~ _ =>
+      Member(i, ui, fn, ln, p, b, at, fp)
     }
 
   def selectByUserId(id: UserId, page: Int): AppliedFragment = {
@@ -36,7 +38,21 @@ object MemberSQL {
     val selectByPhone: Query[Tel, Member] =
       sql"""SELECT * FROM members WHERE phone = $tel AND deleted = false""".query(decoder)
 
-  val insertMember: Query[MemberId ~ UserId ~ CreateMember ~ FileKey, Member] =
+  val insertMember: Query[MemberId ~ UserId ~ CreateMember ~ LocalDateTime ~ FileKey, Member] =
     sql"""INSERT INTO members VALUES ($encoder) RETURNING *""".query(decoder)
+
+  val changeActiveTimeSql: Query[LocalDateTime ~ MemberId, Member] =
+    sql"""UPDATE members SET active_time = $timestamp WHERE id = $memberId RETURNING *""".query(decoder)
+
+  val currentMemberActiveTimeSql: Query[MemberId, LocalDateTime] =
+    sql"""SELECT active_time FROM members WHERE id = $memberId AND deleted = false""".query(timestamp)
+
+  val selectExpiredMember: Query[Void, Member] =
+    sql"""SELECT * FROM members
+      WHERE active_time - INTERVAL '3 DAY' < NOW() AND
+      NOW() < active_time""".query(decoder)
+
+  val selectMemberByIdSql: Query[MemberId, Member] =
+    sql"""SELECT * FROM members WHERE id = $memberId""".query(decoder)
 
 }
