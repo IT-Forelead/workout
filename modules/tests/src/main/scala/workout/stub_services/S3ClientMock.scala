@@ -1,10 +1,16 @@
 package workout.stub_services
 
+import cats.effect.{Async, Sync}
 import com.amazonaws.services.s3.model.Bucket
 import com.itforelead.workout.domain.custom.refinements.FilePath
 import com.itforelead.workout.services.s3.S3Client
 import fs2.Pipe
+
 import java.net.URL
+
+object S3ClientMock {
+  def stream[F[_] : Async](implicit F: Sync[F]): fs2.Stream[F, S3ClientMock[F]] = fs2.Stream.eval(F.pure(new S3ClientMock[F]()))
+}
 
 class S3ClientMock[F[_]] extends S3Client[F] {
   override def listFiles: fs2.Stream[F, FilePath] = ???
