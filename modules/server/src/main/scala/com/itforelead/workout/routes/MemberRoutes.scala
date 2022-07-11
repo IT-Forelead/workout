@@ -7,7 +7,7 @@ import cats.implicits._
 import com.itforelead.workout.domain.Member.CreateMember
 import com.itforelead.workout.domain.custom.exception._
 import com.itforelead.workout.domain.custom.refinements.{FileKey, FileName, FilePath}
-import com.itforelead.workout.domain.{Member, User, Validation}
+import com.itforelead.workout.domain.{User, Validation}
 import com.itforelead.workout.implicits.PartOps
 import com.itforelead.workout.services.{Auth, Members}
 import com.itforelead.workout.services.s3.S3Client
@@ -54,7 +54,7 @@ final class MemberRoutes[F[_]: Async](members: Members[F], s3Client: S3Client[F]
 
     case aR @ PUT -> Root as user =>
       aR.req.decode[Multipart[F]] { multipart =>
-        def uploadFile: F[List[FileKey]] =
+        def createMember(form: CreateMember): F[Unit] =
           fs2.Stream
             .fromIterator(
               multipart.parts.fileParts.flatMap { p =>
@@ -65,17 +65,11 @@ final class MemberRoutes[F[_]: Async](members: Members[F], s3Client: S3Client[F]
             .flatMap { case (filename, body) =>
               body.through(uploadToS3(filename))
             }
-            .compile
-            .toList
-
-        def createMember(form: CreateMember): F[Unit] = {
-          uploadFile.flatMap { list =>
-            println(s"LIST LENGTH: ${list.length}")
-            list.traverse_ { key =>
+            .evalMap { key =>
               members.validateAndCreate(user.id, form, key)
             }
-          }
-        }
+            .compile
+            .drain
 
         (for {
           form <- multipart.parts.convert[CreateMember]

@@ -10,8 +10,7 @@ import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.domain.{Member, User, Validation}
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.routes.{MemberRoutes, deriveEntityEncoder}
-import com.itforelead.workout.services.Members
-import fs2.Pipe
+import fs2.{Pipe, Stream}
 import io.circe.generic.auto.exportEncoder
 import org.http4s.Method.{GET, POST, PUT}
 import org.http4s.client.dsl.io._
@@ -30,7 +29,7 @@ object MemberRoutesSuite extends HttpSuite {
 
   private def s3Client[F[_]: Async](): S3ClientMock[F] = new S3ClientMock[F] {
     override def downloadObject(key: FilePath): fs2.Stream[F, Byte] = fs2.Stream.empty
-    override def putObject(key: FilePath): Pipe[F, Byte, Unit]      = _ => fs2.Stream.empty
+    override def putObject(key: FilePath): Pipe[F, Byte, Unit] = (s: Stream[F, Byte]) => s.as(())
   }
 
   private def memberService[F[_]: Sync: GenUUID](
@@ -47,24 +46,18 @@ object MemberRoutesSuite extends HttpSuite {
       override def sendValidationCode(userId: UserId, phone: Tel): F[Unit] = Sync[F].unit
 
       override def validateAndCreate(userId: UserId, createMember: CreateMember, key: FileKey): F[Member] = {
-        println(s"===========================")
         if (isCorrect) {
-          println(s"===========================1")
           Sync[F].delay(member)
         }
         else if (errorType.contains("validationCodeExpired")) {
-          println(s"===========================2")
-          Sync[F].raiseError(new Exception("validationCodeExpired"))
+          ValidationCodeExpired(createMember.phone).raiseError[F, Member]
         } else if (errorType.getOrElse("unknown") == "phoneInUse") {
-          println(s"===========================3")
           PhoneInUse(createMember.phone).raiseError[F, Member]
         }
         else if (errorType.getOrElse("unknown") == "validationCodeIncorrect") {
-          println(s"===========================4")
           ValidationCodeIncorrect(createMember.code).raiseError[F, Member]
         } else {
-          println(s"===========================5")
-          Sync[F].raiseError(new Exception("asdfasdfasdf"))
+          Sync[F].raiseError(new Exception("Error occurred creating member. error type: Unknown"))
         }
       }
     }
@@ -87,7 +80,7 @@ object MemberRoutesSuite extends HttpSuite {
     cm <- createMemberGen()
   } yield (u, cm)
 
-  test("GET Member By User ID") {
+  test("GET Member By User ID - [SUCCESS]") {
 
     forall(gen) { case (user, member, memberWithTotal) =>
       for {
@@ -100,7 +93,7 @@ object MemberRoutesSuite extends HttpSuite {
     }
   }
 
-  test("Send Validation Code") {
+  test("Send Validation Code - [SUCCESS]") {
 
     forall(gen) { case (user, member, memberWithTotal) =>
       for {
@@ -113,7 +106,7 @@ object MemberRoutesSuite extends HttpSuite {
     }
   }
 
-  test("PUT Member") {
+  test("PUT Member - [SUCCESS]") {
     forall(genCreateMember) { case (user, member, createMember, memberWithTotal) =>
       val fileUrl: URL = getClass.getResource("/photo_2022-06-28_16-27-20.jpg")
       for {
@@ -138,31 +131,27 @@ object MemberRoutesSuite extends HttpSuite {
     }
   }
 
-//  test("PUT Member: File part isn't defined") {
-//    forall(genCreateMember) { case (user, member, createMember, memberWithTotal) =>
-//      val fileUrl: URL = getClass.getResource("")
-//      for {
-//        token <- authToken(user)
-//        formData =
-//          Vector(
-//            Part.formData[F]("firstname", createMember.firstname.value.value),
-//            Part.formData[F]("lastname", createMember.lastname.value.value),
-//            Part.formData[F]("phone", createMember.phone.value),
-//            Part.formData[F]("birthday", createMember.birthday.toString),
-//            Part.formData[F]("code", createMember.code.value)
-//          )
-//        fileData = Vector(
-//          Part.fileData("filename", fileUrl, `Content-Type`(MediaType.image.`png`))
-//        )
-//        multipart = Multipart[F](formData ++ fileData)
-//        req       = PUT(multipart, uri"/member").withHeaders(multipart.headers).putHeaders(token)
-//        routes    = new MemberRoutes[IO](memberService(member, memberWithTotal), s3Client()).routes(usersMiddleware)
-//        res <- expectHttpStatus(routes, req)(Status.BadRequest)
-//      } yield res
-//    }
-//  }
+  test("PUT Member: File part isn't defined - [FAIL]") {
+    forall(genCreateMember) { case (user, member, createMember, memberWithTotal) =>
+      for {
+        token <- authToken(user)
+        formData =
+          Vector(
+            Part.formData[F]("firstname", createMember.firstname.value.value),
+            Part.formData[F]("lastname", createMember.lastname.value.value),
+            Part.formData[F]("phone", createMember.phone.value),
+            Part.formData[F]("birthday", createMember.birthday.toString),
+            Part.formData[F]("code", createMember.code.value)
+          )
+        multipart = Multipart[F](formData)
+        req       = PUT(multipart, uri"/member").withHeaders(multipart.headers).putHeaders(token)
+        routes    = new MemberRoutes[IO](memberService(member, memberWithTotal, isCorrect = false), s3Client()).routes(usersMiddleware)
+        res <- expectHttpStatus(routes, req)(Status.BadRequest)
+      } yield res
+    }
+  }
 
-  test("PUT Member: Validation Code Incorrect") {
+  test("PUT Member: Validation Code Incorrect - [FAIL]") {
     forall(genCreateMember) { case (user, member, createMember, memberWithTotal) =>
       val fileUrl: URL = getClass.getResource("/photo_2022-06-28_16-27-20.jpg")
       for {
@@ -184,12 +173,12 @@ object MemberRoutesSuite extends HttpSuite {
           memberService(member, memberWithTotal, isCorrect = false, "validationCodeIncorrect".some),
           s3Client()
         ).routes(usersMiddleware)
-        res <- expectHttpStatus(routes, req)(Status.BadRequest)
+        res <- expectHttpStatus(routes, req)(Status.NotAcceptable)
       } yield res
     }
   }
 
-  test("PUT Member: Validation Code Expired") {
+  test("PUT Member: Validation Code Expired - [FAIL]") {
     forall(genCreateMember) { case (user, member, createMember, memberWithTotal) =>
       val fileUrl: URL = getClass.getResource("/photo_2022-06-28_16-27-20.jpg")
       for {
@@ -211,12 +200,12 @@ object MemberRoutesSuite extends HttpSuite {
           memberService(member, memberWithTotal, isCorrect = false, "validationCodeExpired".some),
           s3Client()
         ).routes(usersMiddleware)
-        res <- expectHttpStatus(routes, req)(Status.BadRequest)
+        res <- expectHttpStatus(routes, req)(Status.NotAcceptable)
       } yield res
     }
   }
 
-  test("PUT Member: Phone In Use") {
+  test("PUT Member: Phone In Use - [FAIL]") {
     forall(genCreateMember) { case (user, member, createMember, memberWithTotal) =>
       val fileUrl: URL = getClass.getResource("/photo_2022-06-28_16-27-20.jpg")
       for {
@@ -238,7 +227,7 @@ object MemberRoutesSuite extends HttpSuite {
           memberService(member, memberWithTotal, isCorrect = false, "phoneInUse".some),
           s3Client()
         ).routes(usersMiddleware)
-        res <- expectHttpStatus(routes, req)(Status.BadRequest)
+        res <- expectHttpStatus(routes, req)(Status.NotAcceptable)
       } yield res
     }
   }
