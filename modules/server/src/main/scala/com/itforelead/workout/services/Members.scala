@@ -91,15 +91,14 @@ object Members {
               ValidationCodeIncorrect(createMember.code).raiseError[F, Member]
             }
         } yield member
+
+      override def findActiveTimeShort: F[List[Member]] =
+        prepQueryList(selectExpiredMember, Void)
+
+      override def findMemberById(memberId: MemberId): F[Option[Member]] =
+        OptionT(prepOptQuery(selectMemberByIdSql, memberId)).value
+
+      override def updateActiveTime(memberId: MemberId, activeTime: LocalDateTime): F[Member] =
+        prepQueryUnique(changeActiveTimeSql, activeTime ~ memberId)
     }
-
-    override def findActiveTimeShort: F[List[Member]] =
-      prepQueryList(selectExpiredMember, Void)
-
-    override def findMemberById(memberId: MemberId): F[Option[Member]] =
-      OptionT(prepOptQuery(selectMemberByIdSql, memberId)).value
-
-    override def updateActiveTime(memberId: MemberId, activeTime: LocalDateTime): F[Member] =
-      prepQueryUnique(changeActiveTimeSql, activeTime ~ memberId)
-      }
 }

@@ -83,13 +83,12 @@ object MemberRoutesSuite extends HttpSuite {
     cm <- createMemberGen()
   } yield (u, cm)
 
-  test("GET Members") {
-
+  test("GET Members - [SUCCESS]") {
     forall(gen) { case (user, member, memberWithTotal) =>
       for {
         token <- authToken(user)
-        req    = GET(Uri.unsafeFromString(s"/member")).putHeaders(token)
-        routes = new MemberRoutes[IO](memberService(member, memberWithTotal), s3Client()).routes(usersMiddleware)
+        req    = GET(uri"/member").putHeaders(token)
+        routes = new MemberRoutes[IO](memberService(member, memberWithTotal, isCorrect = true), s3Client()).routes(usersMiddleware)
         res <- expectHttpStatus(routes, req)(Status.Ok)
       } yield res
     }
