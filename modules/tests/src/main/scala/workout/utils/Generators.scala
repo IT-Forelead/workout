@@ -80,7 +80,7 @@ object Generators {
 
   val priceGen: Gen[Money] = Gen.posNum[Long].map(n => UZS(BigDecimal(n)))
 
-  val totalGen: Gen[Long] = arbitrary[Long]
+  val validationGen: Gen[Validation] = phoneGen.map(Validation.apply)
 
   val userGen: Gen[User] =
     for {
@@ -121,7 +121,7 @@ object Generators {
   val memberWithTotalGen: Gen[MemberWithTotal] =
     for {
       m <- memberGen
-      t <- totalGen
+      t <- arbitrary[Long]
     } yield MemberWithTotal(List(m), t)
 
   def createMemberGen(phoneOpt: Option[Tel] = None): Gen[CreateMember] =

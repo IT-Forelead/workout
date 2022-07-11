@@ -4,8 +4,8 @@ import cats.implicits.toContravariantOps
 import cats.{Eq, Monoid, Show}
 import com.itforelead.workout.domain.types.UZS
 import dev.profunktor.auth.jwt.JwtToken
-import io.circe.{Decoder, Encoder}
-import io.circe.generic.semiauto.deriveEncoder
+import io.circe.generic.semiauto.deriveCodec
+import io.circe.{Codec, Decoder, Encoder}
 import squants.Money
 import squants.market.Currency
 import tsec.passwordhashers.PasswordHash
@@ -18,7 +18,7 @@ package object domain {
 
   implicit val tokenShow: Show[JwtToken] = Show[String].contramap[JwtToken](_.value)
 
-  implicit val tokenEncoder: Encoder[JwtToken] = deriveEncoder
+  implicit val tokenCodec: Codec[JwtToken] = deriveCodec
 
   implicit val javaTimeShow: Show[LocalDateTime] = Show[String].contramap[LocalDateTime](_.toString)
 
