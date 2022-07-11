@@ -38,6 +38,9 @@ object MemberSQL {
     val selectByPhone: Query[Tel, Member] =
       sql"""SELECT * FROM members WHERE phone = $tel AND deleted = false""".query(decoder)
 
+    val selectMembers: Query[UserId, Member] =
+      sql"""SELECT * FROM members WHERE user_id = $userId AND deleted = false""".query(decoder)
+
   val insertMember: Query[MemberId ~ UserId ~ CreateMember ~ LocalDateTime ~ FileKey, Member] =
     sql"""INSERT INTO members VALUES ($encoder) RETURNING *""".query(decoder)
 
