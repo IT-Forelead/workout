@@ -9,7 +9,7 @@ import eu.timepit.refined.string.{MatchesRegex, Uri, Url}
 package object refinements {
   private type EmailPred          = MatchesRegex["^[a-zA-Z0-9.-_]+@[a-zA-Z0-9]+\\.[a-zA-Z]+$"]
   private type PasswordPred       = MatchesRegex["^(?=.*[0-9])(?=.*[!@#$%^&*])(?=.*[A-Z])[a-zA-Z0-9!@#$%^&*]{6,32}$"]
-  private type FileNamePred       = MatchesRegex["^[\\w,\\s-]+\\.[A-Za-z0-z-]{1,}$"]
+  private type FileNamePred       = MatchesRegex["^[\\w,\\s-]+\\.+(png|jpg|jpeg|bmp|webp)"]
   private type TelNumberPred      = MatchesRegex["^[+][0-9]{12}$"]
   private type ValidationCodePred = MatchesRegex["^[0-9]{4}$"]
   private type BucketPred         = MatchesRegex["^[a-z0-9/.-]{3,63}$"]

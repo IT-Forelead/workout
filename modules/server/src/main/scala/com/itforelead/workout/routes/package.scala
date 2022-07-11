@@ -28,10 +28,7 @@ package object routes {
   implicit def deriveEntityDecoder[F[_]: Async, A: Decoder]: EntityDecoder[F, A] = jsonOf[F, A]
 
   def nameToContentType(filename: FileName): Option[`Content-Type`] =
-    filename.lastIndexOf('.') match {
-      case -1 => None
-      case i  => MediaType.forExtension(filename.value.substring(i + 1)).map(`Content-Type`(_))
-    }
+    MediaType.forExtension(filename.value.substring(filename.lastIndexOf('.') + 1)).map(`Content-Type`(_))
 
   implicit class RefinedRequestDecoder[F[_]: JsonDecoder: MonadThrow](req: Request[F]) extends Http4sDsl[F] {
 

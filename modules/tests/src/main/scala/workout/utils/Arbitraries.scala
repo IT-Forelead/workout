@@ -1,12 +1,11 @@
 package workout.utils
 
-import com.itforelead.workout.domain.{ArrivalType, DeliveryStatus, PaymentType}
 import com.itforelead.workout.domain.custom.refinements._
+import com.itforelead.workout.domain.{ArrivalType, DeliveryStatus, PaymentType}
 import eu.timepit.refined.types.string.NonEmptyString
-import org.http4s.MediaType
 import org.scalacheck.Gen._
 import org.scalacheck.{Arbitrary, Gen}
-import workout.utils.Generators.{nonEmptyStringGen, numberGen}
+import workout.utils.Generators.{fileType, nonEmptyStringGen, numberGen}
 
 import java.time.LocalDateTime
 
@@ -21,7 +20,7 @@ object Arbitraries {
   implicit lazy val arbFilePath: Arbitrary[FilePath] = Arbitrary(
     for {
       s1 <- uuid
-      s2 <- oneOf("png","jpg","jpeg","bmp","webp")
+      s2 <- fileType
     } yield FilePath.unsafeFrom(s"$s1.$s2")
   )
 
@@ -59,7 +58,7 @@ object Arbitraries {
   implicit lazy val arbFileName: Arbitrary[FileName] = Arbitrary(
     for {
       s0 <- nonEmptyStringGen(5, 30)
-      s1 <- oneOf(MediaType.allMediaTypes.flatMap(_.fileExtensions))
+      s1 <- fileType
     } yield FileName.unsafeFrom(s"$s0.$s1")
   )
 
