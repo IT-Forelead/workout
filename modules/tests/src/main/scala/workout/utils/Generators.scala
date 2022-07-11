@@ -118,12 +118,6 @@ object Generators {
       im <- filePathGen
     } yield Member(i, ui, fn, ln, ph, d, at, im)
 
-  val memberWithTotalGen: Gen[MemberWithTotal] =
-    for {
-      m <- memberGen
-      t <- arbitrary[Long]
-    } yield MemberWithTotal(List(m), t)
-
   def createMemberGen(phoneOpt: Option[Tel] = None): Gen[CreateMember] =
     for {
       fn <- firstNameGen
