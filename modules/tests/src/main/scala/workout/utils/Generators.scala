@@ -11,6 +11,7 @@ import com.itforelead.workout.domain.Arrival.CreateArrival
 import com.itforelead.workout.domain.Member.{CreateMember, MemberWithTotal}
 import com.itforelead.workout.domain.Message.CreateMessage
 import com.itforelead.workout.domain.Payment.CreatePayment
+import com.itforelead.workout.domain.UserSetting.UpdateSetting
 import eu.timepit.refined.types.string.NonEmptyString
 import org.scalacheck.Gen.{oneOf, option}
 import squants.Money
@@ -97,6 +98,13 @@ object Generators {
       dPrice <- priceGen
       mPrice <- priceGen
     } yield UserSetting(userId.getOrElse(ui), gName, dPrice, mPrice)
+
+  def updateSettingGen: Gen[UpdateSetting] =
+    for {
+      gName <- gymNameGen
+      dPrice <- priceGen
+      mPrice <- priceGen
+    } yield UpdateSetting(gName, dPrice, mPrice)
 
   val createUserGen: Gen[CreateUser] =
     for {

@@ -6,7 +6,7 @@ import com.itforelead.workout.services.{UserSettings, Users}
 import eu.timepit.refined.auto.autoUnwrap
 import tsec.passwordhashers.jca.SCrypt
 import workout.utils.DBSuite
-import workout.utils.Generators.{createUserGen, defaultUserId, userSettingGen}
+import workout.utils.Generators.{createUserGen, defaultUserId, updateSettingGen, userSettingGen}
 
 object UsersSuite extends DBSuite {
 
@@ -29,8 +29,8 @@ object UsersSuite extends DBSuite {
 
   test("Update user settings") { implicit postgres =>
     val userSettings = UserSettings[IO]
-    forall(userSettingGen(defaultUserId.some)) { userSetting =>
-      userSettings.updateSettings(userSetting).map(s => assert(s.userId == userSetting.userId))
+    forall(updateSettingGen) { setting =>
+      userSettings.updateSettings(defaultUserId, setting).map(s => assert(s.userId == defaultUserId))
     }
   }
 

@@ -3,6 +3,7 @@ package workout.http.routes
 import cats.effect.{IO, Sync}
 import cats.implicits._
 import com.itforelead.workout.domain.UserSetting
+import com.itforelead.workout.domain.UserSetting.UpdateSetting
 import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.routes.{UserRoutes, deriveEntityEncoder}
@@ -20,7 +21,7 @@ import scala.concurrent.duration.DurationInt
 object UserRoutesSuite extends HttpSuite {
   private def settings[F[_]: Sync: GenUUID](setting: UserSetting): UserSettingsMock[F] = new UserSettingsMock[F] {
     override def settings(userId: UserId): F[UserSetting]              = Sync[F].delay(setting)
-    override def updateSettings(settings: UserSetting): F[UserSetting] = Sync[F].delay(setting)
+    override def updateSettings(userId: UserId, settings: UpdateSetting): F[UserSetting] = Sync[F].delay(setting)
   }
 
   test("Update User Settings") {
