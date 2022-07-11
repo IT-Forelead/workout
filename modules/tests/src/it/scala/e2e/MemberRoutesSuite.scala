@@ -17,7 +17,7 @@ object MemberRoutesSuite extends ClientSuite {
         token <- loginReq.expectAs[JwtToken]
         result <- POST(validation, uri"/member/sent-code")
           .putHeaders(makeAuth(token))
-          .expectHttpStatus(Status.Created)
+          .expectHttpStatus(Status.Ok)
       } yield result
     }
   }

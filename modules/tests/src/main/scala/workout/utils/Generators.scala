@@ -36,6 +36,8 @@ object Generators {
 
   val defaultUserId: UserId = UserId(UUID.fromString("76c2c44c-8fbf-4184-9199-19303a042fa0"))
 
+  val defaultFileKey: FileKey = FileKey.unsafeFrom("e8bcab0c-ef16-45b5-842d-7ec35468195e.jpg")
+
   val userIdGen: Gen[UserId] = idGen(UserId.apply)
 
   val memberIdGen: Gen[MemberId] = idGen(MemberId.apply)
@@ -115,12 +117,6 @@ object Generators {
       at <- timestampGen
       im <- filePathGen
     } yield Member(i, ui, fn, ln, ph, d, at, im)
-
-  val memberWithTotalGen: Gen[MemberWithTotal] =
-    for {
-      m <- memberGen
-      t <- arbitrary[Long]
-    } yield MemberWithTotal(List(m), t)
 
   def createMemberGen(phoneOpt: Option[Tel] = None): Gen[CreateMember] =
     for {

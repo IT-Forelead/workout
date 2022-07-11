@@ -1,9 +1,11 @@
 package workout.stub_services
 
+import cats.effect.{Async, Sync}
 import com.amazonaws.services.s3.model.Bucket
 import com.itforelead.workout.domain.custom.refinements.FilePath
 import com.itforelead.workout.services.s3.S3Client
 import fs2.Pipe
+
 import java.net.URL
 
 class S3ClientMock[F[_]] extends S3Client[F] {
