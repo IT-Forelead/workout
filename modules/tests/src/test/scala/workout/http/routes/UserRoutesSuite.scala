@@ -26,7 +26,7 @@ object UserRoutesSuite extends HttpSuite {
   test("Update User Settings") {
     val gen = for {
       u <- userGen
-      s <- userSettingGen
+      s <- userSettingGen()
     } yield (u, s)
 
     forall(gen) { case (user, setting) =>
@@ -42,7 +42,7 @@ object UserRoutesSuite extends HttpSuite {
   test("GET User Settings By ID") {
     val gen = for {
       u <- userGen
-      s <- userSettingGen
+      s <- userSettingGen()
     } yield (u, s)
 
     forall(gen) { case (user, setting) =>

@@ -39,6 +39,9 @@ object MemberRoutesSuite extends HttpSuite {
     errorType: Option[String] = None
   ): MembersStub[F] =
     new MembersStub[F] {
+
+      override def get(userId: UserId): F[List[Member]] = Sync[F].delay(List(member))
+
       override def findMemberByPhone(phone: Tel): F[Option[Member]] = Sync[F].delay(Option(member))
 
       override def findByUserId(userId: UserId, page: Int): F[Member.MemberWithTotal] = Sync[F].delay(memberWithTotal)
@@ -79,6 +82,18 @@ object MemberRoutesSuite extends HttpSuite {
     u  <- userGen
     cm <- createMemberGen()
   } yield (u, cm)
+
+  test("GET Members") {
+
+    forall(gen) { case (user, member, memberWithTotal) =>
+      for {
+        token <- authToken(user)
+        req    = GET(Uri.unsafeFromString(s"/member")).putHeaders(token)
+        routes = new MemberRoutes[IO](memberService(member, memberWithTotal), s3Client()).routes(usersMiddleware)
+        res <- expectHttpStatus(routes, req)(Status.Ok)
+      } yield res
+    }
+  }
 
   test("GET Member By User ID - [SUCCESS]") {
 

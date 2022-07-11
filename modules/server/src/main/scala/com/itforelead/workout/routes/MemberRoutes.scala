@@ -47,6 +47,9 @@ final class MemberRoutes[F[_]: Async](members: Members[F], s3Client: S3Client[F]
     case GET -> Root / IntVar(page) as user =>
       members.findByUserId(user.id, page).flatMap(Ok(_))
 
+    case GET -> Root as user =>
+      members.get(user.id).flatMap(Ok(_))
+
     case aR @ POST -> Root / "sent-code" as user =>
       aR.req.decodeR[Validation] { validationPhone =>
         members.sendValidationCode(user.id, validationPhone.phone).flatMap(Ok(_))

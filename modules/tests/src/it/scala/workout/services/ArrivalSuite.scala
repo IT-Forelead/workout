@@ -20,8 +20,8 @@ object ArrivalSuite extends DBSuite {
             memberId = MemberId(UUID.fromString("99eb364c-f843-11ec-b939-0242ac120002"))
           )
         )
-        arrival2 <- arrivalService.get(arrival1.userId)
-      } yield assert(arrival2.contains(arrival1))
+        arrival2 <- arrivalService.get(defaultUserId)
+      } yield assert(arrival2.exists(_.arrival == arrival1))
     }
   }
 

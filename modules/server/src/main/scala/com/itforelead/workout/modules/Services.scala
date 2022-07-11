@@ -21,17 +21,16 @@ object Services {
     val messages      = Messages[F]
     val members       = Members[F](messageBroker, messages, redisClient)
     val userSetting   = UserSettings[F]
-    val payments      = Payments[F](userSetting)
 
     new Services[F](
       users = Users[F],
       members = members,
-      payments = payments,
+      payments = Payments[F](userSetting, members),
       arrivalService = ArrivalService[F],
       messages = messages,
       userSettings = userSetting,
       messageBroker = messageBroker,
-      notificationMessage = NotificationMessage.make[F](payments, messages, messageBroker, schedulerConfig)
+      notificationMessage = NotificationMessage.make[F](members, messages, messageBroker, schedulerConfig)
     )
   }
 }
