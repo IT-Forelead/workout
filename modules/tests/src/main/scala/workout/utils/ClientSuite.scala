@@ -4,36 +4,42 @@ import cats.effect.std.Supervisor
 import cats.effect.{Async, IO, Resource}
 import cats.implicits._
 import ciris.Secret
-import com.itforelead.workout.config.{AWSConfig, AppConfig, BrokerConfig, ConfigLoader}
+import com.itforelead.workout.config.{AppConfig, ConfigLoader}
+import com.itforelead.workout.domain
 import com.itforelead.workout.domain.AppEnv.TEST
+import com.itforelead.workout.domain.custom.refinements.{Password, Tel}
 import com.itforelead.workout.effects.Background
 import com.itforelead.workout.modules.{HttpApi, Security, Services}
 import com.itforelead.workout.resources.AppResources
-import com.itforelead.workout.services.redis.RedisClient
-import com.itforelead.workout.services.s3.S3Client
-import com.itforelead.workout.services.{Members, Payments, UserSettings}
+import com.itforelead.workout.routes.deriveEntityEncoder
+import dev.profunktor.auth.jwt.JwtToken
 import dev.profunktor.redis4cats.effect.Log.NoOp.instance
 import eu.timepit.refined.cats.refTypeShow
 import eu.timepit.refined.types.all.NonSystemPortNumber
 import eu.timepit.refined.types.string.NonEmptyString
+import org.http4s.Method.POST
 import org.http4s.client.Client
+import org.http4s.client.dsl.io._
+import org.http4s.headers.Authorization
+import org.http4s.implicits.http4sLiteralsSyntax
 import org.http4s.{Status, _}
 import skunk.Session
 import weaver.scalacheck.{CheckConfig, Checkers}
 import weaver.{Expectations, IOSuite}
 
-import java.net.http.HttpClient
-
 trait ClientSuite extends IOSuite with Checkers with Container {
   type Res = Client[IO]
   override def checkConfig: CheckConfig = customCheckConfig
+
+  val tel: Tel           = Tel.unsafeFrom("+998901234567")
+  val password: Password = Password.unsafeFrom("Secret1!")
 
   def application(config: AppConfig)(implicit ev: Background[IO]): Resource[IO, HttpApp[IO]] =
     AppResources[IO](config)
       .evalMap { res =>
         implicit val session: Resource[IO, Session[IO]] = res.postgres
 
-        val services     = Services[IO](config.messageBroker, config.scheduler, res.httpClient, res.redis)
+        val services = Services[IO](config.messageBroker, config.scheduler, res.httpClient, res.redis)
         Security[IO](config, services.users, res.redis).map { security =>
           HttpApi[IO](security, services, res.s3Client, res.redis, config.logConfig).httpApp
         }
@@ -63,6 +69,11 @@ trait ClientSuite extends IOSuite with Checkers with Container {
     } yield httpApp
 
   }
+
+  def loginReq: Request[IO] =
+    POST(domain.Credentials(tel, password), uri"/auth/login")
+
+  def makeAuth: JwtToken => Authorization = token => Authorization(Credentials.Token(AuthScheme.Bearer, token.value))
 
   override def sharedResource: Resource[IO, Res] =
     httpAppRes.map(Client.fromHttpApp[IO])

@@ -13,9 +13,8 @@ import org.http4s.circe.JsonDecoder
 import org.http4s.dsl.Http4sDsl
 import org.http4s.server.{AuthMiddleware, Router}
 import com.itforelead.workout.domain
-import com.itforelead.workout.domain.Member.CreateMember
 import com.itforelead.workout.domain.custom.exception.{InvalidPassword, PhoneInUse, UserNotFound}
-import com.itforelead.workout.domain.tokenEncoder
+import com.itforelead.workout.domain.tokenCodec
 
 final case class AuthRoutes[F[_]: Monad: JsonDecoder: MonadThrow](
   auth: Auth[F]
