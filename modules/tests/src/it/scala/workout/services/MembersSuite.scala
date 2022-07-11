@@ -82,4 +82,50 @@ object MembersSuite extends DBSuite {
     }
   }
 
+  test("Member by user id") { implicit postgres =>
+    val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
+    val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
+
+    val gen = for {
+      p <- phoneGen
+      m <- createMemberGen(p.some)
+    } yield (p, m)
+    forall(gen) { case (phone, createMember) =>
+      val fileKey = FileKey.unsafeFrom("e8bcab0c-ef16-45b5-842d-7ec35468195e.jpg")
+      for {
+        _              <- members.sendValidationCode(defaultUserId, phone)
+        validationCode <- RedisClient.get(phone.value)
+        _ <- members.validateAndCreate(
+          defaultUserId,
+          createMember.copy(code = ValidationCode.unsafeFrom(validationCode.get)),
+          fileKey
+        )
+        membersDB <- members.get(defaultUserId)
+      } yield assert(membersDB.nonEmpty)
+    }
+  }
+
+  test("Member by phone") { implicit postgres =>
+    val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
+    val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
+
+    val gen = for {
+      p <- phoneGen
+      m <- createMemberGen(p.some)
+    } yield (p, m)
+    forall(gen) { case (phone, createMember) =>
+      val fileKey = FileKey.unsafeFrom("e8bcab0c-ef16-45b5-842d-7ec35468195e.jpg")
+      for {
+        _              <- members.sendValidationCode(defaultUserId, phone)
+        validationCode <- RedisClient.get(phone.value)
+        _ <- members.validateAndCreate(
+          defaultUserId,
+          createMember.copy(code = ValidationCode.unsafeFrom(validationCode.get)),
+          fileKey
+        )
+        memberDB <- members.findMemberByPhone(phone)
+      } yield assert(memberDB.nonEmpty)
+    }
+  }
+
 }
