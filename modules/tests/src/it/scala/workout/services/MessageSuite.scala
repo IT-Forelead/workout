@@ -1,44 +1,77 @@
 package workout.services
 
 import cats.effect.IO
-import cats.implicits.catsSyntaxOptionId
-import com.itforelead.workout.domain.types.MemberId
-import com.itforelead.workout.services.Messages
+import cats.implicits.{catsSyntaxApplicativeError, catsSyntaxOptionId}
+import com.itforelead.workout.domain.custom.exception.MemberNotFound
+import com.itforelead.workout.domain.custom.refinements.{Tel, ValidationCode}
+import com.itforelead.workout.domain.types.{MemberId, MessageId}
+import com.itforelead.workout.services.{Members, MessageBroker, Messages}
+import workout.services.ArrivalSuite.{RedisClient, assert, failure, success}
 import workout.utils.DBSuite
-import workout.utils.Generators.{createMessageGen, defaultUserId, deliveryStatusGen}
+import workout.utils.Generators.{
+  createArrivalGen,
+  createMemberGen,
+  createMessageGen,
+  defaultFileKey,
+  defaultUserId,
+  deliveryStatusGen
+}
 
 import java.util.UUID
 
 object MessageSuite extends DBSuite {
 
   test("Create Message") { implicit postgres =>
-    val messages = Messages[IO]
-    forall(createMessageGen(defaultUserId.some)) { createMessage =>
+    val messages                         = Messages[IO]
+    val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
+    val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
+    val gen = for {
+      cm <- createMessageGen(defaultUserId.some)
+      m  <- createMemberGen()
+    } yield (cm, m)
+
+    forall(gen) { case (createMessage, createMember) =>
       for {
-        message1 <- messages.create(
-          createMessage.copy(
-            memberId = MemberId(UUID.fromString("99eb364c-f843-11ec-b939-0242ac120002")).some
-          )
-        )
+        _              <- members.sendValidationCode(defaultUserId, createMember.phone)
+        validationCode <- RedisClient.get(createMember.phone.value)
+        code = ValidationCode.unsafeFrom(validationCode.get)
+        member1  <- members.validateAndCreate(defaultUserId, createMember.copy(code = code), defaultFileKey)
+        message1 <- messages.create(createMessage.copy(memberId = member1.id.some))
         message2 <- messages.get(message1.userId)
       } yield assert(message2.exists(tc => tc.message.userId == message1.userId))
     }
   }
 
-  test("Change status") { implicit postgres =>
+  test("Create Message: Member Not Found") { implicit postgres =>
     val messages = Messages[IO]
-    val gen = for {
-      cm <- createMessageGen(defaultUserId.some)
-      s <- deliveryStatusGen
-    } yield cm -> s
+    forall(createMessageGen(defaultUserId.some)) { createMessage =>
+      (for {
+        _ <- messages.create(createMessage)
+      } yield failure(s"The test should return error")).recover {
+        case _: MemberNotFound.type => success
+        case error                  => failure(s"the test failed. $error")
+      }
+    }
+  }
 
-    forall(gen) { case createMessage -> statusGen =>
+  test("Change status") { implicit postgres =>
+    val messages                         = Messages[IO]
+    val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
+    val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
+
+    val gen = for {
+      m  <- createMemberGen()
+      cm <- createMessageGen(defaultUserId.some)
+      s  <- deliveryStatusGen
+    } yield (m, cm, s)
+
+    forall(gen) { case (createMember, createMessage, statusGen) =>
       for {
-        message1 <- messages.create(
-          createMessage.copy(
-            memberId = MemberId(UUID.fromString("99eb364c-f843-11ec-b939-0242ac120002")).some
-          )
-        )
+        _              <- members.sendValidationCode(defaultUserId, createMember.phone)
+        validationCode <- RedisClient.get(createMember.phone.value)
+        code = ValidationCode.unsafeFrom(validationCode.get)
+        member1  <- members.validateAndCreate(defaultUserId, createMember.copy(code = code), defaultFileKey)
+        message1 <- messages.create(createMessage.copy(memberId = member1.id.some))
         message2 <- messages.changeStatus(message1.id, statusGen)
       } yield assert(message2.deliveryStatus == statusGen)
     }
