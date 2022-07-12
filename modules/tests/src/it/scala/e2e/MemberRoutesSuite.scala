@@ -1,4 +1,5 @@
 package e2e
+
 import com.itforelead.workout.domain._
 import com.itforelead.workout.routes.{deriveEntityDecoder, deriveEntityEncoder}
 import dev.profunktor.auth.jwt.JwtToken
@@ -14,7 +15,7 @@ object MemberRoutesSuite extends ClientSuite {
   test("Member routes suite") { implicit resources =>
     forall(validationGen) { validation =>
       for {
-        token <- loginReq.expectAs[JwtToken]
+        token <- loginReq().expectAs[JwtToken]
         result <- POST(validation, uri"/member/sent-code")
           .putHeaders(makeAuth(token))
           .expectHttpStatus(Status.Ok)
