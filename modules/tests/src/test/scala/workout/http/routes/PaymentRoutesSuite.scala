@@ -1,7 +1,6 @@
 package workout.http.routes
 
 import cats.effect.{IO, Sync}
-import com.itforelead.workout.Application.logger
 import com.itforelead.workout.domain.Payment.{CreatePayment, PaymentWithMember}
 import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.domain.{Member, Payment}

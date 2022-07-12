@@ -2,14 +2,16 @@ package com.itforelead.workout
 
 import cats.implicits.toContravariantOps
 import cats.{Eq, Monoid, Show}
+import com.itforelead.workout.domain.Member.CreateMember
 import com.itforelead.workout.domain.types.UZS
 import dev.profunktor.auth.jwt.JwtToken
-import io.circe.generic.semiauto.deriveCodec
+import io.circe.generic.semiauto.{deriveCodec, deriveEncoder}
 import io.circe.{Codec, Decoder, Encoder}
 import squants.Money
 import squants.market.Currency
 import tsec.passwordhashers.PasswordHash
 import tsec.passwordhashers.jca.SCrypt
+import io.circe.refined._
 
 import java.time.{LocalDate, LocalDateTime}
 
@@ -44,4 +46,6 @@ package object domain {
   implicit val moneyEq: Eq[Money] = Eq.and(Eq.by(_.amount), Eq.by(_.currency))
 
   implicit val moneyShow: Show[Money] = Show.fromToString
+
+  implicit val encCreateMemberAsObject: Encoder.AsObject[CreateMember] = deriveEncoder[CreateMember]
 }

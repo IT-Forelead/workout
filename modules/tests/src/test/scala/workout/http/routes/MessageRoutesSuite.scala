@@ -17,10 +17,8 @@ import workout.utils.HttpSuite
 
 object MessageRoutesSuite extends HttpSuite {
   private def messages[F[_]: Sync: GenUUID](message: Message, member: Member): MessagesStub[F] = new MessagesStub[F] {
-//    override def create(msg: CreateMessage): F[Message] = Sync[F].delay(message)
     override def get(userId: UserId): F[List[MessageWithMember]] =
       Sync[F].delay(List(MessageWithMember(message, member.some)))
-//    override def changeStatus(id: types.MessageId, status: DeliveryStatus): F[Message] = Sync[F].delay(message)
   }
 
   test("GET Messages") {
@@ -39,22 +37,4 @@ object MessageRoutesSuite extends HttpSuite {
       } yield res
     }
   }
-
-//  test("CREATE Message") {
-//    val gen = for {
-//      u  <- userGen
-//      cm <- createMessageGen
-//      ms  <- messageGen
-//      m  <- memberGen
-//    } yield (u, cm, ms, m)
-//
-//    forall(gen) { case (user, createMessage, message, member) =>
-//      for {
-//        token <- authToken(user)
-//        req    = POST(createMessage, uri"/message").putHeaders(token)
-//        routes = new MessageRoutes[IO](messages(message, member)).routes(usersMiddleware)
-//        res <- expectHttpStatus(routes, req)(Status.Created)
-//      } yield res
-//    }
-//  }
 }

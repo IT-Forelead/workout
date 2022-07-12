@@ -2,13 +2,13 @@ package workout.http.routes
 
 import cats.effect.{IO, Sync}
 import cats.implicits.{catsSyntaxApplicativeErrorId, catsSyntaxOptionId}
-import com.itforelead.workout.Application.logger
 import com.itforelead.workout.domain.Member.{CreateMember, MemberWithTotal}
 import com.itforelead.workout.domain.custom.exception.{PhoneInUse, ValidationCodeExpired, ValidationCodeIncorrect}
 import com.itforelead.workout.domain.custom.refinements.{FileKey, FilePath, Tel}
 import com.itforelead.workout.domain.types.UserId
-import com.itforelead.workout.domain.{Member, User, Validation}
+import com.itforelead.workout.domain.{Member, User, Validation, encCreateMemberAsObject}
 import com.itforelead.workout.effects.GenUUID
+import com.itforelead.workout.implicits.GenericTypeOps
 import com.itforelead.workout.routes.{MemberRoutes, deriveEntityEncoder}
 import fs2.{Pipe, Stream}
 import io.circe.generic.auto.exportEncoder
@@ -122,16 +122,10 @@ object MemberRoutesSuite extends HttpSuite {
     forall(gen) { case (user, member, createMember) =>
       for {
         token <- authToken(user)
-        formData =
-          Vector(
-            Part.formData[F]("firstname", createMember.firstname.value.value),
-            Part.formData[F]("lastname", createMember.lastname.value.value),
-            Part.formData[F]("phone", createMember.phone.value),
-            Part.formData[F]("birthday", createMember.birthday.toString),
-            Part.formData[F]("code", createMember.code.value)
-          )
-        fileData  = fileUrl.map(url => Part.fileData("filename", url, `Content-Type`(MediaType.image.`png`))).toVector
-        multipart = Multipart[F](formData ++ fileData)
+        fileData = fileUrl.map { url =>
+          Part.fileData("filename", url, `Content-Type`(MediaType.image.`png`))
+        }.toVector
+        multipart = Multipart[F](createMember.toFormData[F] ++ fileData)
         req       = PUT(multipart, uri"/member").withHeaders(multipart.headers).putHeaders(token)
         routes = new MemberRoutes[IO](memberServiceS(member, errorType), s3Client)
           .routes(usersMiddleware)
