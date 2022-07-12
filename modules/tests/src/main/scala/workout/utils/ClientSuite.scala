@@ -1,6 +1,6 @@
 package workout.utils
 
-import cats.effect.std.Supervisor
+import cats.effect.std.{Console, Supervisor}
 import cats.effect.{Async, IO, Resource}
 import cats.implicits._
 import ciris.Secret
@@ -12,6 +12,7 @@ import com.itforelead.workout.effects.Background
 import com.itforelead.workout.modules.{HttpApi, Security, Services}
 import com.itforelead.workout.resources.AppResources
 import com.itforelead.workout.routes.deriveEntityEncoder
+import com.itforelead.workout.services.redis.RedisClient
 import dev.profunktor.auth.jwt.JwtToken
 import dev.profunktor.redis4cats.effect.Log.NoOp.instance
 import eu.timepit.refined.cats.refTypeShow
@@ -23,29 +24,33 @@ import org.http4s.client.dsl.io._
 import org.http4s.headers.Authorization
 import org.http4s.implicits.http4sLiteralsSyntax
 import org.http4s.{Status, _}
+import org.typelevel.log4cats.Logger
 import skunk.Session
 import weaver.scalacheck.{CheckConfig, Checkers}
 import weaver.{Expectations, IOSuite}
 
 trait ClientSuite extends IOSuite with Checkers with Container {
-  type Res = Client[IO]
+  case class Resources[F[_]](client: Client[F], redis: RedisClient[F])
+  type Res = Resources[IO]
   override def checkConfig: CheckConfig = customCheckConfig
 
   val tel: Tel           = Tel.unsafeFrom("+998901234567")
   val password: Password = Password.unsafeFrom("Secret1!")
 
-  def application(config: AppConfig)(implicit ev: Background[IO]): Resource[IO, HttpApp[IO]] =
-    AppResources[IO](config)
+  def application[F[_]: Async: Logger: Console](
+    config: AppConfig
+  )(implicit ev: Background[F]): Resource[F, (HttpApp[F], RedisClient[F])] =
+    AppResources[F](config)
       .evalMap { res =>
-        implicit val session: Resource[IO, Session[IO]] = res.postgres
+        implicit val session: Resource[F, Session[F]] = res.postgres
 
-        val services = Services[IO](config.messageBroker, config.scheduler, res.httpClient, res.redis)
-        Security[IO](config, services.users, res.redis).map { security =>
-          HttpApi[IO](security, services, res.s3Client, res.redis, config.logConfig).httpApp
+        val services = Services[F](config.messageBroker, config.scheduler, res.httpClient, res.redis)
+        Security[F](config, services.users, res.redis).map { security =>
+          HttpApi[F](security, services, res.s3Client, res.redis, config.logConfig).httpApp -> res.redis
         }
       }
 
-  private def httpAppRes: Resource[IO, HttpApp[IO]] = {
+  private def httpAppRes: Resource[IO, (HttpApp[IO], RedisClient[IO])] = {
     for {
       container <- dbResource
 
@@ -69,25 +74,26 @@ trait ClientSuite extends IOSuite with Checkers with Container {
     } yield httpApp
 
   }
-
   def loginReq: Request[IO] =
     POST(domain.Credentials(tel, password), uri"/auth/login")
 
   def makeAuth: JwtToken => Authorization = token => Authorization(Credentials.Token(AuthScheme.Bearer, token.value))
 
   override def sharedResource: Resource[IO, Res] =
-    httpAppRes.map(Client.fromHttpApp[IO])
+    httpAppRes.map { case httpApp -> redis =>
+      Resources(Client.fromHttpApp[IO](httpApp), redis)
+    }
 
   implicit class RequestOps[F[_]: Async](request: Request[F]) {
     def expectHttpStatus(status: Status)(implicit
-      client: Client[F]
+      res: Resources[F]
     ): F[Expectations] =
-      client.status(request).map { found =>
+      res.client.status(request).map { found =>
         expect.same(found, status)
       }
 
-    def expectAs[A](implicit client: Client[F], ev: EntityDecoder[F, A]): F[A] =
-      client.expect[A](request)
+    def expectAs[A](implicit res: Resources[F], ev: EntityDecoder[F, A]): F[A] =
+      res.client.expect[A](request)
   }
 
 }
