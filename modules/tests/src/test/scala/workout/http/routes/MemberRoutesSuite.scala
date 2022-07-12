@@ -94,18 +94,15 @@ object MemberRoutesSuite extends HttpSuite {
     errorType: Option[String] = None
   ): MembersStub[F] =
     new MembersStub[F] {
-      override def validateAndCreate(userId: UserId, createMember: CreateMember, key: FileKey): F[Member] =
-        if (errorType.isEmpty) {
-          Sync[F].delay(member)
-        } else if (errorType.contains("validationCodeExpired")) {
-          ValidationCodeExpired(createMember.phone).raiseError[F, Member]
-        } else if (errorType.contains("phoneInUse")) {
-          PhoneInUse(createMember.phone).raiseError[F, Member]
-        } else if (errorType.contains("validationCodeIncorrect")) {
-          ValidationCodeIncorrect(createMember.code).raiseError[F, Member]
-        } else {
-          Sync[F].raiseError(new Exception("Error occurred creating member. error type: Unknown"))
+      override def validateAndCreate(userId: UserId, createMember: CreateMember, key: FileKey): F[Member] = {
+        errorType match {
+          case None                      => Sync[F].delay(member)
+          case Some("validationCodeExpired")   => ValidationCodeExpired(createMember.phone).raiseError[F, Member]
+          case Some("phoneInUse")              => PhoneInUse(createMember.phone).raiseError[F, Member]
+          case Some("validationCodeIncorrect") => ValidationCodeIncorrect(createMember.code).raiseError[F, Member]
+          case _ => Sync[F].raiseError(new Exception("Error occurred creating member. error type: Unknown"))
         }
+      }
     }
 
   def putMemberRequest(
