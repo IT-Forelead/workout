@@ -2,6 +2,7 @@ package com.itforelead.workout.routes
 
 import cats.MonadThrow
 import cats.implicits.toFlatMapOps
+import com.itforelead.workout.domain.UserSetting.UpdateSetting
 import com.itforelead.workout.domain.{User, UserSetting}
 import com.itforelead.workout.services.UserSettings
 import org.http4s._
@@ -21,9 +22,9 @@ final class UserRoutes[F[_]: JsonDecoder: MonadThrow](settings: UserSettings[F])
     case GET -> Root / "settings" as user =>
       settings.settings(user.id).flatMap(Ok(_))
 
-    case ar @ PUT -> Root / "settings" as _ =>
-      ar.req.decodeR[UserSetting] { updateSettings =>
-        settings.updateSettings(updateSettings).flatMap(Ok(_))
+    case ar @ PUT -> Root / "settings" as user =>
+      ar.req.decodeR[UpdateSetting] { updateSettings =>
+        settings.updateSettings(user.id, updateSettings).flatMap(Ok(_))
       }
   }
 

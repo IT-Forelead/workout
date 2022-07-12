@@ -15,3 +15,12 @@ case class UserSetting(
   dailyPrice: Money,
   monthlyPrice: Money
 )
+
+object UserSetting {
+  @derive(decoder, encoder, show)
+  case class UpdateSetting(
+    gymName: GymName,
+    dailyPrice: Money,
+    monthlyPrice: Money
+  )
+}
