@@ -33,7 +33,7 @@ object MembersSuite extends DBSuite {
     }
   }
 
-  test("Create Member Phone In Use") { implicit postgres =>
+  test("Create Member: Phone In Use") { implicit postgres =>
     val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
     val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
 
@@ -62,7 +62,7 @@ object MembersSuite extends DBSuite {
     }
   }
 
-  test("Create Member Validation Code Incorrect") { implicit postgres =>
+  test("Create Member: Validation Code Incorrect") { implicit postgres =>
     val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
     val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
 
@@ -85,7 +85,7 @@ object MembersSuite extends DBSuite {
     }
   }
 
-  test("Create Member Validation Code Expired") { implicit postgres =>
+  test("Create Member: Validation Code Expired") { implicit postgres =>
     val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
     val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
 

@@ -38,7 +38,7 @@ object PaymentRoutesSuite extends HttpSuite {
     }
   }
 
-  test("CREATE Payment") {
+  test("POST Payment") {
     val gen = for {
       u  <- userGen
       m  <- memberGen

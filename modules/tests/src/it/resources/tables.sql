@@ -39,10 +39,6 @@ CREATE TABLE IF NOT EXISTS members(
     deleted         BOOLEAN        NOT NULL DEFAULT false
 );
 
-INSERT INTO "members" ("id", "user_id", "firstname", "lastname", "phone", "birthday", "active_time", "image", "deleted")
-VALUES ('99eb364c-f843-11ec-b939-0242ac120002', '76c2c44c-8fbf-4184-9199-19303a042fa0', 'test', 'test', '+998901234567',
-        '2022-06-30', '2022-07-08T05:19:30.175Z', 'e8bcab0c-ef16-45b5-842d-7ec35468195e.jpg', 'false');
-
 CREATE TABLE IF NOT EXISTS payments(
     id           UUID PRIMARY KEY,
     user_id      UUID         NOT NULL

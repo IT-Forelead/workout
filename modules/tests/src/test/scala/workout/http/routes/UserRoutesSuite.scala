@@ -24,7 +24,7 @@ object UserRoutesSuite extends HttpSuite {
     override def updateSettings(userId: UserId, settings: UpdateSetting): F[UserSetting] = Sync[F].delay(setting)
   }
 
-  test("Update User Settings") {
+  test("PUT User Settings") {
     val gen = for {
       u <- userGen
       s <- userSettingGen()
