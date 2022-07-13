@@ -21,23 +21,17 @@ import scala.util.Try
 
 package object sql {
 
-  def parseUUID: String => Either[String, UUID] = s =>
-    Try(Right(UUID.fromString(s))).getOrElse(Left(s"Invalid argument: [ $s ]"))
-
-  val _uuid: Codec[Arr[UUID]] = Codec.array(_.toString, parseUUID, Type._uuid)
-
-  val listUUID: Codec[List[UUID]] = _uuid.imap(_.flattenTo(List))(l => Arr(l: _*))
-
   def identity[A: IsUUID]: Codec[A] = uuid.imap[A](IsUUID[A]._UUID.get)(IsUUID[A]._UUID.apply)
 
-  val firstName: Codec[FirstName] = varchar.imap[FirstName](name => FirstName(NonEmptyString.unsafeFrom(name)))(_.value)
+  val nes: Codec[NonEmptyString] = varchar.imap[NonEmptyString](NonEmptyString.unsafeFrom)(_.value)
 
-  val lastName: Codec[LastName] = varchar.imap[LastName](name => LastName(NonEmptyString.unsafeFrom(name)))(_.value)
+  val firstName: Codec[FirstName] = nes.imap[FirstName](FirstName.apply)(_.value)
 
-  val messageText: Codec[MessageText] =
-    varchar.imap[MessageText](name => MessageText(NonEmptyString.unsafeFrom(name)))(_.value)
+  val lastName: Codec[LastName] = nes.imap[LastName](LastName.apply)(_.value)
 
-  val gymName: Codec[GymName] = varchar.imap[GymName](name => GymName(NonEmptyString.unsafeFrom(name)))(_.value)
+  val messageText: Codec[MessageText] = nes.imap[MessageText](MessageText.apply)(_.value)
+
+  val gymName: Codec[GymName] = nes.imap[GymName](GymName.apply)(_.value)
 
   val passwordHash: Codec[PasswordHash[SCrypt]] = varchar.imap[PasswordHash[SCrypt]](PasswordHash[SCrypt])(_.toString)
 

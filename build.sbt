@@ -6,20 +6,23 @@ lazy val projectSettings = Seq(
   organization := "IT-Forelead"
 )
 
-lazy val root = (project in file("."))
+lazy val root = project
+  .in(file("."))
+  .settings(projectSettings: _*)
   .settings(
     name := "workout"
   )
   .aggregate(server, tests)
 
-lazy val server = (project in file("modules/server"))
+lazy val server = project
+  .in(file("modules/server"))
   .enablePlugins(DockerPlugin)
   .enablePlugins(AshScriptPlugin)
   .settings(projectSettings: _*)
   .settings(
     name              := "workout",
     scalafmtOnCompile := true,
-    libraryDependencies ++= coreLibraries ++ s3Libraries,
+    libraryDependencies ++= coreLibraries,
     scalacOptions ++= CompilerOptions.cOptions,
     Test / compile / coverageEnabled    := true,
     Compile / compile / coverageEnabled := false
@@ -39,7 +42,7 @@ lazy val tests = project
     testFrameworks += new TestFramework("weaver.framework.CatsEffect"),
     Defaults.itSettings,
     scalacOptions ++= CompilerOptions.cOptions,
-    libraryDependencies ++= testLibraries ++ s3Libraries,
+    libraryDependencies ++= testLibraries,
     scalacOptions ++= CompilerOptions.cOptions
   )
   .dependsOn(server)
