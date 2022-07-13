@@ -185,15 +185,9 @@ object Generators {
       ca <- timestampGen
     } yield Payment(i, ui, mi, pt, p, ca)
 
-  val paymentMemberIdGen: Gen[PaymentMemberId] =
-    for {
-      mi <- memberIdGen
-    } yield PaymentMemberId(mi)
+  val paymentMemberIdGen: Gen[PaymentMemberId] = memberIdGen.map(PaymentMemberId.apply)
 
-  val arrivalMemberIdGen: Gen[ArrivalMemberId] =
-    for {
-      mi <- memberIdGen
-    } yield ArrivalMemberId(mi)
+  val arrivalMemberIdGen: Gen[ArrivalMemberId] = memberIdGen.map(ArrivalMemberId.apply)
 
   val createPaymentGen: Gen[CreatePayment] =
     for {
