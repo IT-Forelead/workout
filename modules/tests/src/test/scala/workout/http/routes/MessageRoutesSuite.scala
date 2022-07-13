@@ -2,7 +2,7 @@ package workout.http.routes
 
 import cats.effect.{IO, Sync}
 import cats.implicits.catsSyntaxOptionId
-import com.itforelead.workout.domain.Message.MessageWithMember
+import com.itforelead.workout.domain.Message.{MessageWithMember, MessageWithTotal}
 import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.domain.{Member, Message}
 import com.itforelead.workout.effects.GenUUID
@@ -19,6 +19,8 @@ object MessageRoutesSuite extends HttpSuite {
   private def messages[F[_]: Sync: GenUUID](message: Message, member: Member): MessagesStub[F] = new MessagesStub[F] {
     override def get(userId: UserId): F[List[MessageWithMember]] =
       Sync[F].delay(List(MessageWithMember(message, member.some)))
+    override def getMessagesWithTotal(userId: UserId, page: Int): F[MessageWithTotal] =
+      Sync[F].delay(MessageWithTotal(List(MessageWithMember(message, member.some)), 1))
   }
 
   test("GET Messages") {
@@ -37,4 +39,22 @@ object MessageRoutesSuite extends HttpSuite {
       } yield res
     }
   }
+
+  test("GET Messages pagenation") {
+    val gen = for {
+      u  <- userGen
+      ms <- messageGen
+      m  <- memberGen
+    } yield (u, ms, m)
+
+    forall(gen) { case (user, message, member) =>
+      for {
+        token <- authToken(user)
+        req = GET(uri"/message/1").putHeaders(token)
+        routes = new MessageRoutes[IO](messages(message, member)).routes(usersMiddleware)
+        res <- expectHttpBodyAndStatus(routes, req)(MessageWithTotal(List(MessageWithMember(message, member.some)), 1), Status.Ok)
+      } yield res
+    }
+  }
+
 }

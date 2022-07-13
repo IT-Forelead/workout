@@ -24,6 +24,9 @@ final class ArrivalRoutes[F[_]: JsonDecoder: MonadThrow](arrivalService: Arrival
     case GET -> Root as user =>
       arrivalService.get(user.id).flatMap(Ok(_))
 
+    case GET -> Root / IntVar(page) as user =>
+      arrivalService.getArrivalWithTotal(user.id, page).flatMap(Ok(_))
+
     case ar @ POST -> Root as user =>
       ar.req
         .decodeR[CreateArrival] { form =>

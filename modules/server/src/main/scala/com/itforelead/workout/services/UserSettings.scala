@@ -5,7 +5,7 @@ import com.itforelead.workout.domain.UserSetting
 import com.itforelead.workout.domain.UserSetting.UpdateSetting
 import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.effects.GenUUID
-import com.itforelead.workout.services.sql.UserSettingsSQL.{selectSettings, updateUserSettings}
+import com.itforelead.workout.services.sql.UserSettingsSQL._
 import skunk.Session
 
 trait UserSettings[F[_]] {
