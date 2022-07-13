@@ -2,7 +2,7 @@ package workout.http.routes
 
 import cats.effect.{IO, Sync}
 import cats.implicits.catsSyntaxOptionId
-import com.itforelead.workout.domain.Message.MessageWithMember
+import com.itforelead.workout.domain.Message.{MessageWithMember, MessageWithTotal}
 import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.domain.{Member, Message}
 import com.itforelead.workout.effects.GenUUID
@@ -20,6 +20,9 @@ object MessageRoutesSuite extends HttpSuite {
 //    override def create(msg: CreateMessage): F[Message] = Sync[F].delay(message)
     override def get(userId: UserId): F[List[MessageWithMember]] =
       Sync[F].delay(List(MessageWithMember(message, member.some)))
+
+    override def getMessagesWithTotal(userId: UserId, page: Int): F[MessageWithTotal] =
+      Sync[F].delay(MessageWithTotal(List(MessageWithMember(message, member.some)), 1))
 //    override def changeStatus(id: types.MessageId, status: DeliveryStatus): F[Message] = Sync[F].delay(message)
   }
 
@@ -36,6 +39,23 @@ object MessageRoutesSuite extends HttpSuite {
         req    = GET(uri"/message").putHeaders(token)
         routes = new MessageRoutes[IO](messages(message, member)).routes(usersMiddleware)
         res <- expectHttpStatus(routes, req)(Status.Ok)
+      } yield res
+    }
+  }
+
+  test("GET Messages pagenation") {
+    val gen = for {
+      u  <- userGen
+      ms <- messageGen
+      m  <- memberGen
+    } yield (u, ms, m)
+
+    forall(gen) { case (user, message, member) =>
+      for {
+        token <- authToken(user)
+        req = GET(uri"/message/1").putHeaders(token)
+        routes = new MessageRoutes[IO](messages(message, member)).routes(usersMiddleware)
+        res <- expectHttpBodyAndStatus(routes, req)(MessageWithTotal(List(MessageWithMember(message, member.some)), 1), Status.Ok)
       } yield res
     }
   }
