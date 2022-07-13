@@ -14,7 +14,7 @@ object UserRoutesSuite extends ClientSuite {
 
   test("User settings by id") { implicit client =>
     for {
-      token <- loginReq().expectAs[JwtToken]
+      token <- loginReq.expectAs[JwtToken]
       result <- GET(uri"/user/settings")
         .putHeaders(makeAuth(token))
         .expectHttpStatus(Status.Ok)
@@ -24,7 +24,7 @@ object UserRoutesSuite extends ClientSuite {
   test("Update user settings") { implicit client =>
     forall(updateSettingGen) { settings =>
       for {
-        token <- loginReq().expectAs[JwtToken]
+        token <- loginReq.expectAs[JwtToken]
         result <- PUT(settings, uri"/user/settings")
           .putHeaders(makeAuth(token))
           .expectHttpStatus(Status.Ok)

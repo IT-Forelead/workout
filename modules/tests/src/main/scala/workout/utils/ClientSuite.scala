@@ -34,8 +34,8 @@ trait ClientSuite extends IOSuite with Checkers with Container {
   type Res = Resources[IO]
   override def checkConfig: CheckConfig = customCheckConfig
 
-  val tel1: Tel           = Tel.unsafeFrom("+998901234567")
-  val password1: Password = Password.unsafeFrom("Secret1!")
+  val tel: Tel           = Tel.unsafeFrom("+998901234567")
+  val password: Password = Password.unsafeFrom("Secret1!")
 
   def application[F[_]: Async: Logger: Console](
     config: AppConfig
@@ -74,8 +74,8 @@ trait ClientSuite extends IOSuite with Checkers with Container {
     } yield httpApp
 
   }
-  def loginReq(phone: Option[Tel] = None, pass: Option[Password] = None): Request[IO] =
-    POST(domain.Credentials(phone.getOrElse(tel1), pass.getOrElse(password1)), uri"/auth/login")
+  def loginReq: Request[IO] =
+    POST(domain.Credentials(tel, password), uri"/auth/login")
 
   def makeAuth: JwtToken => Authorization = token => Authorization(Credentials.Token(AuthScheme.Bearer, token.value))
 

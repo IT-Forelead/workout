@@ -4,7 +4,7 @@ import cats.MonadThrow
 import cats.implicits._
 import com.itforelead.workout.domain.Payment.CreatePayment
 import com.itforelead.workout.domain.User
-import com.itforelead.workout.domain.custom.exception.MemberCurrentActiveTime
+import com.itforelead.workout.domain.custom.exception.{MemberCurrentActiveTime, MemberNotFound}
 import com.itforelead.workout.services.Payments
 import org.http4s._
 import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
@@ -32,6 +32,9 @@ final class PaymentRoutes[F[_]: JsonDecoder: MonadThrow](payments: Payments[F])(
           case userAccessError: MemberCurrentActiveTime.type =>
             logger.error(s"This user has access to the GYM.") >>
               Response[F](status = MethodNotAllowed).withEntity("This user has access to the GYM.").pure[F]
+          case notFoundMember: MemberNotFound.type =>
+            logger.error(s"This member not found from DB.") >>
+              Response[F](status = BadRequest).withEntity("This member not found from DB.").pure[F]
           case error =>
             logger.error(error)("Error occurred creating payment!") >>
               BadRequest("Error occurred creating payment. Please try again!")

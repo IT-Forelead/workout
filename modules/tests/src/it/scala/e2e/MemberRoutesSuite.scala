@@ -15,7 +15,7 @@ object MemberRoutesSuite extends ClientSuite {
   test("Member routes suite") { implicit resources =>
     forall(validationGen) { validation =>
       for {
-        token <- loginReq().expectAs[JwtToken]
+        token <- loginReq.expectAs[JwtToken]
         result <- POST(validation, uri"/member/sent-code")
           .putHeaders(makeAuth(token))
           .expectHttpStatus(Status.Ok)
