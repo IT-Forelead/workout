@@ -6,7 +6,7 @@ import com.itforelead.workout.domain.types._
 import com.itforelead.workout.services.sql.MemberSQL.memberId
 import com.itforelead.workout.services.sql.UserSQL.userId
 import skunk._
-import skunk.codec.all.{bool, timestamp}
+import skunk.codec.all.{bool, int8, timestamp}
 import skunk.implicits._
 
 object ArrivalSQL {
@@ -26,6 +26,17 @@ object ArrivalSQL {
     (decoder ~ MemberSQL.decoder).map { case arrival ~ member =>
       ArrivalWithMember(arrival, member)
     }
+
+  def selectArrivalWithTotal(id: UserId, page: Int): AppliedFragment = {
+    val filterByUserID: AppliedFragment =
+      sql"""SELECT arrival_event.*, members.* FROM arrival_event
+            INNER JOIN members ON members.id = arrival_event.member_id
+           WHERE arrival_event.user_id = $userId AND arrival_event.deleted = false""".apply(id)
+    filterByUserID.paginate(10, page)
+  }
+
+  val total: Query[UserId, Long] =
+    sql"""SELECT count(*) FROM arrival_event WHERE user_id = $userId AND deleted = false""".query(int8)
 
   val selectSql: Query[UserId, ArrivalWithMember] =
     sql"""SELECT arrival_event.*, members.* FROM arrival_event

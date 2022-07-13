@@ -28,4 +28,10 @@ object Arrival {
     arrival: Arrival,
     member: Member
   )
+
+  @derive(decoder, encoder, show)
+  case class ArrivalWithTotal(
+    arrival: List[ArrivalWithMember],
+    total: Long
+  )
 }
