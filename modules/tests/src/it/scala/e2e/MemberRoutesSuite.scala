@@ -11,7 +11,7 @@ import workout.utils.Generators.validationGen
 
 object MemberRoutesSuite extends ClientSuite {
 
-  test("Send Code E2E") { implicit client =>
+  test("Send Code E2E") { implicit resources =>
     forall(validationGen) { validation =>
       for {
         token <- loginReq.expectAs[JwtToken]
