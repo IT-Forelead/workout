@@ -26,6 +26,8 @@ object Payment {
     memberId: MemberId,
     paymentType: PaymentType
   )
+  @derive(decoder, encoder, show)
+  case class PaymentMemberId(memberId: MemberId)
 
   @derive(decoder, encoder, show)
   case class PaymentWithMember(

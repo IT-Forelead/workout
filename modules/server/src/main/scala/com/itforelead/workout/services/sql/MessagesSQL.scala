@@ -33,12 +33,12 @@ object MessagesSQL {
     val filterByUserID: AppliedFragment =
       sql"""SELECT messages.*, members.* FROM messages
            LEFT JOIN members ON members.id = messages.member_id
-           WHERE user_id = $userId""".apply(id)
+           WHERE messages.user_id = $userId""".apply(id)
     filterByUserID.paginate(10, page)
   }
 
   val total: Query[UserId, Long] =
-    sql"""SELECT count(*) FROM messages WHERE user_id = $userId AND""".query(int8)
+    sql"""SELECT count(*) FROM messages WHERE user_id = $userId""".query(int8)
 
   val insertMessage: Query[Message, Message] =
     sql"""INSERT INTO messages VALUES ($encoder) RETURNING *""".query(decoder)

@@ -7,10 +7,10 @@ import com.itforelead.workout.domain.types._
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 import Arbitraries._
-import com.itforelead.workout.domain.Arrival.CreateArrival
+import com.itforelead.workout.domain.Arrival.{ArrivalMemberId, CreateArrival}
 import com.itforelead.workout.domain.Member.{CreateMember, MemberWithTotal}
 import com.itforelead.workout.domain.Message.CreateMessage
-import com.itforelead.workout.domain.Payment.CreatePayment
+import com.itforelead.workout.domain.Payment.{CreatePayment, PaymentMemberId}
 import com.itforelead.workout.domain.UserSetting.UpdateSetting
 import eu.timepit.refined.types.string.NonEmptyString
 import org.scalacheck.Gen.{oneOf, option}
@@ -184,6 +184,16 @@ object Generators {
       p  <- priceGen
       ca <- timestampGen
     } yield Payment(i, ui, mi, pt, p, ca)
+
+  val paymentMemberIdGen: Gen[PaymentMemberId] =
+    for {
+      mi <- memberIdGen
+    } yield PaymentMemberId(mi)
+
+  val arrivalMemberIdGen: Gen[ArrivalMemberId] =
+    for {
+      mi <- memberIdGen
+    } yield ArrivalMemberId(mi)
 
   val createPaymentGen: Gen[CreatePayment] =
     for {

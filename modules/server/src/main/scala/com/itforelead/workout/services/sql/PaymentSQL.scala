@@ -2,8 +2,9 @@ package com.itforelead.workout.services.sql
 
 import com.itforelead.workout.domain.Payment
 import com.itforelead.workout.domain.Payment.PaymentWithMember
-import com.itforelead.workout.domain.types.{PaymentId, UserId}
+import com.itforelead.workout.domain.types.{MemberId, PaymentId, UserId}
 import com.itforelead.workout.domain.{Member, Payment}
+import com.itforelead.workout.services.sql.MemberSQL.memberId
 import com.itforelead.workout.services.sql.UserSQL.userId
 import skunk._
 import skunk.codec.all.{bool, timestamp}
@@ -37,5 +38,9 @@ object PaymentSQL {
         INNER JOIN members ON members.id = payments.member_id
         WHERE payments.user_id = $userId AND payments.deleted = false
        """.query(decPaymentWithMember)
+
+  val selectPaymentByMemberId: Query[UserId ~ MemberId, Payment] =
+    sql"""SELECT * FROM payments
+         WHERE user_id = $userId AND member_id = $memberId AND deleted = false""".query(decoder)
 
 }

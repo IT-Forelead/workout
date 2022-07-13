@@ -5,18 +5,20 @@ import cats.effect.{Resource, Sync}
 import com.itforelead.workout.domain.{ID, Payment}
 import com.itforelead.workout.domain.Payment.{CreatePayment, PaymentWithMember}
 import com.itforelead.workout.domain.custom.exception.{MemberCurrentActiveTime, MemberNotFound}
-import com.itforelead.workout.domain.types.{PaymentId, UserId}
+import com.itforelead.workout.domain.types.{MemberId, PaymentId, UserId}
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.services.sql.PaymentSQL._
 import cats.syntax.all._
 import com.itforelead.workout.domain.PaymentType.{DAILY, MONTHLY}
 import com.itforelead.workout.implicits.LocalDateTimeOps
 import skunk._
+import skunk.implicits.toIdOps
 
 import java.time.LocalDateTime
 
 trait Payments[F[_]] {
   def payments(userId: UserId): F[List[PaymentWithMember]]
+  def getPaymentByMemberId(userId: UserId, memberId: MemberId): F[List[Payment]]
   def create(userId: UserId, payment: CreatePayment): F[Payment]
 }
 
@@ -73,6 +75,9 @@ object Payments {
 
     override def payments(userId: UserId): F[List[PaymentWithMember]] =
       prepQueryList(selectAll, userId)
+
+    override def getPaymentByMemberId(userId: UserId, memberId: MemberId): F[List[Payment]] =
+      prepQueryList(selectPaymentByMemberId, userId ~ memberId)
 
   }
 }

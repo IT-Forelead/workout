@@ -34,4 +34,7 @@ object Arrival {
     arrival: List[ArrivalWithMember],
     total: Long
   )
+
+  @derive(decoder, encoder, show)
+  case class ArrivalMemberId(memberId: MemberId)
 }

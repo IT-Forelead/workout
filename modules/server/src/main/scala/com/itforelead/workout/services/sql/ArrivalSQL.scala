@@ -46,4 +46,8 @@ object ArrivalSQL {
   val insertSql: Query[Arrival, Arrival] =
     sql"""INSERT INTO arrival_event VALUES ($encoder) RETURNING *""".query(decoder)
 
+  val selectArrivalByMemberId: Query[UserId ~ MemberId, Arrival] =
+    sql"""SELECT * FROM arrival_event
+         WHERE user_id = $userId AND member_id = $memberId AND deleted = false""".query(decoder)
+
 }
