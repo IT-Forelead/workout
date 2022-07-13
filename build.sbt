@@ -14,14 +14,18 @@ lazy val root = project
   )
   .aggregate(server, tests)
 
-lazy val server = (project in file("modules/server"))
+lazy val server = project
+  .in(file("modules/server"))
   .enablePlugins(DockerPlugin)
   .enablePlugins(AshScriptPlugin)
   .settings(projectSettings: _*)
   .settings(
-    Docker / packageName := "workout",
-    dockerBaseImage      := "openjdk:11-jre-slim-buster",
-    dockerUpdateLatest   := true
+    name              := "workout",
+    scalafmtOnCompile := true,
+    libraryDependencies ++= coreLibraries,
+    scalacOptions ++= CompilerOptions.cOptions,
+    Test / compile / coverageEnabled    := true,
+    Compile / compile / coverageEnabled := false
   )
   .settings(
     Docker / packageName := "workout",
