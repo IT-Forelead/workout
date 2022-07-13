@@ -1,7 +1,7 @@
 package e2e
 
 import cats.implicits.catsSyntaxOptionId
-import com.itforelead.workout.domain.Payment.{CreatePayment, PaymentWithMember}
+import com.itforelead.workout.domain.Payment.CreatePayment
 import com.itforelead.workout.domain._
 import com.itforelead.workout.domain.custom.refinements.ValidationCode
 import com.itforelead.workout.domain.types.MemberId
@@ -9,11 +9,11 @@ import com.itforelead.workout.implicits.GenericTypeOps
 import com.itforelead.workout.routes.{deriveEntityDecoder, deriveEntityEncoder}
 import dev.profunktor.auth.jwt.JwtToken
 import org.http4s.Method.{GET, POST, PUT}
-import org.http4s.{MediaType, Status}
 import org.http4s.client.dsl.io._
 import org.http4s.headers.`Content-Type`
 import org.http4s.implicits._
 import org.http4s.multipart.{Multipart, Part}
+import org.http4s.{MediaType, Status}
 import weaver.Expectations
 import workout.utils.ClientSuite
 import workout.utils.Generators.createMemberGen
@@ -23,7 +23,7 @@ import java.util.UUID
 
 object PaymentRoutesSuite extends ClientSuite {
 
-  val fileUrl: URL = getClass.getResource("/photo_2022-06-28_16-27-20.jpg")
+  val fileUrl: Option[URL] = Option(getClass.getResource("/photo_2022-06-28_16-27-20.jpg"))
 
   def createPaymentRequest(
     shouldReturn: Status,
@@ -34,7 +34,6 @@ object PaymentRoutesSuite extends ClientSuite {
       for {
         token <- loginReq.expectAs[JwtToken]
         _     <- POST(Validation(createMember.phone), uri"/member/sent-code").putHeaders(makeAuth(token)).expectAs[Unit]
-        fileUrl: Option[URL] = Option(getClass.getResource("/photo_2022-06-28_16-27-20.jpg"))
         fileData = fileUrl.map { url =>
           Part.fileData("filename", url, `Content-Type`(MediaType.image.`jpeg`))
         }.toVector
@@ -67,24 +66,11 @@ object PaymentRoutesSuite extends ClientSuite {
   }
 
   test("Get payments by userId") { implicit client =>
-    forall(createMemberGen()) { createMember =>
-      for {
-        token <- loginReq.expectAs[JwtToken]
-        _     <- POST(Validation(createMember.phone), uri"/member/sent-code").putHeaders(makeAuth(token)).expectAs[Unit]
-        fileUrl: Option[URL] = Option(getClass.getResource("/photo_2022-06-28_16-27-20.jpg"))
-        fileData = fileUrl.map { url =>
-          Part.fileData("filename", url, `Content-Type`(MediaType.image.`jpeg`))
-        }.toVector
-        code <- client.redis.get(createMember.phone.value)
-        member    = createMember.copy(code = ValidationCode.unsafeFrom(code.get))
-        multipart = Multipart[F](member.toFormData[F] ++ fileData)
-        _ <- PUT(multipart, uri"/member")
-          .withHeaders(multipart.headers)
-          .putHeaders(makeAuth(token))
-          .expectAs[Unit]
-        result <- GET(uri"/payment").putHeaders(makeAuth(token)).expectHttpStatus(Status.Ok)
-      } yield result
-    }
+    for {
+      token  <- loginReq.expectAs[JwtToken]
+      result <- GET(uri"/payment").putHeaders(makeAuth(token)).expectHttpStatus(Status.Ok)
+    } yield result
+
   }
 
 }

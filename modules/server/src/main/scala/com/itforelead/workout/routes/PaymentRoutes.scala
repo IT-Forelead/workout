@@ -29,12 +29,12 @@ final class PaymentRoutes[F[_]: JsonDecoder: MonadThrow](payments: Payments[F])(
           payments.create(user.id, createPayment).flatMap(Created(_))
         }
         .recoverWith {
-          case userAccessError: MemberCurrentActiveTime.type =>
+          case _: MemberCurrentActiveTime.type =>
             logger.error(s"This user has access to the GYM.") >>
               Response[F](status = MethodNotAllowed).withEntity("This user has access to the GYM.").pure[F]
-          case notFoundMember: MemberNotFound.type =>
+          case _: MemberNotFound.type =>
             logger.error(s"This member not found from DB.") >>
-              Response[F](status = BadRequest).withEntity("This member not found from DB.").pure[F]
+              BadRequest("This member not found from DB.")
           case error =>
             logger.error(error)("Error occurred creating payment!") >>
               BadRequest("Error occurred creating payment. Please try again!")
