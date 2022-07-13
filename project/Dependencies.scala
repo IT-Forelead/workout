@@ -116,7 +116,7 @@ object Dependencies {
   val s3Libraries: Seq[ModuleID] = Seq(awsCore, awsS3, awsSoftwareS3)
 
   val coreLibraries: Seq[ModuleID] =
-    catsLibs ++ cirisLibs ++ circeLibs ++ skunkLibs ++ http4sLibs ++ logLibs ++ derevoLibs ++
+    catsLibs ++ cirisLibs ++ circeLibs ++ skunkLibs ++ http4sLibs ++ logLibs ++ derevoLibs ++ s3Libraries ++
       Seq(
         fs2,
         refinedType,
@@ -131,7 +131,7 @@ object Dependencies {
         squants
       )
 
-  val testLibraries: Seq[ModuleID] = Seq(
+  val testLibraries: Seq[ModuleID] = s3Libraries ++ Seq(
     log4catsNoOp,
     refinedScalacheck,
     weaverCats,

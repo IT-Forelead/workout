@@ -6,7 +6,9 @@ lazy val projectSettings = Seq(
   organization := "IT-Forelead"
 )
 
-lazy val root = (project in file("."))
+lazy val root = project
+  .in(file("."))
+  .settings(projectSettings: _*)
   .settings(
     name := "workout"
   )
@@ -17,12 +19,9 @@ lazy val server = (project in file("modules/server"))
   .enablePlugins(AshScriptPlugin)
   .settings(projectSettings: _*)
   .settings(
-    name              := "workout",
-    scalafmtOnCompile := true,
-    libraryDependencies ++= coreLibraries ++ s3Libraries,
-    scalacOptions ++= CompilerOptions.cOptions,
-    Test / compile / coverageEnabled    := true,
-    Compile / compile / coverageEnabled := false
+    Docker / packageName := "workout",
+    dockerBaseImage      := "openjdk:11-jre-slim-buster",
+    dockerUpdateLatest   := true
   )
   .settings(
     Docker / packageName := "workout",
@@ -39,7 +38,7 @@ lazy val tests = project
     testFrameworks += new TestFramework("weaver.framework.CatsEffect"),
     Defaults.itSettings,
     scalacOptions ++= CompilerOptions.cOptions,
-    libraryDependencies ++= testLibraries ++ s3Libraries,
+    libraryDependencies ++= testLibraries,
     scalacOptions ++= CompilerOptions.cOptions
   )
   .dependsOn(server)

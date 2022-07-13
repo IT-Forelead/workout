@@ -1,7 +1,6 @@
 package com.itforelead.workout.routes
 
 import cats.data.NonEmptyList
-import cats.effect.Sync
 import cats.effect.kernel.Async
 import cats.implicits._
 import com.itforelead.workout.domain.Member.CreateMember
@@ -9,7 +8,7 @@ import com.itforelead.workout.domain.custom.exception._
 import com.itforelead.workout.domain.custom.refinements.{FileKey, FileName, FilePath}
 import com.itforelead.workout.domain.{User, Validation}
 import com.itforelead.workout.implicits.PartOps
-import com.itforelead.workout.services.{Auth, Members}
+import com.itforelead.workout.services.Members
 import com.itforelead.workout.services.s3.S3Client
 import org.http4s._
 import org.http4s.dsl.Http4sDsl
@@ -17,18 +16,6 @@ import org.http4s.headers.`Transfer-Encoding`
 import org.http4s.multipart.Multipart
 import org.http4s.server.{AuthMiddleware, Router}
 import org.typelevel.log4cats.Logger
-
-object MemberRoutes {
-  val prefixPath = "/client"
-
-  def apply[F[_]: Async](
-    s3Client: S3Client[F],
-    member: Members[F]
-  )(implicit logger: Logger[F], F: Sync[F], authService: Auth[F]): MemberRoutes[F] = new MemberRoutes(
-    member,
-    s3Client
-  )
-}
 
 final class MemberRoutes[F[_]: Async](members: Members[F], s3Client: S3Client[F])(implicit
   logger: Logger[F]

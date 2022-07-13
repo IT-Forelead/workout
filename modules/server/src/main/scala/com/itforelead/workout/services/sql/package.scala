@@ -21,13 +21,6 @@ import scala.util.Try
 
 package object sql {
 
-  def parseUUID: String => Either[String, UUID] = s =>
-    Try(Right(UUID.fromString(s))).getOrElse(Left(s"Invalid argument: [ $s ]"))
-
-  val _uuid: Codec[Arr[UUID]] = Codec.array(_.toString, parseUUID, Type._uuid)
-
-  val listUUID: Codec[List[UUID]] = _uuid.imap(_.flattenTo(List))(l => Arr(l: _*))
-
   def identity[A: IsUUID]: Codec[A] = uuid.imap[A](IsUUID[A]._UUID.get)(IsUUID[A]._UUID.apply)
 
   val firstName: Codec[FirstName] = varchar.imap[FirstName](name => FirstName(NonEmptyString.unsafeFrom(name)))(_.value)
