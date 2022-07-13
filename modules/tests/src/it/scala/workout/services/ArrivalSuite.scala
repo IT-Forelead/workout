@@ -36,9 +36,7 @@ object ArrivalSuite extends DBSuite {
   test("Create Arrival: Member Not Found") { implicit postgres =>
     val arrivalService = ArrivalService[IO]
     forall(createArrivalGen) { createArrival =>
-      (for {
-        _ <- arrivalService.create(defaultUserId, createArrival)
-      } yield failure(s"The test should return error")).recover {
+      arrivalService.create(defaultUserId, createArrival).as(failure(s"The test should return error")).recover {
         case _: MemberNotFound.type => success
         case error                  => failure(s"the test failed. $error")
       }

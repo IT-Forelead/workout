@@ -11,7 +11,7 @@ import workout.utils.ClientSuite
 
 object MessageRoutesSuite extends ClientSuite {
 
-  test("GET Messages E2E") { implicit client =>
+  test("GET Messages E2E") { implicit resources =>
     for {
       token <- loginReq.expectAs[JwtToken]
       res <- GET(uri"/message")
