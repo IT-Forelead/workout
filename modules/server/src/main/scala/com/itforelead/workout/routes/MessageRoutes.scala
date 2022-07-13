@@ -14,8 +14,13 @@ final class MessageRoutes[F[_]: Async](messages: Messages[F]) extends Http4sDsl[
 
   private[routes] val prefixPath = "/message"
 
-  private[this] val httpRoutes: AuthedRoutes[User, F] = AuthedRoutes.of { case GET -> Root as user =>
-    messages.get(user.id).flatMap(Ok(_))
+  private[this] val httpRoutes: AuthedRoutes[User, F] = AuthedRoutes.of {
+
+    case GET -> Root as user =>
+      messages.get(user.id).flatMap(Ok(_))
+
+    case GET -> Root / IntVar(page) as user =>
+      messages.getMessagesWithTotal(user.id, page).flatMap(Ok(_))
   }
 
   def routes(authMiddleware: AuthMiddleware[F, User]): HttpRoutes[F] = Router(

@@ -6,7 +6,7 @@ import com.itforelead.workout.domain.{DeliveryStatus, Message}
 import com.itforelead.workout.services.sql.MemberSQL.memberId
 import com.itforelead.workout.services.sql.UserSQL.userId
 import skunk._
-import skunk.codec.all.timestamp
+import skunk.codec.all.{int8, timestamp}
 import skunk.implicits._
 
 object MessagesSQL {
@@ -28,6 +28,17 @@ object MessagesSQL {
     MessageColumns.map { case message ~ member =>
       MessageWithMember(message, member)
     }
+
+  def selectMessagesWithPage(id: UserId, page: Int): AppliedFragment = {
+    val filterByUserID: AppliedFragment =
+      sql"""SELECT messages.*, members.* FROM messages
+           LEFT JOIN members ON members.id = messages.member_id
+           WHERE user_id = $userId""".apply(id)
+    filterByUserID.paginate(10, page)
+  }
+
+  val total: Query[UserId, Long] =
+    sql"""SELECT count(*) FROM messages WHERE user_id = $userId AND""".query(int8)
 
   val insertMessage: Query[Message, Message] =
     sql"""INSERT INTO messages VALUES ($encoder) RETURNING *""".query(decoder)

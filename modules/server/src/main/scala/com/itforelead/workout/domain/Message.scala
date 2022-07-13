@@ -32,4 +32,10 @@ object Message {
     message: Message,
     member: Option[Member]
   )
+
+  @derive(decoder, encoder, show)
+  case class MessageWithTotal(
+    messages: List[MessageWithMember],
+    total: Long
+  )
 }

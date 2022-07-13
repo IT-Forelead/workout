@@ -2,7 +2,7 @@ package workout.http.routes
 
 import cats.effect.{IO, Sync}
 import com.itforelead.workout.domain.{Arrival, Member}
-import com.itforelead.workout.domain.Arrival.{ArrivalWithMember, CreateArrival}
+import com.itforelead.workout.domain.Arrival.{ArrivalWithMember, ArrivalWithTotal, CreateArrival}
 import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.routes.{ArrivalRoutes, deriveEntityEncoder}
@@ -19,6 +19,8 @@ object ArrivalRoutesSuite extends HttpSuite {
     override def create(userId: UserId, createArrival: CreateArrival): F[Arrival]  = Sync[F].delay(arrival)
     override def get(userId: UserId): F[List[ArrivalWithMember]] =
       Sync[F].delay(List(ArrivalWithMember(arrival, member)))
+    override def getArrivalWithTotal(userId: UserId, page: Int): F[ArrivalWithTotal] =
+      Sync[F].delay(ArrivalWithTotal(List(ArrivalWithMember(arrival, member)), 1))
   }
 
   test("GET Arrival") {
@@ -34,6 +36,23 @@ object ArrivalRoutesSuite extends HttpSuite {
         req    = GET(uri"/arrival").putHeaders(token)
         routes = new ArrivalRoutes[IO](arrivalMethod(arrival, member)).routes(usersMiddleware)
         res <- expectHttpStatus(routes, req)(Status.Ok)
+      } yield res
+    }
+  }
+
+  test("GET Arrival pagenation") {
+    val gen = for {
+      u <- userGen
+      a <- arrivalGen
+      m <- memberGen
+    } yield (u, a, m)
+
+    forall(gen) { case (user, arrival, member) =>
+      for {
+        token <- authToken(user)
+        req = GET(uri"/arrival/1").putHeaders(token)
+        routes = new ArrivalRoutes[IO](arrivalMethod(arrival, member)).routes(usersMiddleware)
+        res <- expectHttpBodyAndStatus(routes, req)(ArrivalWithTotal(List(ArrivalWithMember(arrival, member)), 1), Status.Ok)
       } yield res
     }
   }
