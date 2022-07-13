@@ -2,6 +2,9 @@ package workout.utils
 
 import cats.data.OptionT
 import cats.effect.IO
+import com.itforelead.workout.domain.User
+import com.itforelead.workout.implicits.CirceDecoderOps
+import com.itforelead.workout.services.redis.RedisClient
 import dev.profunktor.auth.JwtAuthMiddleware
 import dev.profunktor.auth.jwt.{JwtAuth, JwtToken}
 import eu.timepit.refined.auto.autoUnwrap
@@ -11,18 +14,18 @@ import org.http4s._
 import org.http4s.circe._
 import org.http4s.headers.Authorization
 import org.http4s.server.AuthMiddleware
+import org.typelevel.log4cats.SelfAwareStructuredLogger
+import org.typelevel.log4cats.noop.NoOpLogger
 import pdi.jwt.{JwtAlgorithm, JwtClaim}
-import com.itforelead.workout.domain.User
-import com.itforelead.workout.implicits.CirceDecoderOps
-import com.itforelead.workout.services.redis.RedisClient
-import workout.config.jwtConfig
 import weaver.scalacheck.Checkers
 import weaver.{Expectations, SimpleIOSuite}
+import workout.config.jwtConfig
 import workout.stub_services.{AuthMock, RedisClientMock}
 
 import scala.concurrent.duration.DurationInt
 
 trait HttpSuite extends SimpleIOSuite with Checkers {
+  implicit val logger: SelfAwareStructuredLogger[IO] = NoOpLogger[IO]
 
   val RedisClient: RedisClient[IO] = RedisClientMock[IO]
 

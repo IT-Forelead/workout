@@ -58,6 +58,15 @@ package object implicits {
     def toOptWhen(cond: => Boolean): Option[A] = if (cond) Some(obj) else None
 
     def toJson(implicit encoder: Encoder[A]): String = obj.asJson.printWith(printer)
+
+    def toFormData[F[_]](implicit encoder: Encoder.AsObject[A]): Vector[Part[F]] =
+      obj.asJsonObject.toVector
+        .map { case k -> v =>
+          k -> v.asString
+        }
+        .collect { case k -> Some(v) =>
+          Part.formData[F](k, v)
+        }
   }
 
   implicit class LocalDateTimeOps(ldt: LocalDateTime) {
