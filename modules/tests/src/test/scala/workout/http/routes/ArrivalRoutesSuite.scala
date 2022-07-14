@@ -1,8 +1,8 @@
 package workout.http.routes
 
 import cats.effect.{IO, Sync}
+import com.itforelead.workout.domain.{Arrival, Member, User, types}
 import cats.implicits.{catsSyntaxApplicativeErrorId, catsSyntaxOptionId}
-import com.itforelead.workout.domain.{Arrival, Member, User}
 import com.itforelead.workout.domain.Arrival.{ArrivalWithMember, ArrivalWithTotal, CreateArrival}
 import com.itforelead.workout.domain.custom.exception.MemberNotFound
 import com.itforelead.workout.domain.types.UserId
@@ -22,19 +22,19 @@ object ArrivalRoutesSuite extends HttpSuite {
   private def arrivalMethod[F[_]: Sync: GenUUID](
     arrival: Arrival,
     member: Member,
-    errorType: Option[String] = None
-  ): ArrivalStub[F] =
-    new ArrivalStub[F] {
-      override def create(userId: UserId, createArrival: CreateArrival): F[Arrival] =
-        errorType match {
+    errorType: Option[String] = None): ArrivalStub[F] = new ArrivalStub[F] {
+    override def create(userId: UserId, createArrival: CreateArrival): F[Arrival]  =
+     errorType match {
           case None             => Sync[F].delay(arrival)
           case Some("memberNotFound") => MemberNotFound.raiseError[F, Arrival]
           case _ => Sync[F].raiseError(new Exception("Error occurred creating arrival event. error type: Unknown"))
         }
-      override def get(userId: UserId): F[List[ArrivalWithMember]] =
-        Sync[F].delay(List(ArrivalWithMember(arrival, member)))
+    override def get(userId: UserId): F[List[ArrivalWithMember]] =
+      Sync[F].delay(List(ArrivalWithMember(arrival, member)))
     override def getArrivalWithTotal(userId: UserId, page: Int): F[ArrivalWithTotal] =
       Sync[F].delay(ArrivalWithTotal(List(ArrivalWithMember(arrival, member)), 1))
+    override def getArrivalByMemberId(userId: UserId, memberId: types.MemberId): F[List[Arrival]] =
+      Sync[F].delay(List(arrival))
   }
 
   test("GET Arrival - [SUCCESS]") {
@@ -67,6 +67,24 @@ object ArrivalRoutesSuite extends HttpSuite {
         req = GET(uri"/arrival/1").putHeaders(token)
         routes = new ArrivalRoutes[IO](arrivalMethod(arrival, member)).routes(usersMiddleware)
         res <- expectHttpBodyAndStatus(routes, req)(ArrivalWithTotal(List(ArrivalWithMember(arrival, member)), 1), Status.Ok)
+      } yield res
+    }
+  }
+
+  test("GET Arrival by MemberId") {
+    val gen = for {
+      u <- userGen
+      m <- memberGen
+      a <- arrivalGen
+      i <- arrivalMemberIdGen
+    } yield (u, m, a, i)
+
+    forall(gen) { case (user, member, arrival, memberId) =>
+      for {
+        token <- authToken(user)
+        req    = POST(memberId, uri"/arrival/member").putHeaders(token)
+        routes = new ArrivalRoutes[IO](arrivalMethod(arrival, member)).routes(usersMiddleware)
+        res <- expectHttpStatus(routes, req)(Status.Ok)
       } yield res
     }
   }
