@@ -14,7 +14,8 @@ import workout.utils.Generators.{
   createMessageGen,
   defaultFileKey,
   defaultUserId,
-  deliveryStatusGen
+  deliveryStatusGen,
+  memberIdGen
 }
 
 import java.util.UUID
@@ -22,9 +23,9 @@ import java.util.UUID
 object MessageSuite extends DBSuite {
 
   test("Create Message") { implicit postgres =>
-    val messages                         = Messages[IO]
-    val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
-    val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
+      val messages                         = Messages[IO]
+      val messageBroker: MessageBroker[IO] = (_: MessageId, _: Tel, _: String) => IO.unit
+      val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
     val gen = for {
       cm <- createMessageGen(defaultUserId.some)
       m  <- createMemberGen()
@@ -43,20 +44,22 @@ object MessageSuite extends DBSuite {
   }
 
   test("Create Message: Member Not Found") { implicit postgres =>
-    val messages = Messages[IO]
-    forall(createMessageGen(defaultUserId.some)) { createMessage =>
-      (for {
-        _ <- messages.create(createMessage)
-      } yield failure(s"The test should return error")).recover {
-        case _: MemberNotFound.type => success
-        case error                  => failure(s"the test failed. $error")
-      }
+      val messages = Messages[IO]
+      val gen = for {
+        memberId <- memberIdGen
+        message  <- createMessageGen(defaultUserId.some)
+      } yield message.copy(memberId = memberId.some)
+      forall(gen) { createMessage =>
+        messages.create(createMessage).as(failure(s"The test should return error")).recover {
+          case _: MemberNotFound.type => success
+          case error                  => failure(s"the test failed. $error")
+        }
     }
   }
 
   test("Change status") { implicit postgres =>
     val messages                         = Messages[IO]
-    val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
+    val messageBroker: MessageBroker[IO] = (_: MessageId, _: Tel, _: String) => IO.unit
     val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
 
     val gen = for {

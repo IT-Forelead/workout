@@ -3,7 +3,12 @@ package workout.http.routes
 import cats.effect.{IO, Sync}
 import cats.implicits.{catsSyntaxApplicativeErrorId, catsSyntaxOptionId}
 import com.itforelead.workout.domain.Member.{CreateMember, MemberWithTotal}
-import com.itforelead.workout.domain.custom.exception.{PhoneInUse, ValidationCodeExpired, ValidationCodeIncorrect}
+import com.itforelead.workout.domain.custom.exception.{
+  MultipartDecodeError,
+  PhoneInUse,
+  ValidationCodeExpired,
+  ValidationCodeIncorrect
+}
 import com.itforelead.workout.domain.custom.refinements.{FileKey, FilePath, Tel}
 import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.domain.{Member, User, Validation, encCreateMemberAsObject}
@@ -96,10 +101,11 @@ object MemberRoutesSuite extends HttpSuite {
     new MembersStub[F] {
       override def validateAndCreate(userId: UserId, createMember: CreateMember, key: FileKey): F[Member] = {
         errorType match {
-          case None                      => Sync[F].delay(member)
+          case None                            => Sync[F].delay(member)
           case Some("validationCodeExpired")   => ValidationCodeExpired(createMember.phone).raiseError[F, Member]
           case Some("phoneInUse")              => PhoneInUse(createMember.phone).raiseError[F, Member]
           case Some("validationCodeIncorrect") => ValidationCodeIncorrect(createMember.code).raiseError[F, Member]
+          case Some("multipartDecodeError")    => MultipartDecodeError("Multipart Decode Error").raiseError[F, Member]
           case _ => Sync[F].raiseError(new Exception("Error occurred creating member. error type: Unknown"))
         }
       }
@@ -108,7 +114,8 @@ object MemberRoutesSuite extends HttpSuite {
   def putMemberRequest(
     shouldReturn: Status,
     errorType: Option[String] = None,
-    fileUrl: Option[URL] = None
+    fileUrl: Option[URL] = None,
+    multipartDecError: Boolean = false
   ): MemberRoutesSuite.F[Expectations] = {
     val gen = for {
       u  <- userGen
@@ -122,8 +129,9 @@ object MemberRoutesSuite extends HttpSuite {
         fileData = fileUrl.map { url =>
           Part.fileData("filename", url, `Content-Type`(MediaType.image.`png`))
         }.toVector
-        multipart = Multipart[F](createMember.toFormData[F] ++ fileData)
-        req       = PUT(multipart, uri"/member").withHeaders(multipart.headers).putHeaders(token)
+        multipart =
+          if (multipartDecError) Multipart[F](fileData) else Multipart[F](createMember.toFormData[F] ++fileData)
+        req = PUT(multipart, uri"/member").withHeaders(multipart.headers).putHeaders(token)
         routes = new MemberRoutes[IO](memberServiceS(member, errorType), s3Client)
           .routes(usersMiddleware)
         res <- expectHttpStatus(routes, req)(shouldReturn)
@@ -146,5 +154,11 @@ object MemberRoutesSuite extends HttpSuite {
   }
   test("PUT Member: Phone In Use - [FAIL]") {
     putMemberRequest(Status.NotAcceptable, "phoneInUse".some, fileUrl = fileUrl.some)
+  }
+  test("PUT Member: Multipart Decode Error - [FAIL]") {
+    putMemberRequest(Status.BadRequest, "multipartDecodeError".some, fileUrl = fileUrl.some, multipartDecError = true)
+  }
+  test("PUT Member: Unknown Error - [FAIL]") {
+    putMemberRequest(Status.BadRequest, "".some, fileUrl = fileUrl.some)
   }
 }

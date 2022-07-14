@@ -78,11 +78,13 @@ final class HttpApi[F[_]: Async: Logger] private (
     }
   }
 
+  def httpLogger: Option[String => F[Unit]] = Option(Logger[F].info(_))
+
   private[this] val loggers: HttpApp[F] => HttpApp[F] = {
     { http: HttpApp[F] =>
-      RequestLogger.httpApp(logConfig.httpHeader, logConfig.httpBody)(http)
+        RequestLogger.httpApp(logConfig.httpHeader, logConfig.httpBody, logAction = httpLogger)(http)
     } andThen { http: HttpApp[F] =>
-      ResponseLogger.httpApp(logConfig.httpHeader, logConfig.httpBody)(http)
+      ResponseLogger.httpApp(logConfig.httpHeader, logConfig.httpBody, logAction = httpLogger)(http)
     }
   }
 

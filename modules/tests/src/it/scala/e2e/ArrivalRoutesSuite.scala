@@ -47,7 +47,7 @@ object ArrivalRoutesSuite extends ClientSuite {
         code <- resources.redis.get(createMember.phone.value)
         member    = createMember.copy(code = ValidationCode.unsafeFrom(code.get))
         multipart = Multipart[F](member.toFormData[F] ++ fileData)
-        result <- PUT(multipart, uri"/member")
+        _ <- PUT(multipart, uri"/member")
           .withHeaders(multipart.headers)
           .putHeaders(makeAuth(token))
           .expectAs[Unit]
