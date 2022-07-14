@@ -61,14 +61,12 @@ object ArrivalRoutesSuite extends ClientSuite {
   }
 
   test("Get Arrival E2E") { implicit resources =>
-    forall(arrivalIdGen) { arrivalId =>
-      for {
-        token <- loginReq.expectAs[JwtToken]
-        result <- GET(arrivalId, uri"/arrival")
-          .putHeaders(makeAuth(token))
-          .expectHttpStatus(Status.Ok)
-      } yield result
-    }
+    for {
+      token <- loginReq.expectAs[JwtToken]
+      result <- GET(uri"/arrival")
+        .putHeaders(makeAuth(token))
+        .expectHttpStatus(Status.Ok)
+    } yield result
   }
 
 }

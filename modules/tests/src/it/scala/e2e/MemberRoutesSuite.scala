@@ -19,17 +19,6 @@ import java.net.URL
 
 object MemberRoutesSuite extends ClientSuite {
 
-  test("Send Code E2E") { implicit resources =>
-    forall(validationGen) { validation =>
-      for {
-        token <- loginReq.expectAs[JwtToken]
-        result <- POST(validation, uri"/member/sent-code")
-          .putHeaders(makeAuth(token))
-          .expectHttpStatus(Status.Ok)
-      } yield result
-    }
-  }
-
   val fileUrl: Option[URL] = Option(getClass.getResource("/photo_2022-06-28_16-27-20.jpg"))
 
   def putMemberRequest(
@@ -75,6 +64,17 @@ object MemberRoutesSuite extends ClientSuite {
           .withHeaders(multipart.headers)
           .putHeaders(makeAuth(token))
           .expectHttpStatus(shouldReturn)
+      } yield result
+    }
+  }
+
+  test("Send Code E2E") { implicit resources =>
+    forall(validationGen) { validation =>
+      for {
+        token <- loginReq.expectAs[JwtToken]
+        result <- POST(validation, uri"/member/sent-code")
+          .putHeaders(makeAuth(token))
+          .expectHttpStatus(Status.Ok)
       } yield result
     }
   }

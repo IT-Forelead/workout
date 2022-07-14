@@ -53,11 +53,11 @@ object PaymentRoutesSuite extends ClientSuite {
     }
   }
 
-  test("Create payment - [SUCCESS]") { implicit client =>
+  test("Create payment") { implicit client =>
     createPaymentRequest(Status.Created, paymentType = PaymentType.DAILY)
   }
 
-  test("Not found member - [FAIL]") { implicit client =>
+  test("Not found member") { implicit client =>
     createPaymentRequest(
       Status.BadRequest,
       memberId = MemberId(UUID.randomUUID()).some,
