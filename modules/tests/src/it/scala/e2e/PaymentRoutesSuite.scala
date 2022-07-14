@@ -53,11 +53,11 @@ object PaymentRoutesSuite extends ClientSuite {
     }
   }
 
-  test("Create payment") { implicit client =>
+  test("Create Payment") { implicit client =>
     createPaymentRequest(Status.Created, paymentType = PaymentType.DAILY)
   }
 
-  test("Not found member") { implicit client =>
+  test("Create Payment: Member Not Found") { implicit client =>
     createPaymentRequest(
       Status.BadRequest,
       memberId = MemberId(UUID.randomUUID()).some,
@@ -65,7 +65,7 @@ object PaymentRoutesSuite extends ClientSuite {
     )
   }
 
-  test("Get payments by userId") { implicit client =>
+  test("Get Payments By UserId") { implicit client =>
     for {
       token  <- loginReq.expectAs[JwtToken]
       result <- GET(uri"/payment").putHeaders(makeAuth(token)).expectHttpStatus(Status.Ok)
