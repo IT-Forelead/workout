@@ -6,6 +6,7 @@ import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.typelevel.log4cats.noop.NoOpLogger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 import weaver.scalacheck.CheckConfig
 
 import scala.io.Source
@@ -29,7 +30,8 @@ trait Container {
 
   val customCheckConfig: CheckConfig = CheckConfig.default.copy(minimumSuccessful = 20)
 
-  implicit val logger: SelfAwareStructuredLogger[IO] = NoOpLogger[IO]
+//  implicit val logger: SelfAwareStructuredLogger[IO] = NoOpLogger[IO]
+  implicit val logger: SelfAwareStructuredLogger[IO] = Slf4jLogger.getLogger[IO]
 
   def migrateSql(container: PostgreSQLContainer[Nothing]): Unit = {
     val source     = Source.fromFile(getClass.getResource("/tables.sql").getFile)
