@@ -42,6 +42,8 @@ lazy val tests = project
     testFrameworks += new TestFramework("weaver.framework.CatsEffect"),
     Defaults.itSettings,
     scalacOptions ++= CompilerOptions.cOptions,
+    IntegrationTest / parallelExecution  := false,
+    IntegrationTest / testForkedParallel := false,
     libraryDependencies ++= testLibraries,
     scalacOptions ++= CompilerOptions.cOptions
   )
@@ -63,4 +65,5 @@ runItTests := {
   (tests / IntegrationTest / test).value
 }
 
+Global / concurrentRestrictions += Tags.limit(Tags.Test, 1)
 Global / onLoad := (Global / onLoad).value.andThen(state => "project server" :: state)

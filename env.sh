@@ -6,6 +6,7 @@ export POSTGRES_USER="workout"
 export POSTGRES_PASSWORD="123"
 export POSTGRES_DATABASE="workout"
 export POSTGRES_POOL_SIZE=1024
+export POSTGRES_MAX_CONNECTION=100
 export HTTP_HEADER_LOG=false
 export HTTP_BODY_LOG=false
 export HTTP_HOST="localhost"
