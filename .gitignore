@@ -2,4 +2,4 @@
 target
 .idea
 .bsp
-./local_env.sh
+local_env.sh

@@ -24,7 +24,7 @@ services:
   postgres:
     restart: always
     image: postgres:12
-    command: -c max_connections=10
+    command: -c max_connections=${POSTGRES_MAX_CONNECTION}
     ports:
       - ${POSTGRES_PORT}:5432
     environment:

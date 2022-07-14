@@ -37,14 +37,7 @@ lazy val tests = project
   .in(file("modules/tests"))
   .configs(IntegrationTest)
   .settings(projectSettings: _*)
-  .settings(
-    name := "workout-test-suite",
-    testFrameworks += new TestFramework("weaver.framework.CatsEffect"),
-    Defaults.itSettings,
-    scalacOptions ++= CompilerOptions.cOptions,
-    libraryDependencies ++= testLibraries,
-    scalacOptions ++= CompilerOptions.cOptions
-  )
+  .settings(server)
   .dependsOn(server)
 
 val runItTests = inputKey[Unit]("Runs It tests")
@@ -63,4 +56,5 @@ runItTests := {
   (tests / IntegrationTest / test).value
 }
 
+Global / concurrentRestrictions += Tags.limit(Tags.Test, 1)
 Global / onLoad := (Global / onLoad).value.andThen(state => "project server" :: state)
