@@ -1,8 +1,8 @@
 package com.itforelead.workout.routes
 
 import cats.MonadThrow
+import com.itforelead.workout.domain.Arrival.{ArrivalMemberId, CreateArrival}
 import cats.implicits.{catsSyntaxApplicativeError, catsSyntaxFlatMapOps, toFlatMapOps}
-import com.itforelead.workout.domain.Arrival.CreateArrival
 import com.itforelead.workout.domain.User
 import com.itforelead.workout.domain.custom.exception.MemberNotFound
 import com.itforelead.workout.services.ArrivalService
@@ -36,6 +36,11 @@ final class ArrivalRoutes[F[_]: JsonDecoder: MonadThrow](arrivalService: Arrival
           logger.error(s"Member not found. Error: ${error}") >>
             NotFound("Member not found. Please try again")
         }
+
+    case ar @ POST -> Root / "member" as user =>
+      ar.req.decodeR[ArrivalMemberId] { form =>
+        arrivalService.getArrivalByMemberId(user.id, form.memberId).flatMap(Ok(_))
+      }
 
   }
 

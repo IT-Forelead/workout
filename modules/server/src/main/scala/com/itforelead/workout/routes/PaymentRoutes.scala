@@ -2,7 +2,7 @@ package com.itforelead.workout.routes
 
 import cats.MonadThrow
 import cats.implicits._
-import com.itforelead.workout.domain.Payment.CreatePayment
+import com.itforelead.workout.domain.Payment.{CreatePayment, PaymentMemberId}
 import com.itforelead.workout.domain.User
 import com.itforelead.workout.domain.custom.exception.{MemberCurrentActiveTime, MemberNotFound}
 import com.itforelead.workout.services.Payments
@@ -22,6 +22,11 @@ final class PaymentRoutes[F[_]: JsonDecoder: MonadThrow](payments: Payments[F])(
 
     case GET -> Root as user =>
       payments.payments(user.id).flatMap(Ok(_))
+
+    case ar @ POST -> Root / "member" as user =>
+      ar.req.decodeR[PaymentMemberId] { form =>
+        payments.getPaymentByMemberId(user.id, form.memberId).flatMap(Ok(_))
+      }
 
     case ar @ POST -> Root as user =>
       ar.req

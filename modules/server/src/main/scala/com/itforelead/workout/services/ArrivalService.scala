@@ -5,10 +5,11 @@ import cats.implicits._
 import com.itforelead.workout.domain.Arrival.{ArrivalWithMember, ArrivalWithTotal, CreateArrival}
 import com.itforelead.workout.domain.custom.exception.MemberNotFound
 import com.itforelead.workout.domain.{Arrival, ID}
-import com.itforelead.workout.domain.types.{ArrivalId, UserId}
+import com.itforelead.workout.domain.types.{ArrivalId, MemberId, UserId}
 import com.itforelead.workout.services.sql.ArrivalSQL._
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.services.sql.ArrivalSQL
+import skunk.implicits.toIdOps
 import skunk.{Session, SqlState}
 
 import java.time.LocalDateTime
@@ -16,6 +17,7 @@ import java.time.LocalDateTime
 trait ArrivalService[F[_]] {
   def create(userId: UserId, form: CreateArrival): F[Arrival]
   def get(userId: UserId): F[List[ArrivalWithMember]]
+  def getArrivalByMemberId(userId: UserId, memberId: MemberId): F[List[Arrival]]
   def getArrivalWithTotal(userId: UserId, page: Int): F[ArrivalWithTotal]
 }
 
@@ -40,6 +42,9 @@ object ArrivalService {
 
       override def get(userId: UserId): F[List[ArrivalWithMember]] =
         prepQueryList(selectSql, userId)
+
+      override def getArrivalByMemberId(userId: UserId, memberId: MemberId): F[List[Arrival]] =
+        prepQueryList(selectArrivalByMemberId, userId ~ memberId)
 
       override def getArrivalWithTotal(userId: UserId, page: Int): F[ArrivalWithTotal] =
         for {
