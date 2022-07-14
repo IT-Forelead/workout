@@ -37,7 +37,16 @@ lazy val tests = project
   .in(file("modules/tests"))
   .configs(IntegrationTest)
   .settings(projectSettings: _*)
-  .settings(server)
+  .settings(
+    name := "workout-test-suite",
+    testFrameworks += new TestFramework("weaver.framework.CatsEffect"),
+    Defaults.itSettings,
+    scalacOptions ++= CompilerOptions.cOptions,
+    IntegrationTest / parallelExecution  := false,
+    IntegrationTest / testForkedParallel := false,
+    libraryDependencies ++= testLibraries,
+    scalacOptions ++= CompilerOptions.cOptions
+  )
   .dependsOn(server)
 
 val runItTests = inputKey[Unit]("Runs It tests")
