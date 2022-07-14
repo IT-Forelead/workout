@@ -38,7 +38,7 @@ object NotificationMessage {
       private def startSendExpireDate: F[Unit] =
         for {
           membersList <- members.findActiveTimeShort
-          text = NonEmptyString.unsafeFrom(s"Sizning to'lov vaqtingizga 3 kundan oz muddat qoldi")
+          text = NonEmptyString.unsafeFrom(s"Sizning to'lov vaqtingiz tugashiga 3 kun qoldi.")
           _ <- membersList.traverse { member =>
             createMessage(member.userId, member.id, text).flatMap { message =>
               send(member, text.value, message)

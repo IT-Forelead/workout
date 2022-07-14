@@ -51,9 +51,7 @@ object MemberSQL {
     sql"""SELECT active_time FROM members WHERE id = $memberId AND deleted = false""".query(timestamp)
 
   val selectExpiredMember: Query[Void, Member] =
-    sql"""SELECT * FROM members
-      WHERE active_time - INTERVAL '3 DAY' < NOW() AND
-      NOW() < active_time""".query(decoder)
+    sql"""SELECT * FROM members WHERE DATE(active_time) = DATE(NOW() - INTERVAL '3 DAY')""".query(decoder)
 
   val selectMemberByIdSql: Query[MemberId, Member] =
     sql"""SELECT * FROM members WHERE id = $memberId""".query(decoder)
