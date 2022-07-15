@@ -3,7 +3,7 @@ package com.itforelead.workout
 import cats.effect.std.Supervisor
 import cats.effect.{IO, IOApp, Resource}
 import com.itforelead.workout.config.ConfigLoader
-import com.itforelead.workout.modules.Services
+import com.itforelead.workout.modules.{Security, Services}
 import com.itforelead.workout.resources.MkHttpServer
 import dev.profunktor.redis4cats.log4cats._
 import org.typelevel.log4cats.slf4j.Slf4jLogger
@@ -17,17 +17,23 @@ object Application extends IOApp.Simple {
   override def run: IO[Unit] =
     ConfigLoader.load[IO].flatMap { cfg =>
       Logger[IO].info(s"Loaded config $cfg") >>
-        Supervisor[IO].use { implicit sp =>
+        Supervisor[IO].use { implicit s =>
           resources
             .AppResources[IO](cfg)
             .evalMap { res =>
               implicit val session: Resource[IO, Session[IO]] = res.postgres
 
               val services = Services[IO](cfg.messageBroker, cfg.scheduler, res.httpClient, res.redis)
-              services.notificationMessage.start >>
-                modules.Security[IO](cfg, services.users, res.redis).map { security =>
+              services.notificationMessage.start
+                .as {
                   cfg.serverConfig -> modules
-                    .HttpApi[IO](security, services, res.s3Client, res.redis, cfg.logConfig)
+                    .HttpApi[IO](
+                      Security[IO](cfg, services.users, res.redis),
+                      services,
+                      res.s3Client,
+                      res.redis,
+                      cfg.logConfig
+                    )
                     .httpApp
                 }
             }

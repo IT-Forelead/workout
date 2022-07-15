@@ -40,9 +40,10 @@ final class HttpApi[F[_]: Async: Logger] private (
 ) {
   private[this] val baseURL: String = "/"
 
-  def findUser(token: JwtToken): JwtClaim => F[Option[User]] = _ =>
+  def findUser(token: JwtToken): JwtClaim => F[Option[(User, Option[JwtToken])]] = claim =>
     OptionT(redis.get(token.value))
       .map(_.as[User])
+      .flatMapF(user => security.auth.prolongSession(claim, token, user).map(maybeToken => Option(user, maybeToken)))
       .value
 
   private[this] val usersMiddleware =

@@ -64,7 +64,7 @@ object UserRoutesSuite extends HttpSuite {
 
     forall(gen) { case (user, isAuthed) =>
       for {
-        token <- AuthMock.tokens[IO].flatMap(_.create)
+        token <- AuthMock.tokens[IO].create
         _     <- if (isAuthed) RedisClient.put(token.value, user, 1.minute) else IO.unit
         req    = GET(uri"/user").putHeaders(Authorization(Credentials.Token(AuthScheme.Bearer, token.value)))
         routes = new UserRoutes[IO](new UserSettingsStub[IO] {}).routes(usersMiddleware)

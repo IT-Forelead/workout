@@ -6,11 +6,12 @@ import com.itforelead.workout.effects.GenUUID
 import dev.profunktor.auth.jwt._
 import eu.timepit.refined.auto._
 import pdi.jwt._
-import com.itforelead.workout.implicits.GenericTypeOps
+import com.itforelead.workout.implicits._
 import com.itforelead.workout.types.{JwtAccessTokenKeyConfig, TokenExpiration}
 
 trait Tokens[F[_]] {
   def create: F[JwtToken]
+  def validateAndUpdate(claim: JwtClaim): F[Option[JwtToken]]
 }
 
 object Tokens {
@@ -20,12 +21,26 @@ object Tokens {
     exp: TokenExpiration
   ): Tokens[F] =
     new Tokens[F] {
-      def create: F[JwtToken] =
+      private def encodeToken: JwtClaim => F[JwtToken] =
+        jwtEncode[F](_, JwtSecretKey(config.secret), JwtAlgorithm.HS256)
+
+      override def create: F[JwtToken] =
         for {
           uuid  <- GenUUID[F].make
           claim <- jwtExpire.expiresIn(JwtClaim(uuid.toJson), exp)
-          secretKey = JwtSecretKey(config.secret)
-          token <- jwtEncode[F](claim, secretKey, JwtAlgorithm.HS256)
+          token <- encodeToken(claim)
         } yield token
+
+      override def validateAndUpdate(claim: JwtClaim): F[Option[JwtToken]] =
+        jwtExpire
+          .isExpired(claim)
+          .asOptionT
+          .semiflatMap { _ =>
+            for {
+              updated <- jwtExpire.expiresIn(claim, exp)
+              token   <- encodeToken(updated)
+            } yield token
+          }
+          .value
     }
 }

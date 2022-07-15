@@ -1,17 +1,19 @@
 package com.itforelead.workout
 
+import cats.Monad
+import cats.data.OptionT
 import cats.effect.{Async, Sync}
 import cats.implicits._
+import com.itforelead.workout.domain.custom.exception.MultipartDecodeError
+import com.itforelead.workout.domain.custom.refinements.{FilePath, Prefix}
+import com.itforelead.workout.domain.custom.utils.MapConvert
+import com.itforelead.workout.domain.custom.utils.MapConvert.ValidationResult
 import io.circe.parser.decode
 import io.circe.syntax.EncoderOps
 import io.circe.{Decoder, Encoder, Printer}
 import org.http4s.MediaType
 import org.http4s.headers.`Content-Type`
 import org.http4s.multipart.Part
-import com.itforelead.workout.domain.custom.exception.MultipartDecodeError
-import com.itforelead.workout.domain.custom.refinements.{FilePath, Prefix}
-import com.itforelead.workout.domain.custom.utils.MapConvert
-import com.itforelead.workout.domain.custom.utils.MapConvert.ValidationResult
 
 import java.time.LocalDateTime
 
@@ -73,4 +75,13 @@ package object implicits {
     def endOfDay: LocalDateTime = ldt.withHour(23).withMinute(59).withSecond(59)
   }
 
+  implicit class OptionTOps[F[_]: Monad](fa: F[Boolean]) {
+    def asOptionT: OptionT[F, Unit] = {
+      OptionT {
+        fa.map {
+          if (_) Some(()) else None
+        }
+      }
+    }
+  }
 }

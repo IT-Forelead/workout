@@ -41,13 +41,17 @@ trait ClientSuite extends IOSuite with Checkers with Container {
     config: AppConfig
   )(implicit ev: Background[F]): Resource[F, (HttpApp[F], RedisClient[F])] =
     AppResources[F](config)
-      .evalMap { res =>
+      .map { res =>
         implicit val session: Resource[F, Session[F]] = res.postgres
 
         val services = Services[F](config.messageBroker, config.scheduler, res.httpClient, res.redis)
-        Security[F](config, services.users, res.redis).map { security =>
-          HttpApi[F](security, services, res.s3Client, res.redis, config.logConfig).httpApp -> res.redis
-        }
+        HttpApi[F](
+          Security[F](config, services.users, res.redis),
+          services,
+          res.s3Client,
+          res.redis,
+          config.logConfig
+        ).httpApp -> res.redis
       }
 
   private def httpAppRes: Resource[IO, (HttpApp[IO], RedisClient[IO])] = {

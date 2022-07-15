@@ -8,11 +8,20 @@ import com.itforelead.workout.types.TokenExpiration
 
 trait JwtExpire[F[_]] {
   def expiresIn(claim: JwtClaim, exp: TokenExpiration): F[JwtClaim]
+  def isExpired(claim: JwtClaim): F[Boolean]
 }
 
 object JwtExpire {
-  def apply[F[_]: Sync]: F[JwtExpire[F]] =
-    JwtClock[F].utc.map { implicit jClock => (claim: JwtClaim, exp: TokenExpiration) =>
-      Sync[F].delay(claim.issuedNow.expiresIn(exp.value.toMillis))
+  def apply[F[_]: Sync]: JwtExpire[F] =
+    new JwtExpire[F] {
+      override def expiresIn(claim: JwtClaim, exp: TokenExpiration): F[JwtClaim] =
+        JwtClock[F].utc.map { implicit jClock =>
+          claim.issuedNow.expiresIn(exp.value.toMillis)
+        }
+
+      override def isExpired(claim: JwtClaim): F[Boolean] =
+        JwtClock[F].utc.map { implicit jClock =>
+          !claim.isValid
+        }
     }
 }

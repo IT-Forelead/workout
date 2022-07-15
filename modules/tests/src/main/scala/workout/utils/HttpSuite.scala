@@ -39,7 +39,7 @@ trait HttpSuite extends SimpleIOSuite with Checkers {
 
   def authToken(user: User): IO[Authorization] =
     for {
-      token <- AuthMock.tokens[IO].flatMap(_.create)
+      token <- AuthMock.tokens[IO].create
       _     <- RedisClient.put(token.value, user, 1.minute)
     } yield Authorization(Credentials.Token(AuthScheme.Bearer, token.value))
 

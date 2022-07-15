@@ -48,17 +48,15 @@ object AuthRoutesSuite extends HttpSuite {
     } yield (u, c, b)
 
     forall(gen) { case (user, newUser, conflict) =>
-      for {
-        auth <- AuthMock[IO](users(user, newUser.password), RedisClient)
-        (postData, shouldReturn) =
-          if (conflict)
-            (newUser.copy(phone = user.phone), Status.Conflict)
-          else
-            (newUser, Status.Created)
-        req    = POST(postData, uri"/auth/user")
-        routes = AuthRoutes[IO](auth).routes(usersMiddleware)
-        res <- expectHttpStatus(routes, req)(shouldReturn)
-      } yield res
+      val auth = AuthMock[IO](users(user, newUser.password), RedisClient)
+      val (postData, shouldReturn) =
+        if (conflict)
+          (newUser.copy(phone = user.phone), Status.Conflict)
+        else
+          (newUser, Status.Created)
+      val req    = POST(postData, uri"/auth/user")
+      val routes = AuthRoutes[IO](auth).routes(usersMiddleware)
+      expectHttpStatus(routes, req)(shouldReturn)
     }
   }
 
@@ -70,17 +68,15 @@ object AuthRoutesSuite extends HttpSuite {
     } yield (u, c, b)
 
     forall(gen) { case (user, c, isCorrect) =>
-      for {
-        auth <- AuthMock[IO](users(user, c.password), RedisClient)
-        (postData, shouldReturn) =
-          if (isCorrect)
-            (c.copy(phone = user.phone), Status.Ok)
-          else
-            (c, Status.Forbidden)
-        req    = POST(postData, uri"/auth/login")
-        routes = AuthRoutes[IO](auth).routes(usersMiddleware)
-        res <- expectHttpStatus(routes, req)(shouldReturn)
-      } yield res
+      val auth = AuthMock[IO](users(user, c.password), RedisClient)
+      val (postData, shouldReturn) =
+        if (isCorrect)
+          (c.copy(phone = user.phone), Status.Ok)
+        else
+          (c, Status.Forbidden)
+      val req    = POST(postData, uri"/auth/login")
+      val routes = AuthRoutes[IO](auth).routes(usersMiddleware)
+      expectHttpStatus(routes, req)(shouldReturn)
     }
   }
 
@@ -92,14 +88,14 @@ object AuthRoutesSuite extends HttpSuite {
 
     forall(gen) { case (user, isAuthed) =>
       for {
-        token <- AuthMock.tokens[IO].flatMap(_.create)
+        token <- AuthMock.tokens[IO].create
         status <-
           if (isAuthed)
             RedisClient.put(token.value, user, 1.minute).as(Status.NoContent)
           else
             IO(Status.Forbidden)
-        req = GET(uri"/auth/logout").putHeaders(Authorization(Credentials.Token(AuthScheme.Bearer, token.value)))
-        auth <- AuthMock[IO](new UsersStub[F], RedisClient)
+        req    = GET(uri"/auth/logout").putHeaders(Authorization(Credentials.Token(AuthScheme.Bearer, token.value)))
+        auth   = AuthMock[IO](new UsersStub[F], RedisClient)
         routes = AuthRoutes[IO](auth).routes(usersMiddleware)
         res <- expectHttpStatus(routes, req)(status)
       } yield res

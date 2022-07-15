@@ -16,14 +16,11 @@ object Security {
     cfg: AppConfig,
     users: Users[F],
     redis: RedisClient[F]
-  ): F[Security[F]] = {
-
-    for {
-      tokens <- JwtExpire[F].map(Tokens.make[F](_, cfg.jwtConfig.tokenConfig.value, cfg.jwtConfig.tokenExpiration))
-      userJwtAuth = UserJwtAuth(JwtAuth.hmac(cfg.jwtConfig.tokenConfig.value.secret, JwtAlgorithm.HS256))
-      auth        = Auth[F](cfg.jwtConfig.tokenExpiration, tokens, users, redis)
-    } yield new Security[F](auth, userJwtAuth)
-
+  ): Security[F] = {
+    val tokens      = Tokens.make[F](JwtExpire[F], cfg.jwtConfig.tokenConfig.value, cfg.jwtConfig.tokenExpiration)
+    val userJwtAuth = UserJwtAuth(JwtAuth.hmac(cfg.jwtConfig.tokenConfig.value.secret, JwtAlgorithm.HS256))
+    val auth        = Auth[F](cfg.jwtConfig.tokenExpiration, tokens, users, redis)
+    new Security[F](auth, userJwtAuth)
   }
 }
 
