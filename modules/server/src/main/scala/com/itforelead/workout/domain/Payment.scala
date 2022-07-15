@@ -34,4 +34,10 @@ object Payment {
     payment: Payment,
     member: Member
   )
+
+  @derive(decoder, encoder, show)
+  case class PaymentWithTotal(
+    payment: List[PaymentWithMember],
+    total: Long
+  )
 }

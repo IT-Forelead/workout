@@ -7,7 +7,7 @@ import com.itforelead.workout.domain.{Member, Payment}
 import com.itforelead.workout.services.sql.MemberSQL.memberId
 import com.itforelead.workout.services.sql.UserSQL.userId
 import skunk._
-import skunk.codec.all.{bool, timestamp}
+import skunk.codec.all.{bool, int8, timestamp}
 import skunk.implicits._
 
 object PaymentSQL {
@@ -29,6 +29,18 @@ object PaymentSQL {
       PaymentWithMember(payment, member)
     }
 
+  def selectPaymentsWithPage(id: UserId, page: Int): AppliedFragment = {
+    val filterByUserID: AppliedFragment =
+      sql"""SELECT payments.*, members.* FROM payments
+           LEFT JOIN members ON members.id = payments.member_id
+           WHERE payments.user_id = $userId
+           ORDER BY payments.created_at DESC""".apply(id)
+    filterByUserID.paginate(10, page)
+  }
+
+  val total: Query[UserId, Long] =
+    sql"""SELECT count(*) FROM payments WHERE user_id = $userId""".query(int8)
+
   val insert: Query[Payment, Payment] =
     sql"""INSERT INTO payments VALUES ($encoder) returning *""".query(decoder)
 
@@ -41,6 +53,7 @@ object PaymentSQL {
 
   val selectPaymentByMemberId: Query[UserId ~ MemberId, Payment] =
     sql"""SELECT * FROM payments
-         WHERE user_id = $userId AND member_id = $memberId AND deleted = false""".query(decoder)
+         WHERE user_id = $userId AND member_id = $memberId AND deleted = false
+         ORDER BY created_at DESC""".query(decoder)
 
 }

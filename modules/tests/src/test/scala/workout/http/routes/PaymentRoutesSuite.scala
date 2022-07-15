@@ -2,7 +2,7 @@ package workout.http.routes
 
 import cats.effect.{IO, Sync}
 import cats.implicits.{catsSyntaxApplicativeErrorId, catsSyntaxOptionId}
-import com.itforelead.workout.domain.Payment.{CreatePayment, PaymentMemberId, PaymentWithMember}
+import com.itforelead.workout.domain.Payment.{CreatePayment, PaymentMemberId, PaymentWithMember, PaymentWithTotal}
 import com.itforelead.workout.domain.custom.exception.{CreatePaymentDailyTypeError, MemberNotFound}
 import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.domain.{Member, Payment, types}
@@ -24,6 +24,8 @@ object PaymentRoutesSuite extends HttpSuite {
       Sync[F].delay(List(PaymentWithMember(payment, member)))
     override def getPaymentByMemberId(userId: UserId, memberId: types.MemberId): F[List[Payment]] =
       Sync[F].delay(List(payment))
+    override def getPaymentsWithTotal(userId: UserId, page: Int): F[PaymentWithTotal] =
+      Sync[F].delay(PaymentWithTotal(List(PaymentWithMember(payment, member)), 1))
   }
 
   test("GET Payments") {
@@ -39,6 +41,23 @@ object PaymentRoutesSuite extends HttpSuite {
         req    = GET(uri"/payment").putHeaders(token)
         routes = new PaymentRoutes[IO](paymentS(payment, member)).routes(usersMiddleware)
         res <- expectHttpStatus(routes, req)(Status.Ok)
+      } yield res
+    }
+  }
+
+  test("GET Payments pagenation") {
+    val gen = for {
+      u <- userGen
+      m <- memberGen
+      p <- paymentGen
+    } yield (u, m, p)
+
+    forall(gen) { case (user, member, payment) =>
+      for {
+        token <- authToken(user)
+        req = GET(uri"/payment/1").putHeaders(token)
+        routes = new PaymentRoutes[IO](paymentS(payment, member)).routes(usersMiddleware)
+        res <- expectHttpBodyAndStatus(routes, req)(PaymentWithTotal(List(PaymentWithMember(payment, member)), 1), Status.Ok)
       } yield res
     }
   }
