@@ -5,7 +5,7 @@ import cats.implicits._
 import com.itforelead.workout.config.SchedulerConfig
 import com.itforelead.workout.domain.{DeliveryStatus, Member, Message}
 import com.itforelead.workout.domain.Message.CreateMessage
-import com.itforelead.workout.domain.types.{MemberId, MessageText, UserId}
+import com.itforelead.workout.domain.types.{FirstName, MemberId, MessageText, UserId}
 import com.itforelead.workout.effects.Background
 import eu.timepit.refined.types.string.NonEmptyString
 import org.typelevel.log4cats.Logger
@@ -35,16 +35,26 @@ object NotificationMessage {
         Logger[F].debug(Console.GREEN + s"NotificationMessage will start after $fixedTime" + Console.RESET) >>
           Background[F].schedule(startSendExpireDate, fixedTime, schedulerConfig.period)
 
-      private def startSendExpireDate: F[Unit] =
+      private def startSendExpireDate: F[Unit] = {
+        def text(firstName: FirstName): NonEmptyString = {
+          NonEmptyString.unsafeFrom(
+            s"Assalomu alaykum ${firstName}. Sizning to'lov vaqtingiz tugashiga 3 kun qoldi."
+          )
+        }
         for {
-          membersList <- members.findActiveTimeShort
-          text = NonEmptyString.unsafeFrom(s"Sizning to'lov vaqtingiz tugashiga 3 kun qoldi.")
-          _ <- membersList.traverse { member =>
-            createMessage(member.userId, member.id, text).flatMap { message =>
-              send(member, text.value, message)
+          membersList   <- members.findActiveTimeShort
+          sentTodayList <- messages.sentSMSTodayMemberIds
+          _ <- membersList
+            .filterNot { member =>
+              sentTodayList.contains(member.id)
             }
-          }
+            .traverse_ { member =>
+              createMessage(member.userId, member.id, text(member.firstname)).flatMap { message =>
+                send(member, text(member.firstname).value, message)
+              }
+            }
         } yield ()
+      }
 
       private def createMessage(userId: UserId, memberId: MemberId, text: NonEmptyString): F[Message] = {
         Sync[F].delay(LocalDateTime.now()).flatMap { now =>

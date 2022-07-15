@@ -3,10 +3,10 @@ package com.itforelead.workout.services
 import cats.effect.{Resource, Sync}
 import com.itforelead.workout.domain.{DeliveryStatus, ID, Message}
 import com.itforelead.workout.domain.Message.{CreateMessage, MessageWithMember, MessageWithTotal}
-import com.itforelead.workout.domain.types.{MessageId, UserId}
+import com.itforelead.workout.domain.types.{MemberId, MessageId, UserId}
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.services.sql.MessagesSQL._
-import skunk.{Session, SqlState}
+import skunk._
 import skunk.implicits.toIdOps
 import cats.syntax.all._
 import com.itforelead.workout.domain.custom.exception.MemberNotFound
@@ -16,6 +16,7 @@ import java.time.LocalDateTime
 
 trait Messages[F[_]] {
   def create(msg: CreateMessage): F[Message]
+  def sentSMSTodayMemberIds: F[List[MemberId]]
   def get(userId: UserId): F[List[MessageWithMember]]
   def getMessagesWithTotal(userId: UserId, page: Int): F[MessageWithTotal]
   def changeStatus(id: MessageId, status: DeliveryStatus): F[Message]
@@ -41,6 +42,9 @@ object Messages {
 
       override def get(userId: UserId): F[List[MessageWithMember]] =
         prepQueryList(select, userId)
+
+      override def sentSMSTodayMemberIds: F[List[MemberId]] =
+        prepQueryList(selectSentTodaySql, Void)
 
       override def getMessagesWithTotal(userId: UserId, page: Int): F[MessageWithTotal] =
         for {

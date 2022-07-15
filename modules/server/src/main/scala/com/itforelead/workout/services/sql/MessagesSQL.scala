@@ -52,4 +52,8 @@ object MessagesSQL {
   val changeStatusSql: Query[DeliveryStatus ~ MessageId, Message] =
     sql"""UPDATE messages SET delivery_status = $deliveryStatus WHERE id = $messageId RETURNING *""".query(decoder)
 
+  val selectSentTodaySql: Query[Void, MemberId] =
+    sql"""SELECT member_id FROM messages
+         WHERE DATE(sent_date) = CURRENT_DATE AND member_id IS NOT NULL""".query(memberId)
+
 }
