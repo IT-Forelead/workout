@@ -4,7 +4,7 @@ import cats.data.OptionT
 import cats.effect.{Resource, Sync}
 import com.itforelead.workout.domain.{ID, Payment}
 import com.itforelead.workout.domain.Payment.{CreatePayment, PaymentWithMember}
-import com.itforelead.workout.domain.custom.exception.{MemberCurrentActiveTime, MemberNotFound}
+import com.itforelead.workout.domain.custom.exception.{CreatePaymentDailyTypeError, MemberNotFound}
 import com.itforelead.workout.domain.types.{MemberId, PaymentId, UserId}
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.services.sql.PaymentSQL._
@@ -66,7 +66,7 @@ object Payments {
               } else {
                 payment.paymentType match {
                   case MONTHLY => createPay(payment, member.activeTime.plusMonths(1).endOfDay)
-                  case DAILY   => MemberCurrentActiveTime.raiseError[F, Payment]
+                  case DAILY   => CreatePaymentDailyTypeError.raiseError[F, Payment]
                 }
               }
             }

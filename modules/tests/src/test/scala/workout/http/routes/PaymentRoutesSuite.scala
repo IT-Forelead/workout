@@ -1,7 +1,9 @@
 package workout.http.routes
 
 import cats.effect.{IO, Sync}
+import cats.implicits.{catsSyntaxApplicativeErrorId, catsSyntaxOptionId}
 import com.itforelead.workout.domain.Payment.{CreatePayment, PaymentMemberId, PaymentWithMember}
+import com.itforelead.workout.domain.custom.exception.{CreatePaymentDailyTypeError, MemberNotFound}
 import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.domain.{Member, Payment, types}
 import com.itforelead.workout.effects.GenUUID
@@ -10,6 +12,7 @@ import org.http4s.Method.{GET, POST}
 import org.http4s.Status
 import org.http4s.client.dsl.io._
 import org.http4s.implicits.http4sLiteralsSyntax
+import weaver.Expectations
 import workout.stub_services.PaymentsStub
 import workout.utils.Generators._
 import workout.utils.HttpSuite
@@ -58,21 +61,50 @@ object PaymentRoutesSuite extends HttpSuite {
     }
   }
 
-  test("POST Payment") {
+  private def paymentServiceS[F[_]: Sync: GenUUID](
+    payment: Payment,
+    errorType: Option[String] = None
+  ): PaymentsStub[F] =
+    new PaymentsStub[F] {
+      override def create(userId: UserId, createPayment: CreatePayment): F[Payment] = {
+        errorType match {
+          case None                            => Sync[F].delay(payment)
+          case Some("createPaymentDailyTypeError") => CreatePaymentDailyTypeError.raiseError[F, Payment]
+          case Some("memberNotFound")          => MemberNotFound.raiseError[F, Payment]
+          case _ => Sync[F].raiseError(new Exception("Error occurred while creating payment. error type: Unknown"))
+        }
+      }
+    }
+
+  def postPaymentReq(errorType: Option[String] = None, shouldReturn: Status): PaymentRoutesSuite.F[Expectations] = {
     val gen = for {
       u  <- userGen
-      m  <- memberGen
       cp <- createPaymentGen
       p  <- paymentGen
-    } yield (u, m, cp, p)
-
-    forall(gen) { case (user, member, createPay, payment) =>
+    } yield (u, cp, p)
+    forall(gen) { case (user, createPay, payment) =>
       for {
         token <- authToken(user)
         req    = POST(createPay, uri"/payment").putHeaders(token)
-        routes = new PaymentRoutes[IO](paymentS(payment, member)).routes(usersMiddleware)
-        res <- expectHttpStatus(routes, req)(Status.Created)
+        routes = new PaymentRoutes[IO](paymentServiceS(payment, errorType)).routes(usersMiddleware)
+        res <- expectHttpStatus(routes, req)(shouldReturn)
       } yield res
     }
+  }
+
+  test("POST Payment") {
+    postPaymentReq(shouldReturn = Status.Created)
+  }
+
+  test("POST Payment: Create Payment Daily Type Error") {
+    postPaymentReq(errorType = "createPaymentDailyTypeError".some, shouldReturn = Status.MethodNotAllowed)
+  }
+
+  test("POST Payment: Member Not Found") {
+    postPaymentReq(errorType = "memberNotFound".some, shouldReturn = Status.BadRequest)
+  }
+
+  test("POST Payment: Unknown Error") {
+    postPaymentReq(errorType = "".some, shouldReturn = Status.BadRequest)
   }
 }

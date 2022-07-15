@@ -1,28 +1,25 @@
 package workout.http.routes
 
+import cats.Show.catsStdShowForTuple2
 import cats.effect.{IO, Sync}
 import cats.implicits.{catsSyntaxApplicativeErrorId, catsSyntaxOptionId}
 import com.itforelead.workout.domain.Member.{CreateMember, MemberWithTotal}
-import com.itforelead.workout.domain.custom.exception.{
-  MultipartDecodeError,
-  PhoneInUse,
-  ValidationCodeExpired,
-  ValidationCodeIncorrect
-}
+import com.itforelead.workout.domain.custom.exception.{MultipartDecodeError, PhoneInUse, ValidationCodeExpired, ValidationCodeIncorrect}
 import com.itforelead.workout.domain.custom.refinements.{FileKey, FilePath, Tel}
 import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.domain.{Member, User, Validation, encCreateMemberAsObject}
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.implicits.GenericTypeOps
 import com.itforelead.workout.routes.{MemberRoutes, deriveEntityEncoder}
+import eu.timepit.refined.cats.refTypeShow
 import fs2.{Pipe, Stream}
 import io.circe.generic.auto.exportEncoder
+import org.http4s._
 import org.http4s.Method.{GET, POST, PUT}
 import org.http4s.client.dsl.io._
 import org.http4s.headers.`Content-Type`
 import org.http4s.implicits.http4sLiteralsSyntax
 import org.http4s.multipart.{Multipart, Part}
-import org.http4s.{MediaType, Status}
 import org.scalacheck.Gen
 import weaver.Expectations
 import workout.stub_services.{MembersStub, S3ClientMock}
@@ -130,7 +127,7 @@ object MemberRoutesSuite extends HttpSuite {
           Part.fileData("filename", url, `Content-Type`(MediaType.image.`png`))
         }.toVector
         multipart =
-          if (multipartDecError) Multipart[F](fileData) else Multipart[F](createMember.toFormData[F] ++fileData)
+          if (multipartDecError) Multipart[F](fileData) else Multipart[F](createMember.toFormData[F] ++ fileData)
         req = PUT(multipart, uri"/member").withHeaders(multipart.headers).putHeaders(token)
         routes = new MemberRoutes[IO](memberServiceS(member, errorType), s3Client)
           .routes(usersMiddleware)
@@ -160,5 +157,18 @@ object MemberRoutesSuite extends HttpSuite {
   }
   test("PUT Member: Unknown Error - [FAIL]") {
     putMemberRequest(Status.BadRequest, "".some, fileUrl = fileUrl.some)
+  }
+
+  test("Image Stream") {
+    val gen: Gen[(Member, FilePath)] = for {
+      m <- memberGen
+      f <- filePathGen
+    } yield (m, f)
+
+    forall(gen) { case (member, filePath) =>
+      val routes = new MemberRoutes[IO](memberServiceS(member), s3Client).routes(usersMiddleware)
+      val req    = GET(Uri.unsafeFromString(s"/member/image/$filePath"))
+      expectHttpStatus(routes, req)(Status.Ok)
+    }
   }
 }
