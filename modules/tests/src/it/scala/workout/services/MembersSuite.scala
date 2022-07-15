@@ -160,7 +160,7 @@ object MembersSuite extends DBSuite {
           fileKey
         )
         memberDB <- members.updateActiveTime(member.id, LocalDateTime.now.minusDays(3))
-        members  <- if (memberDB.id == member.id) members.findActiveTimeShort else IO(List.empty[Member])
+        members  <- imembers.findActiveTimeShort
       } yield members match {
         case Nil            => failure(s"the test failed.")
         case ::(head, next) => success
