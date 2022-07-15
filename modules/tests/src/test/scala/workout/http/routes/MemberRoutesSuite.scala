@@ -42,6 +42,8 @@ object MemberRoutesSuite extends HttpSuite {
 
       override def get(userId: UserId): F[List[Member]] = Sync[F].delay(List(member))
 
+      override def getWeekLeftOnAT(userId: UserId): F[List[Member]] = Sync[F].delay(List(member))
+
       override def findMemberByPhone(phone: Tel): F[Option[Member]] = Sync[F].delay(Option(member))
 
       override def findByUserId(userId: UserId, page: Int): F[Member.MemberWithTotal] =
@@ -60,6 +62,18 @@ object MemberRoutesSuite extends HttpSuite {
       for {
         token <- authToken(user)
         req = GET(uri"/member").putHeaders(token)
+        routes = new MemberRoutes[IO](memberService(member), s3Client)
+          .routes(usersMiddleware)
+        res <- expectHttpStatus(routes, req)(Status.Ok)
+      } yield res
+    }
+  }
+
+  test("GET Members week left on AT - [SUCCESS]") {
+    forall(gen) { case user -> member =>
+      for {
+        token <- authToken(user)
+        req = GET(uri"/member/active-time").putHeaders(token)
         routes = new MemberRoutes[IO](memberService(member), s3Client)
           .routes(usersMiddleware)
         res <- expectHttpStatus(routes, req)(Status.Ok)
