@@ -15,7 +15,7 @@ import com.itforelead.workout.services.redis.RedisClient
 import com.itforelead.workout.services.sql.MemberSQL
 import eu.timepit.refined.types.string.NonEmptyString
 import skunk.implicits._
-import skunk.{Session, SqlState, Void}
+import skunk.{Session, SqlState}
 
 import java.time.LocalDateTime
 import eu.timepit.refined.auto._
@@ -94,7 +94,7 @@ object Members {
         } yield member
 
       override def findActiveTimeShort: F[List[Member]] =
-        prepQueryList(selectExpiredMembers, Void)
+        prepQueryAll(selectExpiredMembers)
 
       override def getWeekLeftOnAT(userId: UserId): F[List[Member]] =
         prepQueryList(selectWeekLeftOnAT, userId)
