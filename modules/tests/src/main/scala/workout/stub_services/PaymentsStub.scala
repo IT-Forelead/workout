@@ -8,5 +8,6 @@ import com.itforelead.workout.services.Payments
 class PaymentsStub[F[_]] extends Payments[F] {
   override def create(userId: UserId, payment: CreatePayment): F[Payment] = ???
   override def payments(userId: UserId): F[List[PaymentWithMember]] = ???
+  override def getPaymentsWithTotal(userId: UserId, page: Int): F[Payment.PaymentWithTotal] = ???
   override def getPaymentByMemberId(userId: UserId, memberId: types.MemberId): F[List[Payment]] = ???
 }

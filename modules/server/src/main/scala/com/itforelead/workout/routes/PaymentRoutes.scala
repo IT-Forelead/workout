@@ -23,6 +23,9 @@ final class PaymentRoutes[F[_]: JsonDecoder: MonadThrow](payments: Payments[F])(
     case GET -> Root as user =>
       payments.payments(user.id).flatMap(Ok(_))
 
+    case GET -> Root / IntVar(page) as user =>
+      payments.getPaymentsWithTotal(user.id, page).flatMap(Ok(_))
+
     case ar @ POST -> Root / "member" as user =>
       ar.req.decodeR[PaymentMemberId] { form =>
         payments.getPaymentByMemberId(user.id, form.memberId).flatMap(Ok(_))

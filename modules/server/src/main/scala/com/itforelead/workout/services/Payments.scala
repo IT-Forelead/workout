@@ -3,7 +3,7 @@ package com.itforelead.workout.services
 import cats.data.OptionT
 import cats.effect.{Resource, Sync}
 import com.itforelead.workout.domain.{ID, Payment}
-import com.itforelead.workout.domain.Payment.{CreatePayment, PaymentWithMember}
+import com.itforelead.workout.domain.Payment.{CreatePayment, PaymentWithMember, PaymentWithTotal}
 import com.itforelead.workout.domain.custom.exception.{CreatePaymentDailyTypeError, MemberNotFound}
 import com.itforelead.workout.domain.types.{MemberId, PaymentId, UserId}
 import com.itforelead.workout.effects.GenUUID
@@ -11,6 +11,7 @@ import com.itforelead.workout.services.sql.PaymentSQL._
 import cats.syntax.all._
 import com.itforelead.workout.domain.PaymentType.{DAILY, MONTHLY}
 import com.itforelead.workout.implicits.LocalDateTimeOps
+import com.itforelead.workout.services.sql.PaymentSQL
 import skunk._
 import skunk.implicits.toIdOps
 
@@ -19,6 +20,7 @@ import java.time.LocalDateTime
 trait Payments[F[_]] {
   def payments(userId: UserId): F[List[PaymentWithMember]]
   def getPaymentByMemberId(userId: UserId, memberId: MemberId): F[List[Payment]]
+  def getPaymentsWithTotal(userId: UserId, page: Int): F[PaymentWithTotal]
   def create(userId: UserId, payment: CreatePayment): F[Payment]
 }
 
@@ -75,6 +77,13 @@ object Payments {
 
     override def payments(userId: UserId): F[List[PaymentWithMember]] =
       prepQueryList(selectAll, userId)
+
+    override def getPaymentsWithTotal(userId: UserId, page: Int): F[PaymentWithTotal] =
+      for {
+        fr       <- selectPaymentsWithPage(userId, page).pure[F]
+        messages <- prepQueryList(fr.fragment.query(PaymentSQL.decPaymentWithMember), fr.argument)
+        total    <- prepQueryUnique(total, userId)
+      } yield PaymentWithTotal(messages, total)
 
     override def getPaymentByMemberId(userId: UserId, memberId: MemberId): F[List[Payment]] =
       prepQueryList(selectPaymentByMemberId, userId ~ memberId)

@@ -30,8 +30,9 @@ object ArrivalSQL {
   def selectArrivalWithTotal(id: UserId, page: Int): AppliedFragment = {
     val filterByUserID: AppliedFragment =
       sql"""SELECT arrival_event.*, members.* FROM arrival_event
-            INNER JOIN members ON members.id = arrival_event.member_id
-           WHERE arrival_event.user_id = $userId AND arrival_event.deleted = false""".apply(id)
+           INNER JOIN members ON members.id = arrival_event.member_id
+           WHERE arrival_event.user_id = $userId AND arrival_event.deleted = false
+           ORDER BY arrival_event.created_at DESC""".apply(id)
     filterByUserID.paginate(10, page)
   }
 
@@ -41,13 +42,15 @@ object ArrivalSQL {
   val selectSql: Query[UserId, ArrivalWithMember] =
     sql"""SELECT arrival_event.*, members.* FROM arrival_event
           INNER JOIN members ON members.id = arrival_event.member_id
-         WHERE arrival_event.user_id = $userId AND arrival_event.deleted = false""".query(decArrivalWithMember)
+         WHERE arrival_event.user_id = $userId AND arrival_event.deleted = false
+         ORDER BY arrival_event.created_at DESC""".query(decArrivalWithMember)
 
   val insertSql: Query[Arrival, Arrival] =
     sql"""INSERT INTO arrival_event VALUES ($encoder) RETURNING *""".query(decoder)
 
   val selectArrivalByMemberId: Query[UserId ~ MemberId, Arrival] =
     sql"""SELECT * FROM arrival_event
-         WHERE user_id = $userId AND member_id = $memberId AND deleted = false""".query(decoder)
+         WHERE user_id = $userId AND member_id = $memberId AND deleted = false
+         ORDER BY created_at DESC""".query(decoder)
 
 }
