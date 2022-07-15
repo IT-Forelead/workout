@@ -35,11 +35,11 @@ object MemberSQL {
   val total: Query[UserId, Long] =
     sql"""SELECT count(*) FROM members WHERE user_id = $userId AND deleted = false""".query(int8)
 
-    val selectByPhone: Query[Tel, Member] =
-      sql"""SELECT * FROM members WHERE phone = $tel AND deleted = false""".query(decoder)
+  val selectByPhone: Query[Tel, Member] =
+    sql"""SELECT * FROM members WHERE phone = $tel AND deleted = false""".query(decoder)
 
-    val selectMembers: Query[UserId, Member] =
-      sql"""SELECT * FROM members WHERE user_id = $userId AND deleted = false""".query(decoder)
+  val selectMembers: Query[UserId, Member] =
+    sql"""SELECT * FROM members WHERE user_id = $userId AND deleted = false""".query(decoder)
 
   val insertMember: Query[MemberId ~ UserId ~ CreateMember ~ LocalDateTime ~ FileKey, Member] =
     sql"""INSERT INTO members VALUES ($encoder) RETURNING *""".query(decoder)
@@ -50,8 +50,13 @@ object MemberSQL {
   val currentMemberActiveTimeSql: Query[MemberId, LocalDateTime] =
     sql"""SELECT active_time FROM members WHERE id = $memberId AND deleted = false""".query(timestamp)
 
-  val selectExpiredMember: Query[Void, Member] =
+  val selectExpiredMembers: Query[Void, Member] =
     sql"""SELECT * FROM members WHERE DATE(active_time) = DATE(NOW() - INTERVAL '3 DAY')""".query(decoder)
+
+  val selectWeekLeftOnAT: Query[UserId, Member] =
+    sql"""SELECT * FROM members WHERE user_id = $userId
+      AND DATE(active_time - INTERVAL '7 DAY') < CURRENT_DATE
+      AND CURRENT_DATE < DATE(active_time)""".query(decoder)
 
   val selectMemberByIdSql: Query[MemberId, Member] =
     sql"""SELECT * FROM members WHERE id = $memberId""".query(decoder)

@@ -37,6 +37,9 @@ final class MemberRoutes[F[_]: Async](members: Members[F], s3Client: S3Client[F]
     case GET -> Root as user =>
       members.get(user.id).flatMap(Ok(_))
 
+    case GET -> Root / "active-time" as user =>
+      members.getWeekLeftOnAT(user.id).flatMap(Ok(_))
+
     case aR @ POST -> Root / "sent-code" as user =>
       aR.req.decodeR[Validation] { validationPhone =>
         members.sendValidationCode(user.id, validationPhone.phone).flatMap(Ok(_))
