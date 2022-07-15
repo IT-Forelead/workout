@@ -87,9 +87,9 @@ object PaymentRoutesSuite extends HttpSuite {
     new PaymentsStub[F] {
       override def create(userId: UserId, createPayment: CreatePayment): F[Payment] = {
         errorType match {
-          case None                            => Sync[F].delay(payment)
+          case None                                => Sync[F].delay(payment)
           case Some("createPaymentDailyTypeError") => CreatePaymentDailyTypeError.raiseError[F, Payment]
-          case Some("memberNotFound")          => MemberNotFound.raiseError[F, Payment]
+          case Some("memberNotFound")              => MemberNotFound.raiseError[F, Payment]
           case _ => Sync[F].raiseError(new Exception("Error occurred while creating payment. error type: Unknown"))
         }
       }
