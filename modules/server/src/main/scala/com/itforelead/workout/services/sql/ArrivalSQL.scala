@@ -37,8 +37,8 @@ object ArrivalSQL {
     val filters: List[AppliedFragment] =
       List(
         arrivalTypeFilter(params.typeBy),
-        startTimeFilter(params.filterDateFrom),
-        endTimeFilter(params.filterDateTo)
+        arrivalStartTimeFilter(params.filterDateFrom),
+        arrivalEndTimeFilter(params.filterDateTo)
       ).flatMap(_.toList)
 
     val filterByUserID: AppliedFragment =

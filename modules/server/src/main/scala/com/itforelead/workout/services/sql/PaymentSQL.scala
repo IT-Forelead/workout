@@ -1,7 +1,7 @@
 package com.itforelead.workout.services.sql
 
 import com.itforelead.workout.domain.Payment
-import com.itforelead.workout.domain.Payment.PaymentWithMember
+import com.itforelead.workout.domain.Payment.{PaymentFilter, PaymentWithMember}
 import com.itforelead.workout.domain.types.{MemberId, PaymentId, UserId}
 import com.itforelead.workout.domain.{Member, Payment}
 import com.itforelead.workout.services.sql.MemberSQL.memberId
@@ -29,12 +29,21 @@ object PaymentSQL {
       PaymentWithMember(payment, member)
     }
 
-  def selectPaymentsWithPage(id: UserId, page: Int): AppliedFragment = {
-    val filterByUserID: AppliedFragment =
-      sql"""SELECT payments.*, members.* FROM payments
+  def selectPaymentWithTotal(id: UserId, params: PaymentFilter, page: Int): AppliedFragment = {
+    val base: Fragment[UserId] = sql"""SELECT payments.*, members.* FROM payments
            LEFT JOIN members ON members.id = payments.member_id
            WHERE payments.user_id = $userId
-           ORDER BY payments.created_at DESC""".apply(id)
+          """
+
+    val filters: List[AppliedFragment] =
+      List(
+        paymentTypeFilter(params.typeBy),
+        paymentStartTimeFilter(params.filterDateFrom),
+        paymentEndTimeFilter(params.filterDateTo)
+      ).flatMap(_.toList)
+
+    val filterByUserID: AppliedFragment =
+      base(id).andOpt(filters) |+| sql" ORDER BY payments.created_at DESC".apply(Void)
     filterByUserID.paginate(10, page)
   }
 

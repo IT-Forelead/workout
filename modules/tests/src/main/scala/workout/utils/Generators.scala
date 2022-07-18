@@ -10,7 +10,7 @@ import Arbitraries._
 import com.itforelead.workout.domain.Arrival.{ArrivalFilter, ArrivalMemberId, CreateArrival}
 import com.itforelead.workout.domain.Member.{CreateMember, MemberWithTotal}
 import com.itforelead.workout.domain.Message.CreateMessage
-import com.itforelead.workout.domain.Payment.{CreatePayment, PaymentMemberId}
+import com.itforelead.workout.domain.Payment.{CreatePayment, PaymentFilter, PaymentMemberId}
 import com.itforelead.workout.domain.UserSetting.UpdateSetting
 import eu.timepit.refined.types.string.NonEmptyString
 import org.scalacheck.Gen.{oneOf, option}
@@ -191,6 +191,13 @@ object Generators {
       p  <- priceGen
       ca <- timestampGen
     } yield Payment(i, ui, mi, pt, p, ca)
+
+  val paymentFilterGen: Gen[PaymentFilter] =
+    for {
+      t <- option(paymentTypeGen)
+      f <- option(timestampGen)
+      to <- option(timestampGen)
+    } yield PaymentFilter(t, f, to)
 
   val paymentMemberIdGen: Gen[PaymentMemberId] = memberIdGen.map(PaymentMemberId.apply)
 

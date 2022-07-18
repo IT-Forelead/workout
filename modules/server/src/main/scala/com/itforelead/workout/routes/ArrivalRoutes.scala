@@ -25,14 +25,9 @@ final class ArrivalRoutes[F[_]: JsonDecoder: MonadThrow](arrivalService: Arrival
       arrivalService.get(user.id).flatMap(Ok(_))
 
     case ar @ POST -> Root / IntVar(page) as user =>
-      ar.req
-        .decodeR[ArrivalFilter] { filter =>
-          arrivalService.getArrivalWithTotal(user.id, filter, page).flatMap(Ok(_))
-        }
-        .recoverWith { case error: MemberNotFound.type =>
-          logger.error(s"Member not found. Error: ${error}") >>
-            NotFound("Member not found. Please try again")
-        }
+      ar.req.decodeR[ArrivalFilter] { filter =>
+        arrivalService.getArrivalWithTotal(user.id, filter, page).flatMap(Ok(_))
+      }
 
     case ar @ POST -> Root as user =>
       ar.req

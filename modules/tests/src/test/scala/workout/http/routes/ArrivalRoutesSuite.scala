@@ -54,7 +54,7 @@ object ArrivalRoutesSuite extends HttpSuite {
     }
   }
 
-  test("GET Arrival pagenation") {
+  test("GET Arrival pagination") {
     val gen = for {
       u <- userGen
       a <- arrivalGen
