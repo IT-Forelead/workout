@@ -1,7 +1,8 @@
 package com.itforelead.workout.services.sql
 
+import cats.implicits.catsSyntaxOptionId
 import com.itforelead.workout.domain.Arrival
-import com.itforelead.workout.domain.Arrival.ArrivalWithMember
+import com.itforelead.workout.domain.Arrival.{ArrivalFilter, ArrivalWithMember}
 import com.itforelead.workout.domain.types._
 import com.itforelead.workout.services.sql.MemberSQL.memberId
 import com.itforelead.workout.services.sql.UserSQL.userId
@@ -27,12 +28,21 @@ object ArrivalSQL {
       ArrivalWithMember(arrival, member)
     }
 
-  def selectArrivalWithTotal(id: UserId, page: Int): AppliedFragment = {
+  def selectArrivalWithTotal(id: UserId, params: ArrivalFilter, page: Int): AppliedFragment = {
+    val base: Fragment[UserId] = sql"""SELECT arrival_event.*, members.* FROM arrival_event
+          INNER JOIN members ON members.id = arrival_event.member_id
+          WHERE arrival_event.user_id = $userId AND arrival_event.deleted = false
+          """
+
+    val filters: List[AppliedFragment] =
+      List(
+        arrivalTypeFilter(params.typeBy),
+        startTimeFilter(params.filterDateFrom),
+        endTimeFilter(params.filterDateTo)
+      ).flatMap(_.toList)
+
     val filterByUserID: AppliedFragment =
-      sql"""SELECT arrival_event.*, members.* FROM arrival_event
-           INNER JOIN members ON members.id = arrival_event.member_id
-           WHERE arrival_event.user_id = $userId AND arrival_event.deleted = false
-           ORDER BY arrival_event.created_at DESC""".apply(id)
+      base(id).andOpt(filters) |+| sql" ORDER BY arrival_event.created_at DESC".apply(Void)
     filterByUserID.paginate(10, page)
   }
 

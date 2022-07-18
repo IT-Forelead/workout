@@ -3,7 +3,7 @@ package workout.http.routes
 import cats.effect.{IO, Sync}
 import com.itforelead.workout.domain.{Arrival, Member, User, types}
 import cats.implicits.{catsSyntaxApplicativeErrorId, catsSyntaxOptionId}
-import com.itforelead.workout.domain.Arrival.{ArrivalWithMember, ArrivalWithTotal, CreateArrival}
+import com.itforelead.workout.domain.Arrival.{ArrivalFilter, ArrivalWithMember, ArrivalWithTotal, CreateArrival}
 import com.itforelead.workout.domain.custom.exception.MemberNotFound
 import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.effects.GenUUID
@@ -31,7 +31,7 @@ object ArrivalRoutesSuite extends HttpSuite {
         }
     override def get(userId: UserId): F[List[ArrivalWithMember]] =
       Sync[F].delay(List(ArrivalWithMember(arrival, member)))
-    override def getArrivalWithTotal(userId: UserId, page: Int): F[ArrivalWithTotal] =
+    override def getArrivalWithTotal(userId: UserId, filter: ArrivalFilter, page: Int): F[ArrivalWithTotal] =
       Sync[F].delay(ArrivalWithTotal(List(ArrivalWithMember(arrival, member)), 1))
     override def getArrivalByMemberId(userId: UserId, memberId: types.MemberId): F[List[Arrival]] =
       Sync[F].delay(List(arrival))
@@ -59,12 +59,13 @@ object ArrivalRoutesSuite extends HttpSuite {
       u <- userGen
       a <- arrivalGen
       m <- memberGen
-    } yield (u, a, m)
+      f <- arrivalFilterGen
+    } yield (u, a, m, f)
 
-    forall(gen) { case (user, arrival, member) =>
+    forall(gen) { case (user, arrival, member, filter) =>
       for {
         token <- authToken(user)
-        req = GET(uri"/arrival/1").putHeaders(token)
+        req = POST(filter, uri"/arrival/1").putHeaders(token)
         routes = new ArrivalRoutes[IO](arrivalMethod(arrival, member)).routes(usersMiddleware)
         res <- expectHttpBodyAndStatus(routes, req)(ArrivalWithTotal(List(ArrivalWithMember(arrival, member)), 1), Status.Ok)
       } yield res

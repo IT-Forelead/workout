@@ -7,7 +7,7 @@ import com.itforelead.workout.domain.types._
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 import Arbitraries._
-import com.itforelead.workout.domain.Arrival.{ArrivalMemberId, CreateArrival}
+import com.itforelead.workout.domain.Arrival.{ArrivalFilter, ArrivalMemberId, CreateArrival}
 import com.itforelead.workout.domain.Member.{CreateMember, MemberWithTotal}
 import com.itforelead.workout.domain.Message.CreateMessage
 import com.itforelead.workout.domain.Payment.{CreatePayment, PaymentMemberId}
@@ -143,6 +143,13 @@ object Generators {
       dt <- timestampGen
       at <- arrivalTypeGen
     } yield Arrival(i, ui, mi, dt, at)
+
+  val arrivalFilterGen: Gen[ArrivalFilter] =
+    for {
+      t <- option(arrivalTypeGen)
+      f <- option(timestampGen)
+      to <- option(timestampGen)
+    } yield ArrivalFilter(t, f, to)
 
   val createArrivalGen: Gen[CreateArrival] =
     for {

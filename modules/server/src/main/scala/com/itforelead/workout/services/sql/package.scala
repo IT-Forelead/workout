@@ -7,7 +7,7 @@ import com.itforelead.workout.domain.types._
 import com.itforelead.workout.types.IsUUID
 import skunk._
 import skunk.codec.all._
-import skunk.data.{Arr, Type}
+import skunk.data.Type
 import skunk.implicits._
 import tsec.passwordhashers.PasswordHash
 import tsec.passwordhashers.jca.SCrypt
@@ -16,8 +16,7 @@ import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import squants.Money
 
-import java.util.UUID
-import scala.util.Try
+import java.time.LocalDateTime
 
 package object sql {
 
@@ -77,6 +76,15 @@ package object sql {
       af |+| filters
     }
 
+    def andOpt(fs: List[AppliedFragment]): AppliedFragment = {
+      val filters =
+        if (fs.isEmpty)
+          AppliedFragment.empty
+        else
+          fs.foldSmash(void" AND ", void" AND ", AppliedFragment.empty)
+      af |+| filters
+    }
+
     def innerAndOpt(fs: List[AppliedFragment]): AppliedFragment = {
       val filters =
         if (fs.isEmpty)
@@ -87,5 +95,14 @@ package object sql {
     }
 
   }
+
+  def startTimeFilter: Option[LocalDateTime] => Option[AppliedFragment] =
+    _.map(sql"arrival_event.created_at >= $timestamp")
+
+  def endTimeFilter: Option[LocalDateTime] => Option[AppliedFragment] =
+    _.map(sql"arrival_event.created_at <= $timestamp")
+
+  def arrivalTypeFilter: Option[ArrivalType] => Option[AppliedFragment] =
+    _.map(sql""" arrival_event.arrival = $arrivalType""")
 
 }
