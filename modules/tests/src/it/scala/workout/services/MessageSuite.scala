@@ -31,12 +31,15 @@ object MessageSuite extends DBSuite {
       _              <- members.sendValidationCode(defaultUserId, createMember.phone)
       validationCode <- RedisClient.get(createMember.phone.value)
       code = ValidationCode.unsafeFrom(validationCode.get)
-      member1     <- members.validateAndCreate(defaultUserId, createMember.copy(code = code), defaultFileKey)
-      message1    <- messages.create(createMessage.copy(memberId = member1.id.some))
-      message2    <- messages.get(message1.userId)
-      getMessages <- messages.getMessagesWithTotal(defaultUserId, 1)
+      member1      <- members.validateAndCreate(defaultUserId, createMember.copy(code = code), defaultFileKey)
+      message1     <- messages.create(createMessage.copy(memberId = member1.id.some))
+      message2     <- messages.get(message1.userId)
+      getMessages  <- messages.getMessagesWithTotal(defaultUserId, 1)
+      getMembersId <- messages.sentSMSTodayMemberIds
     } yield assert(
-      message2.exists(tc => tc.message.userId == message1.userId) && getMessages.messages.exists(_.message == message1)
+      message2.exists(tc => tc.message.userId == message1.userId) &&
+      getMessages.messages.exists(_.message == message1) &&
+      getMembersId.contains(member1.id)
     )
   }
   }
