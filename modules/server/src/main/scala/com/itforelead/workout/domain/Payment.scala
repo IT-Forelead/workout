@@ -40,4 +40,11 @@ object Payment {
     payment: List[PaymentWithMember],
     total: Long
   )
+
+  @derive(decoder, encoder, show)
+  case class PaymentFilter(
+    typeBy: Option[PaymentType] = None,
+    filterDateFrom: Option[LocalDateTime] = None,
+    filterDateTo: Option[LocalDateTime] = None
+  )
 }
