@@ -1,7 +1,8 @@
 package com.itforelead.workout.services.sql
 
+import cats.implicits.catsSyntaxOptionId
 import com.itforelead.workout.domain.Arrival
-import com.itforelead.workout.domain.Arrival.ArrivalWithMember
+import com.itforelead.workout.domain.Arrival.{ArrivalFilter, ArrivalWithMember}
 import com.itforelead.workout.domain.types._
 import com.itforelead.workout.services.sql.MemberSQL.memberId
 import com.itforelead.workout.services.sql.UserSQL.userId
@@ -27,13 +28,37 @@ object ArrivalSQL {
       ArrivalWithMember(arrival, member)
     }
 
-  def selectArrivalWithTotal(id: UserId, page: Int): AppliedFragment = {
-    val filterByUserID: AppliedFragment =
-      sql"""SELECT arrival_event.*, members.* FROM arrival_event
-           INNER JOIN members ON members.id = arrival_event.member_id
-           WHERE arrival_event.user_id = $userId AND arrival_event.deleted = false
-           ORDER BY arrival_event.created_at DESC""".apply(id)
-    filterByUserID.paginate(10, page)
+  def selectArrivalWithTotal(id: UserId, params: ArrivalFilter, page: Int): AppliedFragment = {
+    val base: Fragment[UserId] = sql"""SELECT arrival_event.*, members.* FROM arrival_event
+          INNER JOIN members ON members.id = arrival_event.member_id
+          WHERE arrival_event.user_id = $userId AND arrival_event.deleted = false
+          """
+
+    val filters: List[AppliedFragment] =
+      List(
+        arrivalTypeFilter(params.typeBy),
+        arrivalStartTimeFilter(params.filterDateFrom),
+        arrivalEndTimeFilter(params.filterDateTo)
+      ).flatMap(_.toList)
+
+    val filter: AppliedFragment =
+      base(id).andOpt(filters) |+| sql" ORDER BY arrival_event.created_at DESC".apply(Void)
+    filter.paginate(10, page)
+  }
+
+  def total(id: UserId, params: ArrivalFilter): AppliedFragment = {
+    val base: Fragment[UserId] = sql"""SELECT count(*) FROM arrival_event
+          WHERE user_id = $userId AND deleted = false
+          """
+
+    val filters: List[AppliedFragment] =
+      List(
+        arrivalTypeFilter(params.typeBy),
+        arrivalStartTimeFilter(params.filterDateFrom),
+        arrivalEndTimeFilter(params.filterDateTo)
+      ).flatMap(_.toList)
+
+    base(id).andOpt(filters)
   }
 
   val total: Query[UserId, Long] =

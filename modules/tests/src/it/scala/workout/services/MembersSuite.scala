@@ -2,7 +2,7 @@ package workout.services
 
 import cats.effect.{IO, Sync}
 import cats.implicits.{catsSyntaxApplicativeError, catsSyntaxOptionId}
-import com.itforelead.workout.domain.Member
+import com.itforelead.workout.domain.Member.MemberFilter
 import com.itforelead.workout.domain.custom.exception.{PhoneInUse, ValidationCodeExpired, ValidationCodeIncorrect}
 import com.itforelead.workout.domain.custom.refinements.{FileKey, Tel, ValidationCode}
 import com.itforelead.workout.domain.types.MessageId
@@ -10,14 +10,7 @@ import com.itforelead.workout.services.{Members, MessageBroker, Messages}
 import eu.timepit.refined.cats.refTypeShow
 import workout.services.MessageSuite.failure
 import workout.utils.DBSuite
-import workout.utils.Generators.{
-  createMemberGen,
-  defaultFileKey,
-  defaultUserId,
-  memberIdGen,
-  phoneGen,
-  validationCodeGen
-}
+import workout.utils.Generators.{createMemberGen, defaultFileKey, defaultUserId, phoneGen, validationCodeGen}
 
 import java.time.LocalDateTime
 
@@ -37,7 +30,7 @@ object MembersSuite extends DBSuite {
           defaultFileKey
         )
         getMember   <- members.findMemberByPhone(createMember.phone)
-        membersList <- members.findByUserId(defaultUserId, 1)
+        membersList <- members.membersWithTotal(defaultUserId, MemberFilter(), 1)
       } yield assert(membersList.member.contains(member1)) && assert(getMember.get == member1)
     }
   }

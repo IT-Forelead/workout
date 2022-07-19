@@ -1,7 +1,8 @@
 package com.itforelead.workout.services.sql
 
-import com.itforelead.workout.domain.Member
-import com.itforelead.workout.domain.Member.CreateMember
+import com.itforelead.workout.domain.{Member, MemberFilterBy}
+import com.itforelead.workout.domain.Member.{CreateMember, MemberFilter}
+import com.itforelead.workout.domain.MemberFilterBy._
 import com.itforelead.workout.domain.custom.refinements.{FileKey, Tel}
 import com.itforelead.workout.domain.types._
 import com.itforelead.workout.services.sql.UserSQL.userId
@@ -26,10 +27,20 @@ object MemberSQL {
       Member(i, ui, fn, ln, p, b, at, fp)
     }
 
-  def selectByUserId(id: UserId, page: Int): AppliedFragment = {
-    val filterByUserID: AppliedFragment =
-      sql"""SELECT * FROM members WHERE user_id = $userId AND deleted = false""".apply(id)
-    filterByUserID.paginate(10, page)
+  def selectMemberFilter(id: UserId, filter: Option[MemberFilterBy], page: Int): AppliedFragment = {
+    val filterBy = filter
+      .map {
+        case FirstnameAZ => "ORDER BY firstname ASC"
+        case FirstnameZA => "ORDER BY firstname DESC"
+        case LastnameAZ  => "ORDER BY lastname ASC"
+        case LastnameZA  => "ORDER BY lastname DESC"
+        case ActiveTime  => "ORDER BY active_time DESC"
+      }
+      .getOrElse("")
+
+    val res: AppliedFragment =
+      sql"""SELECT * FROM members WHERE user_id = $userId AND deleted = false #$filterBy""".apply(id)
+    res.paginate(10, page)
   }
 
   val total: Query[UserId, Long] =

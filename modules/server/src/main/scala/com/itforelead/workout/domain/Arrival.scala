@@ -36,5 +36,12 @@ object Arrival {
   )
 
   @derive(decoder, encoder, show)
+  case class ArrivalFilter(
+    typeBy: Option[ArrivalType] = None,
+    filterDateFrom: Option[LocalDateTime] = None,
+    filterDateTo: Option[LocalDateTime] = None
+  )
+
+  @derive(decoder, encoder, show)
   case class ArrivalMemberId(memberId: MemberId)
 }

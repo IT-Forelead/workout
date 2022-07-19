@@ -6,7 +6,7 @@ import com.itforelead.workout.services.{UserSettings, Users}
 import eu.timepit.refined.auto.autoUnwrap
 import tsec.passwordhashers.jca.SCrypt
 import workout.utils.DBSuite
-import workout.utils.Generators.{createUserGen, defaultUserId, updateSettingGen, userSettingGen}
+import workout.utils.Generators.{createUserGen, defaultUserId, updateSettingGen}
 
 object UsersSuite extends DBSuite {
 

@@ -4,7 +4,7 @@ import cats.data.OptionT
 import cats.effect.std.Random
 import cats.effect.{Resource, Sync}
 import cats.implicits._
-import com.itforelead.workout.domain.Member.{CreateMember, MemberWithTotal}
+import com.itforelead.workout.domain.Member.{CreateMember, MemberFilter, MemberWithTotal}
 import com.itforelead.workout.domain.Message.CreateMessage
 import com.itforelead.workout.domain.custom.exception.{PhoneInUse, ValidationCodeExpired, ValidationCodeIncorrect}
 import com.itforelead.workout.domain.custom.refinements.{FileKey, Tel}
@@ -25,7 +25,7 @@ import scala.concurrent.duration.DurationInt
 
 trait Members[F[_]] {
   def get(userId: UserId): F[List[Member]]
-  def findByUserId(userId: UserId, page: Int): F[MemberWithTotal]
+  def membersWithTotal(userId: UserId, filter: MemberFilter, page: Int): F[MemberWithTotal]
   def findMemberByPhone(phone: Tel): F[Option[Member]]
   def sendValidationCode(userId: UserId, phone: Tel): F[Unit]
   def validateAndCreate(userId: UserId, createMember: CreateMember, key: FileKey): F[Member]
@@ -58,9 +58,9 @@ object Members {
       override def get(userId: UserId): F[List[Member]] =
         prepQueryList(selectMembers, userId)
 
-      override def findByUserId(userId: UserId, page: Int): F[MemberWithTotal] =
+      override def membersWithTotal(userId: UserId, filter: MemberFilter, page: Int): F[MemberWithTotal] =
         for {
-          fr     <- selectByUserId(userId, page).pure[F]
+          fr     <- selectMemberFilter(userId, filter.filterBy, page).pure[F]
           member <- prepQueryList(fr.fragment.query(MemberSQL.decoder), fr.argument)
           total  <- prepQueryUnique(total, userId)
         } yield MemberWithTotal(member, total)
