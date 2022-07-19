@@ -40,6 +40,11 @@ object Member {
   @derive(decoder, encoder, show)
   case class MemberWithTotal(member: List[Member], total: Long)
 
+  @derive(decoder, encoder, show)
+  case class MemberFilter(
+    filterBy: Option[MemberFilterBy] = None
+  )
+
   implicit def decodeMap[F[_]: Sync]: MapConvert[F, ValidationResult[CreateMember]] =
     (values: Map[String, String]) =>
       (

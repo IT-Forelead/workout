@@ -3,7 +3,7 @@ package com.itforelead.workout.routes
 import cats.data.NonEmptyList
 import cats.effect.kernel.Async
 import cats.implicits._
-import com.itforelead.workout.domain.Member.CreateMember
+import com.itforelead.workout.domain.Member.{CreateMember, MemberFilter}
 import com.itforelead.workout.domain.custom.exception._
 import com.itforelead.workout.domain.custom.refinements.{FileKey, FileName, FilePath}
 import com.itforelead.workout.domain.{User, Validation}
@@ -31,8 +31,10 @@ final class MemberRoutes[F[_]: Async](members: Members[F], s3Client: S3Client[F]
 
   private[this] val privateRoutes: AuthedRoutes[User, F] = AuthedRoutes.of {
 
-    case GET -> Root / IntVar(page) as user =>
-      members.findByUserId(user.id, page).flatMap(Ok(_))
+    case ar @ POST -> Root / IntVar(page) as user =>
+      ar.req.decodeR[MemberFilter] { filter =>
+        members.membersWithTotal(user.id, filter, page).flatMap(Ok(_))
+      }
 
     case GET -> Root as user =>
       members.get(user.id).flatMap(Ok(_))
