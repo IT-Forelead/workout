@@ -4,7 +4,7 @@ import cats.effect.IO
 import com.itforelead.workout.domain.custom.exception.MemberNotFound
 import com.itforelead.workout.domain.types.MessageId
 import com.itforelead.workout.services.{ArrivalService, Members, MessageBroker, Messages}
-import cats.implicits.catsSyntaxApplicativeError
+import cats.implicits.{catsSyntaxApplicativeError, catsSyntaxOptionId}
 import com.itforelead.workout.domain.Arrival.ArrivalFilter
 import com.itforelead.workout.domain.custom.refinements.{Tel, ValidationCode}
 import eu.timepit.refined.types.string.NonEmptyString
@@ -43,7 +43,7 @@ object ArrivalSuite extends DBSuite {
         member1     <- members.validateAndCreate(defaultUserId, createMember.copy(code = code), defaultFileKey)
         arrival1    <- arrivalService.create(defaultUserId, createArrival.copy(memberId = member1.id))
         arrival2    <- arrivalService.get(defaultUserId)
-        getArrivals <- arrivalService.getArrivalWithTotal(defaultUserId, filter, 1)
+        getArrivals <- arrivalService.getArrivalWithTotal(defaultUserId, filter.copy(typeBy = arrival1.arrivalType.some), 1)
         getArrival  <- arrivalService.getArrivalByMemberId(defaultUserId, arrival1.memberId)
       } yield methodName match {
         case "createArrival"        => assert(arrival2.exists(_.arrival == arrival1))
