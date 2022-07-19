@@ -3,7 +3,7 @@ package workout.http.routes
 import cats.Show.catsStdShowForTuple2
 import cats.effect.{IO, Sync}
 import cats.implicits.{catsSyntaxApplicativeErrorId, catsSyntaxOptionId}
-import com.itforelead.workout.domain.Member.{CreateMember, MemberWithTotal}
+import com.itforelead.workout.domain.Member.{CreateMember, MemberFilter, MemberWithTotal}
 import com.itforelead.workout.domain.custom.exception.{MultipartDecodeError, PhoneInUse, ValidationCodeExpired, ValidationCodeIncorrect}
 import com.itforelead.workout.domain.custom.refinements.{FileKey, FilePath, Tel}
 import com.itforelead.workout.domain.types.UserId
@@ -46,7 +46,7 @@ object MemberRoutesSuite extends HttpSuite {
 
       override def findMemberByPhone(phone: Tel): F[Option[Member]] = Sync[F].delay(Option(member))
 
-      override def findByUserId(userId: UserId, page: Int): F[Member.MemberWithTotal] =
+      override def membersWithTotal(userId: UserId, filter: MemberFilter, page: Int): F[Member.MemberWithTotal] =
         Sync[F].delay(MemberWithTotal(List(member), 1))
 
       override def sendValidationCode(userId: UserId, phone: Tel): F[Unit] = Sync[F].unit
@@ -81,11 +81,11 @@ object MemberRoutesSuite extends HttpSuite {
     }
   }
 
-  test("GET Member By User ID - [SUCCESS]") {
+  test("GET Members By User ID - [SUCCESS]") {
     forall(gen) { case user -> member =>
       for {
         token <- authToken(user)
-        req = GET(uri"/member/1").putHeaders(token)
+        req = POST(MemberFilter(),uri"/member/1").putHeaders(token)
         routes = new MemberRoutes[IO](memberService(member), s3Client)
           .routes(usersMiddleware)
         res <- expectHttpBodyAndStatus(routes, req)(MemberWithTotal(List(member), 1), Status.Ok)
