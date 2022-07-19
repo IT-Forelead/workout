@@ -15,7 +15,7 @@ import com.itforelead.workout.services.redis.RedisClient
 import com.itforelead.workout.services.sql.MemberSQL
 import eu.timepit.refined.types.string.NonEmptyString
 import skunk.implicits._
-import skunk.{Session, SqlState, Void}
+import skunk.{Session, SqlState}
 
 import java.time.LocalDateTime
 import eu.timepit.refined.auto._
@@ -29,6 +29,7 @@ trait Members[F[_]] {
   def sendValidationCode(userId: UserId, phone: Tel): F[Unit]
   def validateAndCreate(userId: UserId, createMember: CreateMember, key: FileKey): F[Member]
   def findActiveTimeShort: F[List[Member]]
+  def getWeekLeftOnAT(userId: UserId): F[List[Member]]
   def findMemberById(memberId: MemberId): F[Option[Member]]
   def updateActiveTime(memberId: MemberId, activeTime: LocalDateTime): F[Member]
 }
@@ -93,7 +94,10 @@ object Members {
         } yield member
 
       override def findActiveTimeShort: F[List[Member]] =
-        prepQueryList(selectExpiredMember, Void)
+        prepQueryAll(selectExpiredMembers)
+
+      override def getWeekLeftOnAT(userId: UserId): F[List[Member]] =
+        prepQueryList(selectWeekLeftOnAT, userId)
 
       override def findMemberById(memberId: MemberId): F[Option[Member]] =
         OptionT(prepOptQuery(selectMemberByIdSql, memberId)).value
