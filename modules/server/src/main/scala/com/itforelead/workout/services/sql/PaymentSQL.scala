@@ -1,13 +1,13 @@
 package com.itforelead.workout.services.sql
 
 import com.itforelead.workout.domain.Payment
-import com.itforelead.workout.domain.Payment.PaymentWithMember
+import com.itforelead.workout.domain.Payment.{PaymentFilter, PaymentWithMember}
 import com.itforelead.workout.domain.types.{MemberId, PaymentId, UserId}
 import com.itforelead.workout.domain.{Member, Payment}
 import com.itforelead.workout.services.sql.MemberSQL.memberId
 import com.itforelead.workout.services.sql.UserSQL.userId
 import skunk._
-import skunk.codec.all.{bool, timestamp}
+import skunk.codec.all.{bool, int8, timestamp}
 import skunk.implicits._
 
 object PaymentSQL {
@@ -29,6 +29,39 @@ object PaymentSQL {
       PaymentWithMember(payment, member)
     }
 
+  def selectPaymentWithTotal(id: UserId, params: PaymentFilter, page: Int): AppliedFragment = {
+    val base: Fragment[UserId] = sql"""SELECT payments.*, members.* FROM payments
+           LEFT JOIN members ON members.id = payments.member_id
+           WHERE payments.user_id = $userId
+          """
+
+    val filters: List[AppliedFragment] =
+      List(
+        paymentTypeFilter(params.typeBy),
+        paymentStartTimeFilter(params.filterDateFrom),
+        paymentEndTimeFilter(params.filterDateTo)
+      ).flatMap(_.toList)
+
+    val filter: AppliedFragment =
+      base(id).andOpt(filters) |+| sql" ORDER BY payments.created_at DESC".apply(Void)
+    filter.paginate(10, page)
+  }
+
+  def total(id: UserId, params: PaymentFilter): AppliedFragment = {
+    val base: Fragment[UserId] = sql"""SELECT count(*) FROM payments
+           WHERE payments.user_id = $userId
+          """
+
+    val filters: List[AppliedFragment] =
+      List(
+        paymentTypeFilter(params.typeBy),
+        paymentStartTimeFilter(params.filterDateFrom),
+        paymentEndTimeFilter(params.filterDateTo)
+      ).flatMap(_.toList)
+
+    base(id).andOpt(filters)
+  }
+
   val insert: Query[Payment, Payment] =
     sql"""INSERT INTO payments VALUES ($encoder) returning *""".query(decoder)
 
@@ -41,6 +74,7 @@ object PaymentSQL {
 
   val selectPaymentByMemberId: Query[UserId ~ MemberId, Payment] =
     sql"""SELECT * FROM payments
-         WHERE user_id = $userId AND member_id = $memberId AND deleted = false""".query(decoder)
+         WHERE user_id = $userId AND member_id = $memberId AND deleted = false
+         ORDER BY created_at DESC""".query(decoder)
 
 }

@@ -40,7 +40,7 @@ object MessageRoutesSuite extends HttpSuite {
     }
   }
 
-  test("GET Messages pagenation") {
+  test("GET Messages Pagination") {
     val gen = for {
       u  <- userGen
       ms <- messageGen
@@ -50,9 +50,12 @@ object MessageRoutesSuite extends HttpSuite {
     forall(gen) { case (user, message, member) =>
       for {
         token <- authToken(user)
-        req = GET(uri"/message/1").putHeaders(token)
+        req    = GET(uri"/message/1").putHeaders(token)
         routes = new MessageRoutes[IO](messages(message, member)).routes(usersMiddleware)
-        res <- expectHttpBodyAndStatus(routes, req)(MessageWithTotal(List(MessageWithMember(message, member.some)), 1), Status.Ok)
+        res <- expectHttpBodyAndStatus(routes, req)(
+          MessageWithTotal(List(MessageWithMember(message, member.some)), 1),
+          Status.Ok
+        )
       } yield res
     }
   }

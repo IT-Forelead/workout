@@ -14,7 +14,6 @@ import eu.timepit.refined.cats._
 import eu.timepit.refined.types.string.NonEmptyString
 
 import java.time.{LocalDate, LocalDateTime}
-import java.time.{LocalDate, LocalDateTime}
 
 @derive(decoder, encoder, show)
 case class Member(
@@ -40,6 +39,11 @@ object Member {
 
   @derive(decoder, encoder, show)
   case class MemberWithTotal(member: List[Member], total: Long)
+
+  @derive(decoder, encoder, show)
+  case class MemberFilter(
+    filterBy: Option[MemberFilterBy] = None
+  )
 
   implicit def decodeMap[F[_]: Sync]: MapConvert[F, ValidationResult[CreateMember]] =
     (values: Map[String, String]) =>

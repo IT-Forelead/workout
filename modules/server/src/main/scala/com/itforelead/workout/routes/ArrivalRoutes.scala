@@ -1,7 +1,7 @@
 package com.itforelead.workout.routes
 
 import cats.MonadThrow
-import com.itforelead.workout.domain.Arrival.{ArrivalMemberId, CreateArrival}
+import com.itforelead.workout.domain.Arrival.{ArrivalFilter, ArrivalMemberId, CreateArrival}
 import cats.implicits.{catsSyntaxApplicativeError, catsSyntaxFlatMapOps, toFlatMapOps}
 import com.itforelead.workout.domain.User
 import com.itforelead.workout.domain.custom.exception.MemberNotFound
@@ -24,8 +24,10 @@ final class ArrivalRoutes[F[_]: JsonDecoder: MonadThrow](arrivalService: Arrival
     case GET -> Root as user =>
       arrivalService.get(user.id).flatMap(Ok(_))
 
-    case GET -> Root / IntVar(page) as user =>
-      arrivalService.getArrivalWithTotal(user.id, page).flatMap(Ok(_))
+    case ar @ POST -> Root / IntVar(page) as user =>
+      ar.req.decodeR[ArrivalFilter] { filter =>
+        arrivalService.getArrivalWithTotal(user.id, filter, page).flatMap(Ok(_))
+      }
 
     case ar @ POST -> Root as user =>
       ar.req

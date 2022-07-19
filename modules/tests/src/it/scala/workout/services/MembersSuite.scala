@@ -1,12 +1,14 @@
 package workout.services
 
-import cats.effect.IO
+import cats.effect.{IO, Sync}
 import cats.implicits.{catsSyntaxApplicativeError, catsSyntaxOptionId}
+import com.itforelead.workout.domain.Member.MemberFilter
 import com.itforelead.workout.domain.custom.exception.{PhoneInUse, ValidationCodeExpired, ValidationCodeIncorrect}
 import com.itforelead.workout.domain.custom.refinements.{FileKey, Tel, ValidationCode}
 import com.itforelead.workout.domain.types.MessageId
 import com.itforelead.workout.services.{Members, MessageBroker, Messages}
 import eu.timepit.refined.cats.refTypeShow
+import workout.services.MessageSuite.failure
 import workout.utils.DBSuite
 import workout.utils.Generators.{createMemberGen, defaultFileKey, defaultUserId, phoneGen, validationCodeGen}
 
@@ -27,8 +29,8 @@ object MembersSuite extends DBSuite {
           createMember.copy(code = ValidationCode.unsafeFrom(validationCode.get)),
           defaultFileKey
         )
-        getMember <- members.findMemberByPhone(createMember.phone)
-        membersList <- members.findByUserId(defaultUserId, 1)
+        getMember   <- members.findMemberByPhone(createMember.phone)
+        membersList <- members.membersWithTotal(defaultUserId, MemberFilter(), 1)
       } yield assert(membersList.member.contains(member1)) && assert(getMember.get == member1)
     }
   }
@@ -69,10 +71,10 @@ object MembersSuite extends DBSuite {
     val gen = for {
       m <- createMemberGen()
       c <- validationCodeGen
-    } yield (m,c)
+    } yield (m, c)
     forall(gen) { case (createMember, validationCode) =>
       (for {
-        _               <- members.sendValidationCode(defaultUserId, createMember.phone)
+        _ <- members.sendValidationCode(defaultUserId, createMember.phone)
         _ <- members.validateAndCreate(
           defaultUserId,
           createMember.copy(code = validationCode),
@@ -80,7 +82,7 @@ object MembersSuite extends DBSuite {
         )
       } yield failure(s"The test should return error")).recover {
         case _: ValidationCodeIncorrect => success
-        case error         => failure(s"the test failed. $error")
+        case error                      => failure(s"the test failed. $error")
       }
     }
   }
@@ -90,8 +92,8 @@ object MembersSuite extends DBSuite {
     val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
 
     val gen = for {
-      m  <- createMemberGen()
-      p  <- phoneGen
+      m <- createMemberGen()
+      p <- phoneGen
     } yield (m, p)
     forall(gen) { case (createMember, phone) =>
       (for {
@@ -104,12 +106,12 @@ object MembersSuite extends DBSuite {
         )
       } yield failure(s"The test should return error")).recover {
         case _: ValidationCodeExpired => success
-        case error         => failure(s"the test failed. $error")
+        case error                    => failure(s"the test failed. $error")
       }
     }
   }
 
-  test("Member by id") { implicit postgres =>
+  test("Member By Id") { implicit postgres =>
     val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
     val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
 
@@ -150,12 +152,16 @@ object MembersSuite extends DBSuite {
           createMember.copy(code = ValidationCode.unsafeFrom(validationCode.get)),
           fileKey
         )
-        memberDB <- members.updateActiveTime(member.id, LocalDateTime.now())
-      } yield assert(memberDB.id == member.id)
+        memberDB <- members.updateActiveTime(member.id, LocalDateTime.now.minusDays(3))
+        members  <- members.findActiveTimeShort
+      } yield members match {
+        case Nil            => failure(s"the test failed.")
+        case ::(head, next) => success
+      }
     }
   }
 
-  test("Member by user id") { implicit postgres =>
+  test("Member By User Id") { implicit postgres =>
     val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
     val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
 
@@ -178,7 +184,7 @@ object MembersSuite extends DBSuite {
     }
   }
 
-  test("Member by phone") { implicit postgres =>
+  test("Member By Phone") { implicit postgres =>
     val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
     val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
 

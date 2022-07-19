@@ -11,19 +11,19 @@ import scala.util.Try
 
 object UtilsSuite extends SimpleIOSuite with Checkers {
 
-  test("Retrieve content type") {
+  test("Retrieve Content Type") {
     forall(filenameGen) { filename =>
       expect(nameToContentType(filename).isDefined)
     }
   }
 
-  test("Retrieve file type") {
+  test("Retrieve File Type") {
     forall(filenameGen) { filename =>
       expect(FileTypes.contains(getFileType(filename)))
     }
   }
 
-  test("Retrieve file key") {
+  test("Retrieve File Key") {
     forall(filenameGen) { filename =>
       genFileKey(filename).map { key =>
         val Array(uuid, fType) = key.value.split('.')

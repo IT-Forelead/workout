@@ -3,7 +3,7 @@ package workout.http.routes
 import cats.effect.{IO, Sync}
 import com.itforelead.workout.domain.{Arrival, Member, User, types}
 import cats.implicits.{catsSyntaxApplicativeErrorId, catsSyntaxOptionId}
-import com.itforelead.workout.domain.Arrival.{ArrivalWithMember, ArrivalWithTotal, CreateArrival}
+import com.itforelead.workout.domain.Arrival.{ArrivalFilter, ArrivalWithMember, ArrivalWithTotal, CreateArrival}
 import com.itforelead.workout.domain.custom.exception.MemberNotFound
 import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.effects.GenUUID
@@ -22,16 +22,17 @@ object ArrivalRoutesSuite extends HttpSuite {
   private def arrivalMethod[F[_]: Sync: GenUUID](
     arrival: Arrival,
     member: Member,
-    errorType: Option[String] = None): ArrivalStub[F] = new ArrivalStub[F] {
-    override def create(userId: UserId, createArrival: CreateArrival): F[Arrival]  =
-     errorType match {
-          case None             => Sync[F].delay(arrival)
-          case Some("memberNotFound") => MemberNotFound.raiseError[F, Arrival]
-          case _ => Sync[F].raiseError(new Exception("Error occurred creating arrival event. error type: Unknown"))
-        }
+    errorType: Option[String] = None
+  ): ArrivalStub[F] = new ArrivalStub[F] {
+    override def create(userId: UserId, createArrival: CreateArrival): F[Arrival] =
+      errorType match {
+        case None                   => Sync[F].delay(arrival)
+        case Some("memberNotFound") => MemberNotFound.raiseError[F, Arrival]
+        case _ => Sync[F].raiseError(new Exception("Error occurred creating arrival event. error type: Unknown"))
+      }
     override def get(userId: UserId): F[List[ArrivalWithMember]] =
       Sync[F].delay(List(ArrivalWithMember(arrival, member)))
-    override def getArrivalWithTotal(userId: UserId, page: Int): F[ArrivalWithTotal] =
+    override def getArrivalWithTotal(userId: UserId, filter: ArrivalFilter, page: Int): F[ArrivalWithTotal] =
       Sync[F].delay(ArrivalWithTotal(List(ArrivalWithMember(arrival, member)), 1))
     override def getArrivalByMemberId(userId: UserId, memberId: types.MemberId): F[List[Arrival]] =
       Sync[F].delay(List(arrival))
@@ -54,24 +55,28 @@ object ArrivalRoutesSuite extends HttpSuite {
     }
   }
 
-  test("GET Arrival pagenation") {
+  test("GET Arrival Pagination") {
     val gen = for {
       u <- userGen
       a <- arrivalGen
       m <- memberGen
-    } yield (u, a, m)
+      f <- arrivalFilterGen
+    } yield (u, a, m, f)
 
-    forall(gen) { case (user, arrival, member) =>
+    forall(gen) { case (user, arrival, member, filter) =>
       for {
         token <- authToken(user)
-        req = GET(uri"/arrival/1").putHeaders(token)
+        req    = POST(filter, uri"/arrival/1").putHeaders(token)
         routes = new ArrivalRoutes[IO](arrivalMethod(arrival, member)).routes(usersMiddleware)
-        res <- expectHttpBodyAndStatus(routes, req)(ArrivalWithTotal(List(ArrivalWithMember(arrival, member)), 1), Status.Ok)
+        res <- expectHttpBodyAndStatus(routes, req)(
+          ArrivalWithTotal(List(ArrivalWithMember(arrival, member)), 1),
+          Status.Ok
+        )
       } yield res
     }
   }
 
-  test("GET Arrival by MemberId") {
+  test("GET Arrival By MemberId") {
     val gen = for {
       u <- userGen
       m <- memberGen

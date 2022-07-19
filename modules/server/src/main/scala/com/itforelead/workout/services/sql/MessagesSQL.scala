@@ -33,7 +33,8 @@ object MessagesSQL {
     val filterByUserID: AppliedFragment =
       sql"""SELECT messages.*, members.* FROM messages
            LEFT JOIN members ON members.id = messages.member_id
-           WHERE messages.user_id = $userId""".apply(id)
+           WHERE messages.user_id = $userId
+           ORDER BY messages.sent_date DESC""".apply(id)
     filterByUserID.paginate(10, page)
   }
 
@@ -47,9 +48,14 @@ object MessagesSQL {
     sql"""SELECT messages.*, members.* FROM messages
           LEFT JOIN members ON members.id = messages.member_id
           WHERE messages.user_id = $userId
+          ORDER BY messages.sent_date DESC
        """.query(decMessageWithMember)
 
   val changeStatusSql: Query[DeliveryStatus ~ MessageId, Message] =
     sql"""UPDATE messages SET delivery_status = $deliveryStatus WHERE id = $messageId RETURNING *""".query(decoder)
+
+  val selectSentTodaySql: Query[Void, MemberId] =
+    sql"""SELECT member_id FROM messages
+         WHERE DATE(sent_date) = CURRENT_DATE AND member_id IS NOT NULL""".query(memberId)
 
 }

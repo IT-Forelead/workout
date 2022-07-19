@@ -1,8 +1,9 @@
 package workout.http.routes
 
+import cats.Show.catsStdShowForTuple2
 import cats.effect.{IO, Sync}
 import cats.implicits.{catsSyntaxApplicativeErrorId, catsSyntaxOptionId}
-import com.itforelead.workout.domain.Member.{CreateMember, MemberWithTotal}
+import com.itforelead.workout.domain.Member.{CreateMember, MemberFilter, MemberWithTotal}
 import com.itforelead.workout.domain.custom.exception.{
   MultipartDecodeError,
   PhoneInUse,
@@ -15,14 +16,15 @@ import com.itforelead.workout.domain.{Member, User, Validation, encCreateMemberA
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.implicits.GenericTypeOps
 import com.itforelead.workout.routes.{MemberRoutes, deriveEntityEncoder}
+import eu.timepit.refined.cats.refTypeShow
 import fs2.{Pipe, Stream}
 import io.circe.generic.auto.exportEncoder
+import org.http4s._
 import org.http4s.Method.{GET, POST, PUT}
 import org.http4s.client.dsl.io._
 import org.http4s.headers.`Content-Type`
 import org.http4s.implicits.http4sLiteralsSyntax
 import org.http4s.multipart.{Multipart, Part}
-import org.http4s.{MediaType, Status}
 import org.scalacheck.Gen
 import weaver.Expectations
 import workout.stub_services.{MembersStub, S3ClientMock}
@@ -45,9 +47,11 @@ object MemberRoutesSuite extends HttpSuite {
 
       override def get(userId: UserId): F[List[Member]] = Sync[F].delay(List(member))
 
+      override def getWeekLeftOnAT(userId: UserId): F[List[Member]] = Sync[F].delay(List(member))
+
       override def findMemberByPhone(phone: Tel): F[Option[Member]] = Sync[F].delay(Option(member))
 
-      override def findByUserId(userId: UserId, page: Int): F[Member.MemberWithTotal] =
+      override def membersWithTotal(userId: UserId, filter: MemberFilter, page: Int): F[Member.MemberWithTotal] =
         Sync[F].delay(MemberWithTotal(List(member), 1))
 
       override def sendValidationCode(userId: UserId, phone: Tel): F[Unit] = Sync[F].unit
@@ -70,26 +74,26 @@ object MemberRoutesSuite extends HttpSuite {
     }
   }
 
-  test("GET Member By User ID - [SUCCESS]") {
+  test("GET Members Week Left On AT - [SUCCESS]") {
     forall(gen) { case user -> member =>
       for {
         token <- authToken(user)
-        req = GET(uri"/member/1").putHeaders(token)
+        req = GET(uri"/member/active-time").putHeaders(token)
         routes = new MemberRoutes[IO](memberService(member), s3Client)
           .routes(usersMiddleware)
-        res <- expectHttpBodyAndStatus(routes, req)(MemberWithTotal(List(member), 1), Status.Ok)
+        res <- expectHttpStatus(routes, req)(Status.Ok)
       } yield res
     }
   }
 
-  test("Send Validation Code - [SUCCESS]") {
+  test("GET Members By User ID - [SUCCESS]") {
     forall(gen) { case user -> member =>
       for {
         token <- authToken(user)
-        req = POST(Validation(member.phone), uri"/member/sent-code").putHeaders(token)
+        req = POST(MemberFilter(),uri"/member/1").putHeaders(token)
         routes = new MemberRoutes[IO](memberService(member), s3Client)
           .routes(usersMiddleware)
-        res <- expectHttpStatus(routes, req)(Status.Ok)
+        res <- expectHttpBodyAndStatus(routes, req)(MemberWithTotal(List(member), 1), Status.Ok)
       } yield res
     }
   }
@@ -130,7 +134,7 @@ object MemberRoutesSuite extends HttpSuite {
           Part.fileData("filename", url, `Content-Type`(MediaType.image.`png`))
         }.toVector
         multipart =
-          if (multipartDecError) Multipart[F](fileData) else Multipart[F](createMember.toFormData[F] ++fileData)
+          if (multipartDecError) Multipart[F](fileData) else Multipart[F](createMember.toFormData[F] ++ fileData)
         req = PUT(multipart, uri"/member").withHeaders(multipart.headers).putHeaders(token)
         routes = new MemberRoutes[IO](memberServiceS(member, errorType), s3Client)
           .routes(usersMiddleware)
@@ -160,5 +164,30 @@ object MemberRoutesSuite extends HttpSuite {
   }
   test("PUT Member: Unknown Error - [FAIL]") {
     putMemberRequest(Status.BadRequest, "".some, fileUrl = fileUrl.some)
+  }
+
+  test("Send Validation Code - [SUCCESS]") {
+    forall(gen) { case user -> member =>
+      for {
+        token <- authToken(user)
+        req = POST(Validation(member.phone), uri"/member/sent-code").putHeaders(token)
+        routes = new MemberRoutes[IO](memberService(member), s3Client)
+          .routes(usersMiddleware)
+        res <- expectHttpStatus(routes, req)(Status.Ok)
+      } yield res
+    }
+  }
+
+  test("Image Stream") {
+    val gen: Gen[(Member, FilePath)] = for {
+      m <- memberGen
+      f <- filePathGen
+    } yield (m, f)
+
+    forall(gen) { case (member, filePath) =>
+      val routes = new MemberRoutes[IO](memberServiceS(member), s3Client).routes(usersMiddleware)
+      val req    = GET(Uri.unsafeFromString(s"/member/image/$filePath"))
+      expectHttpStatus(routes, req)(Status.Ok)
+    }
   }
 }
