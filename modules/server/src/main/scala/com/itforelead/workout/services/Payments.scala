@@ -13,6 +13,7 @@ import com.itforelead.workout.domain.PaymentType.{DAILY, MONTHLY}
 import com.itforelead.workout.implicits.LocalDateTimeOps
 import com.itforelead.workout.services.sql.PaymentSQL
 import skunk._
+import skunk.codec.all.int8
 import skunk.implicits.toIdOps
 
 import java.time.LocalDateTime
@@ -81,8 +82,9 @@ object Payments {
     override def getPaymentsWithTotal(userId: UserId, filter: PaymentFilter, page: Int): F[PaymentWithTotal] =
       for {
         fr       <- selectPaymentWithTotal(userId, filter, page).pure[F]
+        t        <- total(userId, filter).pure[F]
         messages <- prepQueryList(fr.fragment.query(PaymentSQL.decPaymentWithMember), fr.argument)
-        total    <- prepQueryUnique(total, userId)
+        total    <- prepQueryUnique(t.fragment.query(int8), t.argument)
       } yield PaymentWithTotal(messages, total)
 
     override def getPaymentByMemberId(userId: UserId, memberId: MemberId): F[List[Payment]] =

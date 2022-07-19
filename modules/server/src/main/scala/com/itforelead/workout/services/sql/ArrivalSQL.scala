@@ -41,9 +41,24 @@ object ArrivalSQL {
         arrivalEndTimeFilter(params.filterDateTo)
       ).flatMap(_.toList)
 
-    val filterByUserID: AppliedFragment =
+    val filter: AppliedFragment =
       base(id).andOpt(filters) |+| sql" ORDER BY arrival_event.created_at DESC".apply(Void)
-    filterByUserID.paginate(10, page)
+    filter.paginate(10, page)
+  }
+
+  def total(id: UserId, params: ArrivalFilter): AppliedFragment = {
+    val base: Fragment[UserId] = sql"""SELECT count(*) FROM arrival_event
+          WHERE user_id = $userId AND deleted = false
+          """
+
+    val filters: List[AppliedFragment] =
+      List(
+        arrivalTypeFilter(params.typeBy),
+        arrivalStartTimeFilter(params.filterDateFrom),
+        arrivalEndTimeFilter(params.filterDateTo)
+      ).flatMap(_.toList)
+
+    base(id).andOpt(filters)
   }
 
   val total: Query[UserId, Long] =

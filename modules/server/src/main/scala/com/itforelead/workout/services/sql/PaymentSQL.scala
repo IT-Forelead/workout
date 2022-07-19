@@ -42,13 +42,25 @@ object PaymentSQL {
         paymentEndTimeFilter(params.filterDateTo)
       ).flatMap(_.toList)
 
-    val filterByUserID: AppliedFragment =
+    val filter: AppliedFragment =
       base(id).andOpt(filters) |+| sql" ORDER BY payments.created_at DESC".apply(Void)
-    filterByUserID.paginate(10, page)
+    filter.paginate(10, page)
   }
 
-  val total: Query[UserId, Long] =
-    sql"""SELECT count(*) FROM payments WHERE user_id = $userId""".query(int8)
+  def total(id: UserId, params: PaymentFilter): AppliedFragment = {
+    val base: Fragment[UserId] = sql"""SELECT count(*) FROM payments
+           WHERE payments.user_id = $userId
+          """
+
+    val filters: List[AppliedFragment] =
+      List(
+        paymentTypeFilter(params.typeBy),
+        paymentStartTimeFilter(params.filterDateFrom),
+        paymentEndTimeFilter(params.filterDateTo)
+      ).flatMap(_.toList)
+
+    base(id).andOpt(filters)
+  }
 
   val insert: Query[Payment, Payment] =
     sql"""INSERT INTO payments VALUES ($encoder) returning *""".query(decoder)

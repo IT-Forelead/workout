@@ -9,6 +9,7 @@ import com.itforelead.workout.domain.types.{ArrivalId, MemberId, UserId}
 import com.itforelead.workout.services.sql.ArrivalSQL._
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.services.sql.ArrivalSQL
+import skunk.codec.all.int8
 import skunk.implicits.toIdOps
 import skunk.{Session, SqlState}
 
@@ -49,8 +50,9 @@ object ArrivalService {
       override def getArrivalWithTotal(userId: UserId, filter: ArrivalFilter, page: Int): F[ArrivalWithTotal] =
         for {
           fr      <- selectArrivalWithTotal(userId, filter, page).pure[F]
+          t       <- total(userId, filter).pure[F]
           arrival <- prepQueryList(fr.fragment.query(ArrivalSQL.decArrivalWithMember), fr.argument)
-          total   <- prepQueryUnique(total, userId)
+          total   <- prepQueryUnique(t.fragment.query(int8), t.argument)
         } yield ArrivalWithTotal(arrival, total)
 
     }
