@@ -6,7 +6,6 @@ import com.itforelead.workout.domain.types.MessageId
 import com.itforelead.workout.services.{ArrivalService, Members, MessageBroker, Messages}
 import cats.implicits.catsSyntaxApplicativeError
 import com.itforelead.workout.domain.custom.refinements.{Tel, ValidationCode}
-import eu.timepit.refined.types.string.NonEmptyString
 import weaver.Expectations
 import workout.utils.DBSuite
 import workout.utils.Generators.{createArrivalGen, createMemberGen, defaultFileKey, defaultUserId}
