@@ -20,7 +20,7 @@ import scala.concurrent.duration.DurationInt
 
 object UserRoutesSuite extends HttpSuite {
   private def settings[F[_]: Sync: GenUUID](setting: UserSetting): UserSettingsMock[F] = new UserSettingsMock[F] {
-    override def settings(userId: UserId): F[UserSetting]              = Sync[F].delay(setting)
+    override def settings(userId: UserId): F[UserSetting]                                = Sync[F].delay(setting)
     override def updateSettings(userId: UserId, settings: UpdateSetting): F[UserSetting] = Sync[F].delay(setting)
   }
 
@@ -40,7 +40,7 @@ object UserRoutesSuite extends HttpSuite {
     }
   }
 
-  test("GET User Settings By ID") {
+  test("GET User Settings By Id") {
     val gen = for {
       u <- userGen
       s <- userSettingGen()

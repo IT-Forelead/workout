@@ -45,7 +45,7 @@ object PaymentRoutesSuite extends HttpSuite {
     }
   }
 
-  test("GET Payments pagination") {
+  test("GET Payments Pagination") {
     val gen = for {
       u <- userGen
       m <- memberGen
@@ -56,14 +56,17 @@ object PaymentRoutesSuite extends HttpSuite {
     forall(gen) { case (user, member, payment, filter) =>
       for {
         token <- authToken(user)
-        req = POST(filter, uri"/payment/1").putHeaders(token)
+        req    = POST(filter, uri"/payment/1").putHeaders(token)
         routes = new PaymentRoutes[IO](paymentS(payment, member)).routes(usersMiddleware)
-        res <- expectHttpBodyAndStatus(routes, req)(PaymentWithTotal(List(PaymentWithMember(payment, member)), 1), Status.Ok)
+        res <- expectHttpBodyAndStatus(routes, req)(
+          PaymentWithTotal(List(PaymentWithMember(payment, member)), 1),
+          Status.Ok
+        )
       } yield res
     }
   }
 
-  test("GET Payments by MemberId") {
+  test("GET Payments By MemberId") {
     val gen = for {
       u <- userGen
       m <- memberGen
