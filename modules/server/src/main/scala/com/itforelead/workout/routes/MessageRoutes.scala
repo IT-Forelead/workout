@@ -2,6 +2,7 @@ package com.itforelead.workout.routes
 
 import cats.effect.kernel.Async
 import cats.implicits._
+import com.itforelead.workout.domain.Message.MessagesFilter
 import com.itforelead.workout.domain.User
 import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.services.Messages
@@ -19,8 +20,10 @@ final class MessageRoutes[F[_]: Async](messages: Messages[F]) extends Http4sDsl[
     case GET -> Root as user =>
       messages.get(user.id).flatMap(Ok(_))
 
-    case GET -> Root / IntVar(page) as user =>
-      messages.getMessagesWithTotal(user.id, page).flatMap(Ok(_))
+    case ar @ POST -> Root / IntVar(page) as user =>
+      ar.req.decodeR[MessagesFilter] { filter =>
+        messages.getMessagesWithTotal(user.id, filter, page).flatMap(Ok(_))
+      }
   }
 
   def routes(authMiddleware: AuthMiddleware[F, User]): HttpRoutes[F] = Router(

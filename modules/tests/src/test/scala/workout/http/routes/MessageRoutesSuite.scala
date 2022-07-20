@@ -2,12 +2,12 @@ package workout.http.routes
 
 import cats.effect.{IO, Sync}
 import cats.implicits.catsSyntaxOptionId
-import com.itforelead.workout.domain.Message.{MessageWithMember, MessageWithTotal}
+import com.itforelead.workout.domain.Message.{MessageWithMember, MessageWithTotal, MessagesFilter}
 import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.domain.{Member, Message}
 import com.itforelead.workout.effects.GenUUID
-import com.itforelead.workout.routes.MessageRoutes
-import org.http4s.Method.GET
+import com.itforelead.workout.routes.{MessageRoutes, deriveEntityEncoder}
+import org.http4s.Method.{GET, POST}
 import org.http4s.Status
 import org.http4s.client.dsl.io._
 import org.http4s.implicits.http4sLiteralsSyntax
@@ -19,7 +19,7 @@ object MessageRoutesSuite extends HttpSuite {
   private def messages[F[_]: Sync: GenUUID](message: Message, member: Member): MessagesStub[F] = new MessagesStub[F] {
     override def get(userId: UserId): F[List[MessageWithMember]] =
       Sync[F].delay(List(MessageWithMember(message, member.some)))
-    override def getMessagesWithTotal(userId: UserId, page: Int): F[MessageWithTotal] =
+    override def getMessagesWithTotal(userId: UserId, filter: MessagesFilter, page: Int): F[MessageWithTotal] =
       Sync[F].delay(MessageWithTotal(List(MessageWithMember(message, member.some)), 1))
   }
 
@@ -45,12 +45,13 @@ object MessageRoutesSuite extends HttpSuite {
       u  <- userGen
       ms <- messageGen
       m  <- memberGen
-    } yield (u, ms, m)
+      f <- messageFilterGen
+    } yield (u, ms, m, f)
 
-    forall(gen) { case (user, message, member) =>
+    forall(gen) { case (user, message, member, filter) =>
       for {
         token <- authToken(user)
-        req    = GET(uri"/message/1").putHeaders(token)
+        req    = POST(filter, uri"/message/1").putHeaders(token)
         routes = new MessageRoutes[IO](messages(message, member)).routes(usersMiddleware)
         res <- expectHttpBodyAndStatus(routes, req)(
           MessageWithTotal(List(MessageWithMember(message, member.some)), 1),

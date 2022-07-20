@@ -9,7 +9,7 @@ import org.scalacheck.Gen
 import Arbitraries._
 import com.itforelead.workout.domain.Arrival.{ArrivalFilter, ArrivalMemberId, CreateArrival}
 import com.itforelead.workout.domain.Member.{CreateMember, MemberWithTotal}
-import com.itforelead.workout.domain.Message.CreateMessage
+import com.itforelead.workout.domain.Message.{CreateMessage, MessagesFilter}
 import com.itforelead.workout.domain.Payment.{CreatePayment, PaymentFilter, PaymentMemberId}
 import com.itforelead.workout.domain.UserSetting.UpdateSetting
 import eu.timepit.refined.types.string.NonEmptyString
@@ -58,6 +58,8 @@ object Generators {
   val textGen: Gen[MessageText] = arbitrary[NonEmptyString].map(MessageText.apply)
 
   val arrivalTypeGen: Gen[ArrivalType] = arbitrary[ArrivalType]
+
+  val messageFilterTypeGen: Gen[MessageFilterBy] = arbitrary[MessageFilterBy]
 
   val deliveryStatusGen: Gen[DeliveryStatus] = arbitrary[DeliveryStatus]
 
@@ -150,6 +152,13 @@ object Generators {
       f <- option(timestampGen)
       to <- option(timestampGen)
     } yield ArrivalFilter(t, f, to)
+
+  val messageFilterGen: Gen[MessagesFilter] =
+    for {
+      t <- option(messageFilterTypeGen)
+      f <- option(timestampGen)
+      to <- option(timestampGen)
+    } yield MessagesFilter(t, f, to)
 
   val createArrivalGen: Gen[CreateArrival] =
     for {

@@ -1,14 +1,15 @@
 package com.itforelead.workout.services.sql
 
-import com.itforelead.workout.domain.Payment
+import com.itforelead.workout.domain.{Payment, PaymentType}
 import com.itforelead.workout.domain.Payment.{PaymentFilter, PaymentWithMember}
 import com.itforelead.workout.domain.types.{MemberId, PaymentId, UserId}
-import com.itforelead.workout.domain.{Member, Payment}
 import com.itforelead.workout.services.sql.MemberSQL.memberId
 import com.itforelead.workout.services.sql.UserSQL.userId
 import skunk._
 import skunk.codec.all.{bool, int8, timestamp}
 import skunk.implicits._
+
+import java.time.LocalDateTime
 
 object PaymentSQL {
   val paymentId: Codec[PaymentId] = identity[PaymentId]
@@ -29,6 +30,15 @@ object PaymentSQL {
       PaymentWithMember(payment, member)
     }
 
+  def typeFilter: Option[PaymentType] => Option[AppliedFragment] =
+    _.map(sql""" payments.payment_type = $paymentType""")
+
+  def startTimeFilter: Option[LocalDateTime] => Option[AppliedFragment] =
+    _.map(sql"payments.created_at >= $timestamp")
+
+  def endTimeFilter: Option[LocalDateTime] => Option[AppliedFragment] =
+    _.map(sql"payments.created_at <= $timestamp")
+
   def selectPaymentWithTotal(id: UserId, params: PaymentFilter, page: Int): AppliedFragment = {
     val base: Fragment[UserId] = sql"""SELECT payments.*, members.* FROM payments
            LEFT JOIN members ON members.id = payments.member_id
@@ -37,9 +47,9 @@ object PaymentSQL {
 
     val filters: List[AppliedFragment] =
       List(
-        paymentTypeFilter(params.typeBy),
-        paymentStartTimeFilter(params.filterDateFrom),
-        paymentEndTimeFilter(params.filterDateTo)
+        typeFilter(params.typeBy),
+        startTimeFilter(params.filterDateFrom),
+        endTimeFilter(params.filterDateTo)
       ).flatMap(_.toList)
 
     val filter: AppliedFragment =
@@ -54,9 +64,9 @@ object PaymentSQL {
 
     val filters: List[AppliedFragment] =
       List(
-        paymentTypeFilter(params.typeBy),
-        paymentStartTimeFilter(params.filterDateFrom),
-        paymentEndTimeFilter(params.filterDateTo)
+        typeFilter(params.typeBy),
+        startTimeFilter(params.filterDateFrom),
+        endTimeFilter(params.filterDateTo)
       ).flatMap(_.toList)
 
     base(id).andOpt(filters)

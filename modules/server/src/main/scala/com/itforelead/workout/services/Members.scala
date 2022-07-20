@@ -60,7 +60,7 @@ object Members {
 
       override def membersWithTotal(userId: UserId, filter: MemberFilter, page: Int): F[MemberWithTotal] =
         for {
-          fr     <- selectMemberFilter(userId, filter.filterBy, page).pure[F]
+          fr     <- selectMemberFilter(userId, filter.typeBy, page).pure[F]
           member <- prepQueryList(fr.fragment.query(MemberSQL.decoder), fr.argument)
           total  <- prepQueryUnique(total, userId)
         } yield MemberWithTotal(member, total)
