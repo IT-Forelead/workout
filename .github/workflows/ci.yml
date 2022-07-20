@@ -25,7 +25,7 @@ jobs:
         run: nix-shell --argstr jdk "${{ matrix.java }}" --run "cd app; bash redis.sh"
 
       - name: "Starting up S3 🐳"
-        run: nix-shell --argstr jdk "${{ matrix.java }}" --run "cd s3; bash run.sh"
+        run: nix-shell --argstr jdk "${{ matrix.java }}" --run "cd app; bash s3.sh"
 
       - name: "Install Cachix ❄️"
         uses: cachix/cachix-action@v10

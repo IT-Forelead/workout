@@ -15,28 +15,28 @@ object MessageSuite extends DBSuite {
     val messageBroker: MessageBroker[IO] = (_: MessageId, _: Tel, _: String) => IO.unit
     val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
 
-  val gen = for {
-    cm <- createMessageGen(defaultUserId.some)
-    m  <- createMemberGen()
-    f  <- messageFilterGen
-  } yield (cm, m, f)
+    val gen = for {
+      cm <- createMessageGen(defaultUserId.some)
+      m  <- createMemberGen()
+      f  <- messageFilterGen
+    } yield (cm, m, f)
 
-  forall(gen) { case (createMessage, createMember, filter) =>
-    for {
-      _              <- members.sendValidationCode(defaultUserId, createMember.phone)
-      validationCode <- RedisClient.get(createMember.phone.value)
-      code = ValidationCode.unsafeFrom(validationCode.get)
-      member1      <- members.validateAndCreate(defaultUserId, createMember.copy(code = code), defaultFileKey)
-      message1     <- messages.create(createMessage.copy(memberId = member1.id.some))
-      message2     <- messages.get(message1.userId)
-      getMessages  <- messages.getMessagesWithTotal(defaultUserId, filter, 1)
-      getMembersId <- messages.sentSMSTodayMemberIds
-    } yield assert(
-      message2.exists(tc => tc.message.userId == message1.userId) &&
+    forall(gen) { case (createMessage, createMember, filter) =>
+      for {
+        _              <- members.sendValidationCode(defaultUserId, createMember.phone)
+        validationCode <- RedisClient.get(createMember.phone.value)
+        code = ValidationCode.unsafeFrom(validationCode.get)
+        member1      <- members.validateAndCreate(defaultUserId, createMember.copy(code = code), defaultFileKey)
+        message1     <- messages.create(createMessage.copy(memberId = member1.id.some))
+        message2     <- messages.get(message1.userId)
+        getMessages  <- messages.getMessagesWithTotal(defaultUserId, filter, 1)
+        getMembersId <- messages.sentSMSTodayMemberIds
+      } yield assert(
+        message2.exists(tc => tc.message.userId == message1.userId) &&
         getMessages.messages.exists(_.message == message1) &&
         getMembersId.contains(member1.id)
-    )
-  }
+      )
+    }
   }
 
   test("Create Message: Member Not Found") { implicit postgres =>
