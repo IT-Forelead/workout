@@ -3,16 +3,27 @@ package e2e
 import com.itforelead.workout.domain._
 import com.itforelead.workout.routes.{deriveEntityDecoder, deriveEntityEncoder}
 import dev.profunktor.auth.jwt.JwtToken
-import org.http4s.Method.{GET, PUT}
+import org.http4s.Method.{GET, POST, PUT}
 import org.http4s.Status
 import org.http4s.client.dsl.io._
 import org.http4s.implicits._
 import workout.utils.ClientSuite
-import workout.utils.Generators.updateSettingGen
+import workout.utils.Generators.{createUserGen, updateSettingGen}
 
 object UserRoutesSuite extends ClientSuite {
 
-  test("User settings by id") { implicit client =>
+  test("Create Client") { implicit client =>
+    forall(createUserGen) { createUser =>
+      for {
+        token <- loginReq.expectAs[JwtToken]
+        result <- POST(createUser, uri"/auth/user")
+          .putHeaders(makeAuth(token))
+          .expectHttpStatus(Status.Created)
+      } yield result
+    }
+  }
+
+  test("Settings By Id") { implicit client =>
     for {
       token <- loginReq.expectAs[JwtToken]
       result <- GET(uri"/user/settings")
@@ -21,7 +32,7 @@ object UserRoutesSuite extends ClientSuite {
     } yield result
   }
 
-  test("Update user settings") { implicit client =>
+  test("Update Settings") { implicit client =>
     forall(updateSettingGen) { settings =>
       for {
         token <- loginReq.expectAs[JwtToken]

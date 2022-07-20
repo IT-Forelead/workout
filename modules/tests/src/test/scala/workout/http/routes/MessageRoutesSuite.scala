@@ -25,7 +25,7 @@ object MessageRoutesSuite extends HttpSuite {
 
   test("GET Messages") {
     val gen = for {
-      u  <- userGen
+      u  <- userGen()
       ms <- messageGen
       m  <- memberGen
     } yield (u, ms, m)
@@ -42,7 +42,7 @@ object MessageRoutesSuite extends HttpSuite {
 
   test("GET Messages Pagination") {
     val gen = for {
-      u  <- userGen
+      u  <- userGen()
       ms <- messageGen
       m  <- memberGen
       f <- messageFilterGen

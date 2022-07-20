@@ -30,7 +30,7 @@ object PaymentRoutesSuite extends HttpSuite {
 
   test("GET Payments") {
     val gen = for {
-      u <- userGen
+      u <- userGen()
       m <- memberGen
       p <- paymentGen
     } yield (u, m, p)
@@ -47,7 +47,7 @@ object PaymentRoutesSuite extends HttpSuite {
 
   test("GET Payments Pagination") {
     val gen = for {
-      u <- userGen
+      u <- userGen()
       m <- memberGen
       p <- paymentGen
       f <- paymentFilterGen
@@ -68,7 +68,7 @@ object PaymentRoutesSuite extends HttpSuite {
 
   test("GET Payments By MemberId") {
     val gen = for {
-      u <- userGen
+      u <- userGen()
       m <- memberGen
       p <- paymentGen
       i <- paymentMemberIdGen
@@ -101,7 +101,7 @@ object PaymentRoutesSuite extends HttpSuite {
 
   def postPaymentReq(errorType: Option[String] = None, shouldReturn: Status): PaymentRoutesSuite.F[Expectations] = {
     val gen = for {
-      u  <- userGen
+      u  <- userGen()
       cp <- createPaymentGen
       p  <- paymentGen
     } yield (u, cp, p)

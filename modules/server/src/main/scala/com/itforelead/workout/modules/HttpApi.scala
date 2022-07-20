@@ -49,8 +49,9 @@ final class HttpApi[F[_]: Async: Logger] private (
     JwtAuthMiddleware[F, User](security.userJwtAuth.value, findUser)
 
   // Auth routes
-  private[this] val authRoutes    = AuthRoutes[F](security.auth).routes(usersMiddleware)
-  private[this] val userRoutes    = new UserRoutes[F](services.userSettings).routes(usersMiddleware)
+  private[this] val authRoutes = AuthRoutes[F](security.auth).routes(usersMiddleware)
+  private[this] val userRoutes =
+    new UserRoutes[F](services.userSettings, services.users).routes(usersMiddleware)
   private[this] val memberRoutes  = new MemberRoutes[F](services.members, s3Client).routes(usersMiddleware)
   private[this] val arrivalRoutes = new ArrivalRoutes[F](services.arrivalService).routes(usersMiddleware)
   private[this] val messageRoutes = new MessageRoutes[F](services.messages).routes(usersMiddleware)

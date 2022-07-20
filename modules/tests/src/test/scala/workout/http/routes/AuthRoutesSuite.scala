@@ -2,8 +2,9 @@ package workout.http.routes
 
 import cats.effect.{IO, Sync}
 import cats.implicits._
+import com.itforelead.workout.domain.Role.ADMIN
 import com.itforelead.workout.domain.User
-import com.itforelead.workout.domain.User.{CreateUser, UserWithPassword}
+import com.itforelead.workout.domain.User.{CreateClient, UserWithPassword}
 import com.itforelead.workout.domain.custom.refinements.{Password, Tel}
 import com.itforelead.workout.routes.{AuthRoutes, deriveEntityEncoder}
 import com.itforelead.workout.services.Users
@@ -16,6 +17,7 @@ import org.http4s.{AuthScheme, Credentials, Status}
 import workout.utils.Generators.{booleanGen, createUserGen, userCredentialGen, userGen}
 import tsec.passwordhashers.PasswordHash
 import tsec.passwordhashers.jca.SCrypt
+import workout.http.routes.MessageRoutesSuite.authToken
 import workout.stub_services.{AuthMock, UsersStub}
 import workout.utils.HttpSuite
 
@@ -35,14 +37,14 @@ object AuthRoutesSuite extends HttpSuite {
         none[UserWithPassword].pure[F]
 
     override def create(
-      userParam: CreateUser,
+      userParam: CreateClient,
       password: PasswordHash[SCrypt]
     ): F[User] = user.pure[F]
   }
 
   test("POST Create") {
     val gen = for {
-      u <- userGen
+      u <- userGen(ADMIN)
       c <- createUserGen
       b <- booleanGen
     } yield (u, c, b)
@@ -50,12 +52,13 @@ object AuthRoutesSuite extends HttpSuite {
     forall(gen) { case (user, newUser, conflict) =>
       for {
         auth <- AuthMock[IO](users(user, newUser.password), RedisClient)
+        token <- authToken(user)
         (postData, shouldReturn) =
           if (conflict)
             (newUser.copy(phone = user.phone), Status.Conflict)
           else
             (newUser, Status.Created)
-        req    = POST(postData, uri"/auth/user")
+        req    = POST(postData, uri"/auth/user").putHeaders(token)
         routes = AuthRoutes[IO](auth).routes(usersMiddleware)
         res <- expectHttpStatus(routes, req)(shouldReturn)
       } yield res
@@ -64,7 +67,7 @@ object AuthRoutesSuite extends HttpSuite {
 
   test("POST Login") {
     val gen = for {
-      u <- userGen
+      u <- userGen()
       c <- userCredentialGen
       b <- booleanGen
     } yield (u, c, b)
@@ -86,7 +89,7 @@ object AuthRoutesSuite extends HttpSuite {
 
   test("User Logout") {
     val gen = for {
-      u <- userGen
+      u <- userGen()
       b <- booleanGen
     } yield (u, b)
 

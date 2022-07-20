@@ -40,7 +40,7 @@ object ArrivalRoutesSuite extends HttpSuite {
 
   test("GET Arrival - [SUCCESS]") {
     val gen = for {
-      u <- userGen
+      u <- userGen()
       a <- arrivalGen
       m <- memberGen
     } yield (u, a, m)
@@ -57,7 +57,7 @@ object ArrivalRoutesSuite extends HttpSuite {
 
   test("GET Arrival Pagination") {
     val gen = for {
-      u <- userGen
+      u <- userGen()
       a <- arrivalGen
       m <- memberGen
       f <- arrivalFilterGen
@@ -78,7 +78,7 @@ object ArrivalRoutesSuite extends HttpSuite {
 
   test("GET Arrival By MemberId") {
     val gen = for {
-      u <- userGen
+      u <- userGen()
       m <- memberGen
       a <- arrivalGen
       i <- arrivalMemberIdGen
@@ -97,7 +97,7 @@ object ArrivalRoutesSuite extends HttpSuite {
   def createMemberReq(shouldReturn: Status, errorType: Option[String] = None): ArrivalRoutesSuite.F[Expectations] = {
 
     val createGen: Gen[(User, CreateArrival, Arrival, Member)] = for {
-      u  <- userGen
+      u  <- userGen()
       ca <- createArrivalGen
       a  <- arrivalGen
       m  <- memberGen

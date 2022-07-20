@@ -7,7 +7,16 @@ import com.itforelead.workout.domain.custom.refinements.{Tel, ValidationCode}
 import com.itforelead.workout.domain.types.MessageId
 import com.itforelead.workout.services.{Members, MessageBroker, Messages}
 import workout.utils.DBSuite
-import workout.utils.Generators.{createMemberGen, createMessageGen, defaultFileKey, defaultUserId, deliveryStatusGen, memberIdGen, messageFilterGen}
+import workout.utils.Generators.{
+  createMemberGen,
+  createMessageGen,
+  defaultFileKey,
+  defaultUserId,
+  deliveryStatusGen,
+  memberIdGen,
+  messageFilterGen
+}
+
 object MessageSuite extends DBSuite {
 
   test("Create Message") { implicit postgres =>
@@ -29,7 +38,15 @@ object MessageSuite extends DBSuite {
         member1      <- members.validateAndCreate(defaultUserId, createMember.copy(code = code), defaultFileKey)
         message1     <- messages.create(createMessage.copy(memberId = member1.id.some))
         message2     <- messages.get(message1.userId)
-        getMessages  <- messages.getMessagesWithTotal(defaultUserId, filter, 1)
+        getMessages  <- messages.getMessagesWithTotal(
+          defaultUserId,
+          filter.copy(
+            typeBy = None,
+            filterDateFrom = None,
+            filterDateTo = None
+          ),
+          1
+        )
         getMembersId <- messages.sentSMSTodayMemberIds
       } yield assert(
         message2.exists(tc => tc.message.userId == message1.userId) &&

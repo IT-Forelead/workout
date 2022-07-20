@@ -8,9 +8,10 @@ import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 import Arbitraries._
 import com.itforelead.workout.domain.Arrival.{ArrivalFilter, ArrivalMemberId, CreateArrival}
-import com.itforelead.workout.domain.Member.{CreateMember, MemberWithTotal}
+import com.itforelead.workout.domain.Member.CreateMember
 import com.itforelead.workout.domain.Message.{CreateMessage, MessagesFilter}
 import com.itforelead.workout.domain.Payment.{CreatePayment, PaymentFilter, PaymentMemberId}
+import com.itforelead.workout.domain.Role.CLIENT
 import com.itforelead.workout.domain.UserSetting.UpdateSetting
 import eu.timepit.refined.types.string.NonEmptyString
 import org.scalacheck.Gen.{oneOf, option}
@@ -20,7 +21,7 @@ import java.time.{LocalDate, LocalDateTime}
 import java.util.UUID
 
 object Generators {
-  val FileTypes: List[String] = List("png","jpg","jpeg","bmp","webp")
+  val FileTypes: List[String] = List("png", "jpg", "jpeg", "bmp", "webp")
   def nonEmptyStringGen(min: Int, max: Int): Gen[String] =
     Gen
       .chooseNum(min, max)
@@ -85,36 +86,38 @@ object Generators {
 
   val validationGen: Gen[Validation] = phoneGen.map(Validation.apply)
 
-  val userGen: Gen[User] =
+  val roleGen: Gen[Role] = arbitrary[Role]
+
+  def userGen(role: Role = CLIENT): Gen[User] =
     for {
       i  <- userIdGen
       fn <- firstNameGen
       ln <- lastNameGen
       ph <- phoneGen
-    } yield User(i, fn, ln, ph)
+    } yield User(i, fn, ln, ph, role)
 
   def userSettingGen(userId: Option[UserId] = None): Gen[UserSetting] =
     for {
-      ui <- userIdGen
-      gName <- gymNameGen
+      ui     <- userIdGen
+      gName  <- gymNameGen
       dPrice <- priceGen
       mPrice <- priceGen
     } yield UserSetting(userId.getOrElse(ui), gName, dPrice, mPrice)
 
-  def updateSettingGen: Gen[UpdateSetting] =
+  val updateSettingGen: Gen[UpdateSetting] =
     for {
-      gName <- gymNameGen
+      gName  <- gymNameGen
       dPrice <- priceGen
       mPrice <- priceGen
     } yield UpdateSetting(gName, dPrice, mPrice)
 
-  val createUserGen: Gen[CreateUser] =
+  val createUserGen: Gen[CreateClient] =
     for {
       fn <- firstNameGen
       ln <- lastNameGen
       ph <- phoneGen
       p  <- passwordGen
-    } yield CreateUser(fn, ln, ph, p)
+    } yield CreateClient(fn, ln, ph, p)
 
   val memberGen: Gen[Member] =
     for {
@@ -148,8 +151,8 @@ object Generators {
 
   val arrivalFilterGen: Gen[ArrivalFilter] =
     for {
-      t <- option(arrivalTypeGen)
-      f <- option(timestampGen)
+      t  <- option(arrivalTypeGen)
+      f  <- option(timestampGen)
       to <- option(timestampGen)
     } yield ArrivalFilter(t, f, to)
 
@@ -203,8 +206,8 @@ object Generators {
 
   val paymentFilterGen: Gen[PaymentFilter] =
     for {
-      t <- option(paymentTypeGen)
-      f <- option(timestampGen)
+      t  <- option(paymentTypeGen)
+      f  <- option(timestampGen)
       to <- option(timestampGen)
     } yield PaymentFilter(t, f, to)
 
