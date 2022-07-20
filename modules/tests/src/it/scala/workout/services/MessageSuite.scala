@@ -33,8 +33,8 @@ object MessageSuite extends DBSuite {
       getMembersId <- messages.sentSMSTodayMemberIds
     } yield assert(
       message2.exists(tc => tc.message.userId == message1.userId) &&
-      getMessages.messages.exists(_.message == message1) &&
-      getMembersId.contains(member1.id)
+        getMessages.messages.exists(_.message == message1) &&
+        getMembersId.contains(member1.id)
     )
   }
   }

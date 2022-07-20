@@ -4,7 +4,12 @@ import cats.Show.catsStdShowForTuple2
 import cats.effect.{IO, Sync}
 import cats.implicits.{catsSyntaxApplicativeErrorId, catsSyntaxOptionId}
 import com.itforelead.workout.domain.Member.{CreateMember, MemberFilter, MemberWithTotal}
-import com.itforelead.workout.domain.custom.exception.{MultipartDecodeError, PhoneInUse, ValidationCodeExpired, ValidationCodeIncorrect}
+import com.itforelead.workout.domain.custom.exception.{
+  MultipartDecodeError,
+  PhoneInUse,
+  ValidationCodeExpired,
+  ValidationCodeIncorrect
+}
 import com.itforelead.workout.domain.custom.refinements.{FileKey, FilePath, Tel}
 import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.domain.{Member, User, Validation, encCreateMemberAsObject}
@@ -69,7 +74,7 @@ object MemberRoutesSuite extends HttpSuite {
     }
   }
 
-  test("GET Members week left on AT - [SUCCESS]") {
+  test("GET Members Week Left On AT - [SUCCESS]") {
     forall(gen) { case user -> member =>
       for {
         token <- authToken(user)
@@ -89,18 +94,6 @@ object MemberRoutesSuite extends HttpSuite {
         routes = new MemberRoutes[IO](memberService(member), s3Client)
           .routes(usersMiddleware)
         res <- expectHttpBodyAndStatus(routes, req)(MemberWithTotal(List(member), 1), Status.Ok)
-      } yield res
-    }
-  }
-
-  test("Send Validation Code - [SUCCESS]") {
-    forall(gen) { case user -> member =>
-      for {
-        token <- authToken(user)
-        req = POST(Validation(member.phone), uri"/member/sent-code").putHeaders(token)
-        routes = new MemberRoutes[IO](memberService(member), s3Client)
-          .routes(usersMiddleware)
-        res <- expectHttpStatus(routes, req)(Status.Ok)
       } yield res
     }
   }
@@ -171,6 +164,18 @@ object MemberRoutesSuite extends HttpSuite {
   }
   test("PUT Member: Unknown Error - [FAIL]") {
     putMemberRequest(Status.BadRequest, "".some, fileUrl = fileUrl.some)
+  }
+
+  test("Send Validation Code - [SUCCESS]") {
+    forall(gen) { case user -> member =>
+      for {
+        token <- authToken(user)
+        req = POST(Validation(member.phone), uri"/member/sent-code").putHeaders(token)
+        routes = new MemberRoutes[IO](memberService(member), s3Client)
+          .routes(usersMiddleware)
+        res <- expectHttpStatus(routes, req)(Status.Ok)
+      } yield res
+    }
   }
 
   test("Image Stream") {

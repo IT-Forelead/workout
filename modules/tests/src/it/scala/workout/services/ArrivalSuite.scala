@@ -7,7 +7,6 @@ import com.itforelead.workout.services.{ArrivalService, Members, MessageBroker, 
 import cats.implicits.{catsSyntaxApplicativeError, catsSyntaxOptionId}
 import com.itforelead.workout.domain.Arrival.ArrivalFilter
 import com.itforelead.workout.domain.custom.refinements.{Tel, ValidationCode}
-import eu.timepit.refined.types.string.NonEmptyString
 import weaver.Expectations
 import workout.utils.DBSuite
 import workout.utils.Generators.{arrivalFilterGen, createArrivalGen, createMemberGen, defaultFileKey, defaultUserId}

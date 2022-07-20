@@ -40,7 +40,7 @@ object AuthRoutesSuite extends HttpSuite {
     ): F[User] = user.pure[F]
   }
 
-  test("POST create") {
+  test("POST Create") {
     val gen = for {
       u <- userGen
       c <- createUserGen
@@ -62,7 +62,7 @@ object AuthRoutesSuite extends HttpSuite {
     }
   }
 
-  test("POST login") {
+  test("POST Login") {
     val gen = for {
       u <- userGen
       c <- userCredentialGen
