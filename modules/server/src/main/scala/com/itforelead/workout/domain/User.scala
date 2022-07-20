@@ -1,5 +1,6 @@
 package com.itforelead.workout.domain
 
+import com.itforelead.workout.domain.Role.CLIENT
 import com.itforelead.workout.domain.custom.refinements.{Password, Tel}
 import com.itforelead.workout.domain.types._
 import derevo.cats._
@@ -17,17 +18,19 @@ case class User(
   id: UserId,
   firstname: FirstName,
   lastname: LastName,
-  phone: Tel
+  phone: Tel,
+  role: Role
 )
 
 object User {
 
   @derive(decoder, encoder, show)
-  case class CreateUser(
+  case class CreateClient(
     firstname: FirstName,
     lastname: LastName,
     phone: Tel,
-    password: Password
+    password: Password,
+    role: Role = CLIENT
   )
 
   @derive(decoder, encoder)

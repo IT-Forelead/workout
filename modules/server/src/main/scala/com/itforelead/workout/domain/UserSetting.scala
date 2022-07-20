@@ -7,6 +7,7 @@ import derevo.derive
 import squants.Money
 import io.circe.refined._
 import eu.timepit.refined.cats._
+import eu.timepit.refined.types.string.NonEmptyString
 
 @derive(decoder, encoder, show)
 case class UserSetting(
@@ -17,6 +18,7 @@ case class UserSetting(
 )
 
 object UserSetting {
+
   @derive(decoder, encoder, show)
   case class UpdateSetting(
     gymName: GymName,

@@ -2,7 +2,7 @@ package com.itforelead.workout.services
 
 import cats.effect.Sync
 import cats.syntax.all._
-import com.itforelead.workout.domain.User.CreateUser
+import com.itforelead.workout.domain.User.CreateClient
 import dev.profunktor.auth.jwt.JwtToken
 import eu.timepit.refined.auto.autoUnwrap
 import tsec.passwordhashers.jca.SCrypt
@@ -15,7 +15,7 @@ import com.itforelead.workout.services.redis.RedisClient
 import com.itforelead.workout.types.TokenExpiration
 
 trait Auth[F[_]] {
-  def newUser(userParam: CreateUser): F[JwtToken]
+  def newUser(userParam: CreateClient): F[JwtToken]
   def login(credentials: Credentials): F[JwtToken]
   def logout(token: JwtToken, phone: Tel): F[Unit]
 }
@@ -31,7 +31,7 @@ object Auth {
 
       private val TokenExpiration = tokenExpiration.value
 
-      override def newUser(userParam: CreateUser): F[JwtToken] =
+      override def newUser(userParam: CreateClient): F[JwtToken] =
         users.find(userParam.phone).flatMap {
           case Some(_) =>
             PhoneInUse(userParam.phone).raiseError[F, JwtToken]

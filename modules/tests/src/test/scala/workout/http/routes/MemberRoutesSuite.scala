@@ -58,7 +58,7 @@ object MemberRoutesSuite extends HttpSuite {
     }
 
   val gen: Gen[(User, Member)] = for {
-    u <- userGen
+    u <- userGen()
     m <- memberGen
   } yield u -> m
 
@@ -122,7 +122,7 @@ object MemberRoutesSuite extends HttpSuite {
     multipartDecError: Boolean = false
   ): MemberRoutesSuite.F[Expectations] = {
     val gen = for {
-      u  <- userGen
+      u  <- userGen()
       m  <- memberGen
       cm <- createMemberGen()
     } yield (u, m, cm)
