@@ -1,13 +1,16 @@
 package com.itforelead.workout.services.sql
 
-import com.itforelead.workout.domain.Message.MessageWithMember
+import com.itforelead.workout.domain.Message.{MessageWithMember, MessagesFilter}
+import com.itforelead.workout.domain.MessageFilterBy.{ReminderSMS, SendCode}
 import com.itforelead.workout.domain.types._
-import com.itforelead.workout.domain.{DeliveryStatus, Message}
+import com.itforelead.workout.domain.{DeliveryStatus, Message, MessageFilterBy}
 import com.itforelead.workout.services.sql.MemberSQL.memberId
 import com.itforelead.workout.services.sql.UserSQL.userId
 import skunk._
 import skunk.codec.all.{int8, timestamp}
 import skunk.implicits._
+
+import java.time.LocalDateTime
 
 object MessagesSQL {
   val messageId: Codec[MessageId] = identity[MessageId]
@@ -38,8 +41,50 @@ object MessagesSQL {
     filterByUserID.paginate(10, page)
   }
 
-  val total: Query[UserId, Long] =
-    sql"""SELECT count(*) FROM messages WHERE user_id = $userId""".query(int8)
+  def typeFilter: Option[MessageFilterBy] => Option[AppliedFragment] =
+    _.map {
+      case SendCode    => sql""" messages.member_id IS NULL """.apply(Void)
+      case ReminderSMS => sql""" messages.member_id IS NOT NULL """.apply(Void)
+    }
+
+  def startTimeFilter: Option[LocalDateTime] => Option[AppliedFragment] =
+    _.map(sql"messages.sent_date >= $timestamp")
+
+  def endTimeFilter: Option[LocalDateTime] => Option[AppliedFragment] =
+    _.map(sql"messages.sent_date <= $timestamp")
+
+  def selectMessagesWithTotal(id: UserId, params: MessagesFilter, page: Int): AppliedFragment = {
+    val base: Fragment[UserId] = sql"""SELECT messages.*, members.* FROM messages
+          LEFT JOIN members ON members.id = messages.member_id
+          WHERE messages.user_id = $userId
+          """
+
+    val filters: List[AppliedFragment] =
+      List(
+        typeFilter(params.typeBy),
+        startTimeFilter(params.filterDateFrom),
+        endTimeFilter(params.filterDateTo)
+      ).flatMap(_.toList)
+
+    val filter: AppliedFragment =
+      base(id).andOpt(filters) |+| sql" ORDER BY messages.sent_date DESC".apply(Void)
+    filter.paginate(10, page)
+  }
+
+  def total(id: UserId, params: MessagesFilter): AppliedFragment = {
+    val base: Fragment[UserId] = sql"""SELECT count(*) FROM messages
+          WHERE user_id = $userId
+          """
+
+    val filters: List[AppliedFragment] =
+      List(
+        typeFilter(params.typeBy),
+        startTimeFilter(params.filterDateFrom),
+        endTimeFilter(params.filterDateTo)
+      ).flatMap(_.toList)
+
+    base(id).andOpt(filters)
+  }
 
   val insertMessage: Query[Message, Message] =
     sql"""INSERT INTO messages VALUES ($encoder) RETURNING *""".query(decoder)

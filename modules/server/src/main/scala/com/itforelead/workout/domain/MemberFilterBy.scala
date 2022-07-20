@@ -8,8 +8,8 @@ sealed abstract class MemberFilterBy(val value: String)
 object MemberFilterBy {
   case object FirstnameAZ extends MemberFilterBy("firstname-az")
   case object FirstnameZA extends MemberFilterBy("firstname-za")
-  case object LastnameAZ  extends MemberFilterBy("firstname-az")
-  case object LastnameZA  extends MemberFilterBy("firstname-za")
+  case object LastnameAZ  extends MemberFilterBy("lastname-az")
+  case object LastnameZA  extends MemberFilterBy("lastname-za")
   case object ActiveTime  extends MemberFilterBy("active-time")
 
   val types: List[MemberFilterBy] = List(FirstnameAZ, FirstnameZA, LastnameAZ, LastnameZA, ActiveTime)

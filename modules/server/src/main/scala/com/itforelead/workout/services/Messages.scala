@@ -2,7 +2,7 @@ package com.itforelead.workout.services
 
 import cats.effect.{Resource, Sync}
 import com.itforelead.workout.domain.{DeliveryStatus, ID, Message}
-import com.itforelead.workout.domain.Message.{CreateMessage, MessageWithMember, MessageWithTotal}
+import com.itforelead.workout.domain.Message.{CreateMessage, MessageWithMember, MessageWithTotal, MessagesFilter}
 import com.itforelead.workout.domain.types.{MemberId, MessageId, UserId}
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.services.sql.MessagesSQL._
@@ -11,6 +11,7 @@ import skunk.implicits.toIdOps
 import cats.syntax.all._
 import com.itforelead.workout.domain.custom.exception.MemberNotFound
 import com.itforelead.workout.services.sql.MessagesSQL
+import skunk.codec.all.int8
 
 import java.time.LocalDateTime
 
@@ -18,7 +19,7 @@ trait Messages[F[_]] {
   def create(msg: CreateMessage): F[Message]
   def sentSMSTodayMemberIds: F[List[MemberId]]
   def get(userId: UserId): F[List[MessageWithMember]]
-  def getMessagesWithTotal(userId: UserId, page: Int): F[MessageWithTotal]
+  def getMessagesWithTotal(userId: UserId, filter: MessagesFilter, page: Int): F[MessageWithTotal]
   def changeStatus(id: MessageId, status: DeliveryStatus): F[Message]
 }
 
@@ -46,11 +47,12 @@ object Messages {
       override def sentSMSTodayMemberIds: F[List[MemberId]] =
         prepQueryList(selectSentTodaySql, Void)
 
-      override def getMessagesWithTotal(userId: UserId, page: Int): F[MessageWithTotal] =
+      override def getMessagesWithTotal(userId: UserId, filter: MessagesFilter, page: Int): F[MessageWithTotal] =
         for {
-          fr       <- selectMessagesWithPage(userId, page).pure[F]
+          fr       <- selectMessagesWithTotal(userId, filter, page).pure[F]
+          t        <- total(userId, filter).pure[F]
           messages <- prepQueryList(fr.fragment.query(MessagesSQL.decMessageWithMember), fr.argument)
-          total    <- prepQueryUnique(total, userId)
+          total    <- prepQueryUnique(t.fragment.query(int8), t.argument)
         } yield MessageWithTotal(messages, total)
 
       override def changeStatus(id: MessageId, status: DeliveryStatus): F[Message] =

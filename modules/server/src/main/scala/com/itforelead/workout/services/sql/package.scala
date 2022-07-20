@@ -96,22 +96,4 @@ package object sql {
 
   }
 
-  def paymentTypeFilter: Option[PaymentType] => Option[AppliedFragment] =
-    _.map(sql""" payments.payment_type = $paymentType""")
-
-  def paymentStartTimeFilter: Option[LocalDateTime] => Option[AppliedFragment] =
-    _.map(sql"payments.created_at >= $timestamp")
-
-  def paymentEndTimeFilter: Option[LocalDateTime] => Option[AppliedFragment] =
-    _.map(sql"payments.created_at <= $timestamp")
-
-  def arrivalTypeFilter: Option[ArrivalType] => Option[AppliedFragment] =
-    _.map(sql""" arrival_event.arrival = $arrivalType""")
-
-  def arrivalStartTimeFilter: Option[LocalDateTime] => Option[AppliedFragment] =
-    _.map(sql"arrival_event.created_at >= $timestamp")
-
-  def arrivalEndTimeFilter: Option[LocalDateTime] => Option[AppliedFragment] =
-    _.map(sql"arrival_event.created_at <= $timestamp")
-
 }

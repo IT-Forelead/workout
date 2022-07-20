@@ -38,4 +38,11 @@ object Message {
     messages: List[MessageWithMember],
     total: Long
   )
+
+  @derive(decoder, encoder, show)
+  case class MessagesFilter(
+    typeBy: Option[MessageFilterBy] = None,
+    filterDateFrom: Option[LocalDateTime] = None,
+    filterDateTo: Option[LocalDateTime] = None
+  )
 }

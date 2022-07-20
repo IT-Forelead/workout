@@ -7,26 +7,21 @@ import com.itforelead.workout.domain.custom.refinements.{Tel, ValidationCode}
 import com.itforelead.workout.domain.types.MessageId
 import com.itforelead.workout.services.{Members, MessageBroker, Messages}
 import workout.utils.DBSuite
-import workout.utils.Generators.{
-  createMemberGen,
-  createMessageGen,
-  defaultFileKey,
-  defaultUserId,
-  deliveryStatusGen,
-  memberIdGen
-}
+import workout.utils.Generators.{createMemberGen, createMessageGen, defaultFileKey, defaultUserId, deliveryStatusGen, memberIdGen, messageFilterGen}
 object MessageSuite extends DBSuite {
 
   test("Create Message") { implicit postgres =>
     val messages                         = Messages[IO]
     val messageBroker: MessageBroker[IO] = (_: MessageId, _: Tel, _: String) => IO.unit
     val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
+
   val gen = for {
     cm <- createMessageGen(defaultUserId.some)
     m  <- createMemberGen()
-  } yield (cm, m)
+    f  <- messageFilterGen
+  } yield (cm, m, f)
 
-  forall(gen) { case (createMessage, createMember) =>
+  forall(gen) { case (createMessage, createMember, filter) =>
     for {
       _              <- members.sendValidationCode(defaultUserId, createMember.phone)
       validationCode <- RedisClient.get(createMember.phone.value)
@@ -34,7 +29,7 @@ object MessageSuite extends DBSuite {
       member1      <- members.validateAndCreate(defaultUserId, createMember.copy(code = code), defaultFileKey)
       message1     <- messages.create(createMessage.copy(memberId = member1.id.some))
       message2     <- messages.get(message1.userId)
-      getMessages  <- messages.getMessagesWithTotal(defaultUserId, 1)
+      getMessages  <- messages.getMessagesWithTotal(defaultUserId, filter, 1)
       getMembersId <- messages.sentSMSTodayMemberIds
     } yield assert(
       message2.exists(tc => tc.message.userId == message1.userId) &&

@@ -42,7 +42,7 @@ object Member {
 
   @derive(decoder, encoder, show)
   case class MemberFilter(
-    filterBy: Option[MemberFilterBy] = None
+    typeBy: Option[MemberFilterBy] = None
   )
 
   implicit def decodeMap[F[_]: Sync]: MapConvert[F, ValidationResult[CreateMember]] =

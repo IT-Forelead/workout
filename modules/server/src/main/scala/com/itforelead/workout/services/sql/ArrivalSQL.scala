@@ -1,7 +1,6 @@
 package com.itforelead.workout.services.sql
 
-import cats.implicits.catsSyntaxOptionId
-import com.itforelead.workout.domain.Arrival
+import com.itforelead.workout.domain.{Arrival, ArrivalType}
 import com.itforelead.workout.domain.Arrival.{ArrivalFilter, ArrivalWithMember}
 import com.itforelead.workout.domain.types._
 import com.itforelead.workout.services.sql.MemberSQL.memberId
@@ -9,6 +8,8 @@ import com.itforelead.workout.services.sql.UserSQL.userId
 import skunk._
 import skunk.codec.all.{bool, int8, timestamp}
 import skunk.implicits._
+
+import java.time.LocalDateTime
 
 object ArrivalSQL {
   val arrivalId: Codec[ArrivalId] = identity[ArrivalId]
@@ -28,6 +29,15 @@ object ArrivalSQL {
       ArrivalWithMember(arrival, member)
     }
 
+  def typeFilter: Option[ArrivalType] => Option[AppliedFragment] =
+    _.map(sql""" arrival_event.arrival = $arrivalType""")
+
+  def startTimeFilter: Option[LocalDateTime] => Option[AppliedFragment] =
+    _.map(sql"arrival_event.created_at >= $timestamp")
+
+  def endTimeFilter: Option[LocalDateTime] => Option[AppliedFragment] =
+    _.map(sql"arrival_event.created_at <= $timestamp")
+
   def selectArrivalWithTotal(id: UserId, params: ArrivalFilter, page: Int): AppliedFragment = {
     val base: Fragment[UserId] = sql"""SELECT arrival_event.*, members.* FROM arrival_event
           INNER JOIN members ON members.id = arrival_event.member_id
@@ -36,9 +46,9 @@ object ArrivalSQL {
 
     val filters: List[AppliedFragment] =
       List(
-        arrivalTypeFilter(params.typeBy),
-        arrivalStartTimeFilter(params.filterDateFrom),
-        arrivalEndTimeFilter(params.filterDateTo)
+        typeFilter(params.typeBy),
+        startTimeFilter(params.filterDateFrom),
+        endTimeFilter(params.filterDateTo)
       ).flatMap(_.toList)
 
     val filter: AppliedFragment =
@@ -53,9 +63,9 @@ object ArrivalSQL {
 
     val filters: List[AppliedFragment] =
       List(
-        arrivalTypeFilter(params.typeBy),
-        arrivalStartTimeFilter(params.filterDateFrom),
-        arrivalEndTimeFilter(params.filterDateTo)
+        typeFilter(params.typeBy),
+        startTimeFilter(params.filterDateFrom),
+        endTimeFilter(params.filterDateTo)
       ).flatMap(_.toList)
 
     base(id).andOpt(filters)
