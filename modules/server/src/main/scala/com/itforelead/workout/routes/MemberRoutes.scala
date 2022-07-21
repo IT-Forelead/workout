@@ -80,8 +80,8 @@ final class MemberRoutes[F[_]: Async](members: Members[F], s3Client: S3Client[F]
             case phoneInUseError: PhoneInUse =>
               logger.error(s"Phone is already in use. Error: ${phoneInUseError.phone.value}") >>
                 NotAcceptable("Phone is already in use. Please try again with other phone number")
-            case calCodeError: ValidationCodeIncorrect =>
-              logger.error(s"Validation code is wrong. Error: ${calCodeError.code.value}") >>
+            case valCodeError: ValidationCodeIncorrect =>
+              logger.error(s"Validation code is wrong. Error: ${valCodeError.code.value}") >>
                 NotAcceptable("Validation code is wrong. Please try again")
             case error: MultipartDecodeError =>
               logger.error(s"Error occurred while parse multipart. Error: ${error.cause}") >>

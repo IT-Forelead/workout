@@ -117,11 +117,12 @@ object Generators {
       fn <- firstNameGen
       ln <- lastNameGen
       ph <- phoneGen
+      code <- validationCodeGen
       p  <- passwordGen
       gn <- gymNameGen
       dp <- priceGen
       mp <- priceGen
-    } yield CreateClient(fn, ln, gn, dp, mp, ph, p)
+    } yield CreateClient(fn, ln, gn, dp, mp, ph, code, p)
 
   val memberGen: Gen[Member] =
     for {

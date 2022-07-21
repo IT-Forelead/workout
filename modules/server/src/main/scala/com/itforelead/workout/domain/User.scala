@@ -1,7 +1,7 @@
 package com.itforelead.workout.domain
 
 import com.itforelead.workout.domain.Role.CLIENT
-import com.itforelead.workout.domain.custom.refinements.{Password, Tel}
+import com.itforelead.workout.domain.custom.refinements.{Password, Tel, ValidationCode}
 import com.itforelead.workout.domain.types._
 import derevo.cats._
 import derevo.circe.magnolia.{decoder, encoder}
@@ -34,6 +34,7 @@ object User {
     dailyPrice: Money,
     monthlyPrice: Money,
     phone: Tel,
+    code: ValidationCode,
     password: Password,
     role: Role = CLIENT
   )

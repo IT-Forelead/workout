@@ -5,6 +5,7 @@ import cats.implicits._
 import com.itforelead.workout.domain.Role.ADMIN
 import com.itforelead.workout.domain.User
 import com.itforelead.workout.domain.User.{CreateClient, UserWithPassword}
+import com.itforelead.workout.domain.custom.exception.{PhoneInUse, ValidationCodeExpired, ValidationCodeIncorrect}
 import com.itforelead.workout.domain.custom.refinements.{Password, Tel}
 import com.itforelead.workout.routes.{AuthRoutes, deriveEntityEncoder}
 import com.itforelead.workout.services.Users
@@ -17,6 +18,7 @@ import org.http4s.{AuthScheme, Credentials, Status}
 import workout.utils.Generators.{booleanGen, createUserGen, userCredentialGen, userGen}
 import tsec.passwordhashers.PasswordHash
 import tsec.passwordhashers.jca.SCrypt
+import weaver.Expectations
 import workout.http.routes.MessageRoutesSuite.authToken
 import workout.stub_services.{AuthMock, UsersStub}
 import workout.utils.HttpSuite
@@ -25,7 +27,7 @@ import scala.concurrent.duration.DurationInt
 
 object AuthRoutesSuite extends HttpSuite {
 
-  def users[F[_]: Sync](user: User, pass: Password): Users[F] = new UsersStub[F] {
+  def users[F[_]: Sync](user: User, pass: Password, errorType: Option[String] = None): Users[F] = new UsersStub[F] {
     override def find(
       phoneNumber: Tel
     ): F[Option[UserWithPassword]] =
@@ -39,10 +41,35 @@ object AuthRoutesSuite extends HttpSuite {
     override def create(
       userParam: CreateClient,
       password: PasswordHash[SCrypt]
-    ): F[User] = user.pure[F]
+    ): F[User] = errorType match {
+      case None                            => Sync[F].delay(user)
+      case Some("validationCodeExpired")   => ValidationCodeExpired(userParam.phone).raiseError[F, User]
+      case Some("phoneInUse")              => PhoneInUse(userParam.phone).raiseError[F, User]
+      case Some("validationCodeIncorrect") => ValidationCodeIncorrect(userParam.code).raiseError[F, User]
+      case _ => Sync[F].raiseError(new Exception("Error occurred creating user. error type: Unknown"))
+    }
   }
 
-  test("POST Create") {
+//  private def authService[F[_]: Sync](
+//                                                   user: CreateClient,
+//                                                   errorType: Option[String] = None
+//                                                 ): UsersStub[F] =
+//    new UsersStub[F] {
+//      override def create(params: CreateClient, pass: PasswordHash[SCrypt]): F[User] = {
+//        errorType match {
+//          case None                            => Sync[F].delay(user)
+//          case Some("validationCodeExpired")   => ValidationCodeExpired(params.phone).raiseError[F, User]
+//          case Some("phoneInUse")              => PhoneInUse(params.phone).raiseError[F, User]
+//          case Some("validationCodeIncorrect") => ValidationCodeIncorrect(params.code).raiseError[F, User]
+//          case _ => Sync[F].raiseError(new Exception("Error occurred creating user. error type: Unknown"))
+//        }
+//      }
+//    }
+
+  def createUserReq(
+    shouldReturn: Status,
+    errorType: Option[String] = None
+  ): AuthRoutesSuite.F[Expectations] = {
     val gen = for {
       u <- userGen(ADMIN)
       c <- createUserGen
@@ -51,18 +78,33 @@ object AuthRoutesSuite extends HttpSuite {
 
     forall(gen) { case (user, newUser, conflict) =>
       for {
-        auth <- AuthMock[IO](users(user, newUser.password), RedisClient)
+        auth  <- AuthMock[IO](users(user, newUser.password, errorType), RedisClient)
         token <- authToken(user)
-        (postData, shouldReturn) =
-          if (conflict)
-            (newUser.copy(phone = user.phone), Status.Conflict)
-          else
-            (newUser, Status.Created)
-        req    = POST(postData, uri"/auth/user").putHeaders(token)
+        req    = POST(newUser, uri"/auth/user").putHeaders(token)
         routes = AuthRoutes[IO](auth).routes(usersMiddleware)
         res <- expectHttpStatus(routes, req)(shouldReturn)
       } yield res
     }
+  }
+
+  test("create user - 'Success'") {
+    createUserReq(Status.Created)
+  }
+
+  test("create user validationCodeIncorrect - 'Fail'") {
+    createUserReq(Status.NotAcceptable, "validationCodeIncorrect".some)
+  }
+
+  test("create user validationCodeExpired - 'Fail'") {
+    createUserReq(Status.NotAcceptable, "validationCodeExpired".some)
+  }
+
+  test("create user validationPhoneInUse - 'Fail'") {
+    createUserReq(Status.NotAcceptable, "phoneInUse".some)
+  }
+
+  test("create user Unknown Error - 'Fail'") {
+    createUserReq(Status.BadRequest, "".some)
   }
 
   test("POST Login") {

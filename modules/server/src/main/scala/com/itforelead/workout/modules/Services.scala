@@ -23,7 +23,7 @@ object Services {
     val userSetting   = UserSettings[F]
 
     new Services[F](
-      users = Users[F],
+      users = Users[F](redisClient),
       members = members,
       payments = Payments[F](userSetting, members),
       arrivalService = ArrivalService[F],
