@@ -20,7 +20,8 @@ case class User(
   firstname: FirstName,
   lastname: LastName,
   phone: Tel,
-  role: Role
+  role: Role,
+  activate: Boolean
 )
 
 object User {

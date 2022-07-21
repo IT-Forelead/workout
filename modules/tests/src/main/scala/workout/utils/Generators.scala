@@ -94,7 +94,8 @@ object Generators {
       fn <- firstNameGen
       ln <- lastNameGen
       ph <- phoneGen
-    } yield User(i, fn, ln, ph, role)
+      bool <- booleanGen
+    } yield User(i, fn, ln, ph, role, bool)
 
   def userSettingGen(userId: Option[UserId] = None): Gen[UserSetting] =
     for {
