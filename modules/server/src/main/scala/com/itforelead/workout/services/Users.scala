@@ -41,7 +41,7 @@ object Users {
           user <- prepQueryUnique(insertUser, id ~ userParam ~ password).map(_._1)
           _ <- prepQueryUnique(
             insertSettings,
-            UserSetting(user.id, GymName(NonEmptyString.unsafeFrom("Demo GYM")), UZS(1000), UZS(1000))
+            UserSetting(user.id, userParam.gymName, userParam.dailyPrice, userParam.monthlyPrice)
           )
         } yield user)
           .recoverWith { case SqlState.UniqueViolation(_) =>

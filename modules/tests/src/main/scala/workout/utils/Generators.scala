@@ -117,7 +117,10 @@ object Generators {
       ln <- lastNameGen
       ph <- phoneGen
       p  <- passwordGen
-    } yield CreateClient(fn, ln, ph, p)
+      gn <- gymNameGen
+      dp <- priceGen
+      mp <- priceGen
+    } yield CreateClient(fn, ln, gn, dp, mp, ph, p)
 
   val memberGen: Gen[Member] =
     for {

@@ -10,6 +10,7 @@ import tsec.passwordhashers.PasswordHash
 import tsec.passwordhashers.jca.SCrypt
 import io.circe.refined._
 import eu.timepit.refined.cats._
+import squants.Money
 
 import java.util.UUID
 
@@ -28,6 +29,9 @@ object User {
   case class CreateClient(
     firstname: FirstName,
     lastname: LastName,
+    gymName: GymName,
+    dailyPrice: Money,
+    monthlyPrice: Money,
     phone: Tel,
     password: Password,
     role: Role = CLIENT
