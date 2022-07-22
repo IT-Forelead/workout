@@ -33,6 +33,7 @@ final case class AuthRoutes[F[_]: Monad: JsonDecoder: MonadThrow](
         }
     }
   }
+
   private[this] val privateRoutes: AuthedRoutes[User, F] = AuthedRoutes.of {
 
     case ar @ GET -> Root / "logout" as user =>
