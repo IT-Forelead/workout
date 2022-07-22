@@ -34,7 +34,7 @@ trait HttpSuite extends SimpleIOSuite with Checkers {
       .map(_.as[User])
       .value
 
-  protected val usersMiddleware: AuthMiddleware[F, User] =
+  protected def usersMiddleware: AuthMiddleware[F, User] =
     JwtAuthMiddleware[F, User](JwtAuth.hmac(jwtConfig.tokenConfig.value.secret, JwtAlgorithm.HS256), findUser)
 
   def authToken(user: User): IO[Authorization] =

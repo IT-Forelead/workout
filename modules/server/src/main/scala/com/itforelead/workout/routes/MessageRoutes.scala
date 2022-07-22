@@ -1,6 +1,6 @@
 package com.itforelead.workout.routes
 
-import cats.effect.kernel.Async
+import cats.effect.Async
 import cats.implicits._
 import com.itforelead.workout.domain.Message.MessagesFilter
 import com.itforelead.workout.domain.{User, Validation}

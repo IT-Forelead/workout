@@ -15,12 +15,3 @@ case class BrokerMessage(
   text: String,
   sms: SMS
 )
-
-object BrokerMessage {
-  @derive(decoder, encoder, show)
-  case class BrokerMessageWithoutMember(
-    recipient: Tel,
-    text: String,
-    sms: SMS
-  )
-}

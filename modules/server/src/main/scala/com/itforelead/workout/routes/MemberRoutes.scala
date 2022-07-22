@@ -1,15 +1,15 @@
 package com.itforelead.workout.routes
 
 import cats.data.NonEmptyList
-import cats.effect.kernel.Async
+import cats.effect.Async
 import cats.implicits._
 import com.itforelead.workout.domain.Member.{CreateMember, MemberFilter}
+import com.itforelead.workout.domain.User
 import com.itforelead.workout.domain.custom.exception._
 import com.itforelead.workout.domain.custom.refinements.{FileKey, FileName, FilePath}
-import com.itforelead.workout.domain.{User, Validation}
 import com.itforelead.workout.implicits.PartOps
-import com.itforelead.workout.services.{Members, Messages}
 import com.itforelead.workout.services.s3.S3Client
+import com.itforelead.workout.services.{Members, Messages}
 import org.http4s._
 import org.http4s.dsl.Http4sDsl
 import org.http4s.headers.`Transfer-Encoding`

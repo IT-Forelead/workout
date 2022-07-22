@@ -19,7 +19,6 @@ import workout.utils.Generators.{booleanGen, createUserGen, userCredentialGen, u
 import tsec.passwordhashers.PasswordHash
 import tsec.passwordhashers.jca.SCrypt
 import weaver.Expectations
-import workout.http.routes.MessageRoutesSuite.authToken
 import workout.stub_services.{AuthMock, UsersStub}
 import workout.utils.HttpSuite
 
@@ -57,10 +56,9 @@ object AuthRoutesSuite extends HttpSuite {
     val gen = for {
       u <- userGen(ADMIN)
       c <- createUserGen
-      b <- booleanGen
-    } yield (u, c, b)
+    } yield (u, c)
 
-    forall(gen) { case (user, newUser, conflict) =>
+    forall(gen) { case user -> newUser =>
       for {
         auth  <- AuthMock[IO](users(user, newUser.password, errorType), RedisClient)
         token <- authToken(user)

@@ -45,8 +45,6 @@ package object sql {
 
   val price: Codec[Money] = numeric.imap[Money](money => UZS(money))(_.amount)
 
-  val duration: Codec[Duration] = int2.imap[Duration](duration => Duration(NonNegShort.unsafeFrom(duration)))(_.value)
-
   val fileKey: Codec[FileKey] = varchar.imap[FileKey](fileKey => FileKey.unsafeFrom(fileKey))(_.value)
 
   val arrivalType: Codec[ArrivalType] =
@@ -60,15 +58,6 @@ package object sql {
     }
 
     /** Returns `WHERE (f1) AND (f2) AND ... (fn)` for defined `f`, if any, otherwise the empty fragment. */
-    def whereAndOpt(fs: AppliedFragment*): AppliedFragment = {
-      val filters =
-        if (fs.toList.isEmpty)
-          AppliedFragment.empty
-        else
-          fs.foldSmash(void" WHERE ", void" AND ", AppliedFragment.empty)
-      af |+| filters
-    }
-
     def whereAndOpt(fs: List[AppliedFragment]): AppliedFragment = {
       val filters =
         if (fs.isEmpty)
@@ -79,15 +68,6 @@ package object sql {
     }
 
     def andOpt(fs: List[AppliedFragment]): AppliedFragment = {
-      val filters =
-        if (fs.isEmpty)
-          AppliedFragment.empty
-        else
-          fs.foldSmash(void" AND ", void" AND ", AppliedFragment.empty)
-      af |+| filters
-    }
-
-    def innerAndOpt(fs: List[AppliedFragment]): AppliedFragment = {
       val filters =
         if (fs.isEmpty)
           AppliedFragment.empty

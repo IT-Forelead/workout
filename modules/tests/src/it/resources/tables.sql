@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users
     password  VARCHAR        NOT NULL,
     role      ROLE           NOT NULL DEFAULT 'client',
     deleted   BOOLEAN        NOT NULL DEFAULT false,
-    activate   BOOLEAN        NOT NULL DEFAULT false
+    activate BOOLEAN NOT NULL DEFAULT false
 );
 
 INSERT INTO "users" ("id", "firstname", "lastname", "phone", "password", "role")
