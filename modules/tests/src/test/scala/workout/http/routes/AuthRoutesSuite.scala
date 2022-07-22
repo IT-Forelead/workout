@@ -50,22 +50,6 @@ object AuthRoutesSuite extends HttpSuite {
     }
   }
 
-//  private def authService[F[_]: Sync](
-//                                                   user: CreateClient,
-//                                                   errorType: Option[String] = None
-//                                                 ): UsersStub[F] =
-//    new UsersStub[F] {
-//      override def create(params: CreateClient, pass: PasswordHash[SCrypt]): F[User] = {
-//        errorType match {
-//          case None                            => Sync[F].delay(user)
-//          case Some("validationCodeExpired")   => ValidationCodeExpired(params.phone).raiseError[F, User]
-//          case Some("phoneInUse")              => PhoneInUse(params.phone).raiseError[F, User]
-//          case Some("validationCodeIncorrect") => ValidationCodeIncorrect(params.code).raiseError[F, User]
-//          case _ => Sync[F].raiseError(new Exception("Error occurred creating user. error type: Unknown"))
-//        }
-//      }
-//    }
-
   def createUserReq(
     shouldReturn: Status,
     errorType: Option[String] = None
