@@ -1,7 +1,7 @@
 package com.itforelead.workout.services.sql
 
 import com.itforelead.workout.domain.{Member, MemberFilterBy}
-import com.itforelead.workout.domain.Member.{CreateMember, MemberFilter}
+import com.itforelead.workout.domain.Member.CreateMember
 import com.itforelead.workout.domain.MemberFilterBy._
 import com.itforelead.workout.domain.custom.refinements.{FileKey, Tel}
 import com.itforelead.workout.domain.types._

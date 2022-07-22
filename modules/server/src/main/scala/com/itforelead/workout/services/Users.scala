@@ -3,12 +3,13 @@ package com.itforelead.workout.services
 import cats.data.OptionT
 import cats.effect._
 import cats.syntax.all._
-import com.itforelead.workout.domain.User.{CreateClient, UserWithPassword}
+import com.itforelead.workout.domain.User.{CreateClient, UserFilter, UserWithPassword, UserWithSetting}
 import com.itforelead.workout.domain.custom.exception.PhoneInUse
 import com.itforelead.workout.domain.custom.refinements.Tel
 import com.itforelead.workout.domain.types.{GymName, UZS, UserId}
 import com.itforelead.workout.domain.{ID, Role, User, UserSetting}
 import com.itforelead.workout.effects.GenUUID
+import com.itforelead.workout.services.sql.{UserSQL, UserSettingsSQL}
 import com.itforelead.workout.services.sql.UserSQL.{insertUser, _}
 import com.itforelead.workout.services.sql.UserSettingsSQL.insertSettings
 import eu.timepit.refined.types.string.NonEmptyString
@@ -20,7 +21,7 @@ import tsec.passwordhashers.jca.SCrypt
 trait Users[F[_]] {
   def find(phoneNumber: Tel): F[Option[UserWithPassword]]
   def create(userParam: CreateClient, password: PasswordHash[SCrypt]): F[User]
-  def getClients: F[List[User]]
+  def getClients(filter: UserFilter): F[List[UserWithSetting]]
 }
 
 object Users {
@@ -50,7 +51,10 @@ object Users {
 
       }
 
-      def getClients: F[List[User]] =
-        prepQueryList(selectClients, Void)
+      def getClients(filter: UserFilter): F[List[UserWithSetting]] =
+        for {
+          fr      <- selectClientsFilter(filter.typeBy, filter.sortBy).pure[F]
+          clients <- prepQueryList(fr.fragment.query(UserSQL.decUserWithSetting), fr.argument)
+        } yield clients
     }
 }

@@ -2,6 +2,7 @@ package workout.http.routes
 
 import cats.effect.{IO, Sync}
 import cats.implicits._
+import com.itforelead.workout.domain.User.{UserFilter, UserWithSetting}
 import com.itforelead.workout.domain.{User, UserSetting}
 import com.itforelead.workout.domain.UserSetting.UpdateSetting
 import com.itforelead.workout.domain.types.UserId
@@ -24,8 +25,9 @@ object UserRoutesSuite extends HttpSuite {
     override def updateSettings(userId: UserId, settings: UpdateSetting): F[UserSetting] = Sync[F].delay(setting)
   }
 
-  private def users[F[_]: Sync: GenUUID](user: User): UsersStub[F] = new UsersStub[F] {
-    override def getClients: F[List[User]] = Sync[F].delay(List(user))
+  private def users[F[_]: Sync: GenUUID](user: User, setting: UserSetting): UsersStub[F] = new UsersStub[F] {
+    override def getClients(filter: UserFilter): F[List[UserWithSetting]] =
+      Sync[F].delay(List(UserWithSetting(user, setting)))
   }
 
   test("PUT User Settings") {
@@ -38,7 +40,7 @@ object UserRoutesSuite extends HttpSuite {
       for {
         token <- authToken(user)
         req    = PUT(setting, uri"/user/settings").putHeaders(token)
-        routes = new UserRoutes[IO](settings(setting), users(user)).routes(usersMiddleware)
+        routes = new UserRoutes[IO](settings(setting), users(user, setting)).routes(usersMiddleware)
         res <- expectHttpBodyAndStatus(routes, req)(setting, Status.Ok)
       } yield res
     }
@@ -54,7 +56,7 @@ object UserRoutesSuite extends HttpSuite {
       for {
         token <- authToken(user)
         req    = GET(uri"/user/settings").putHeaders(token)
-        routes = new UserRoutes[IO](settings(setting), users(user)).routes(usersMiddleware)
+        routes = new UserRoutes[IO](settings(setting), users(user, setting)).routes(usersMiddleware)
         res <- expectHttpBodyAndStatus(routes, req)(setting, Status.Ok)
       } yield res
     }
@@ -63,15 +65,16 @@ object UserRoutesSuite extends HttpSuite {
   test("GET User") {
     val gen = for {
       u <- userGen()
+      s <- userSettingGen()
       b <- booleanGen
-    } yield (u, b)
+    } yield (u, s, b)
 
-    forall(gen) { case (user, isAuthed) =>
+    forall(gen) { case (user, setting, isAuthed) =>
       for {
         token <- AuthMock.tokens[IO].flatMap(_.create)
         _     <- if (isAuthed) RedisClient.put(token.value, user, 1.minute) else IO.unit
         req    = GET(uri"/user").putHeaders(Authorization(Credentials.Token(AuthScheme.Bearer, token.value)))
-        routes = new UserRoutes[IO](new UserSettingsStub[IO] {}, users(user)).routes(usersMiddleware)
+        routes = new UserRoutes[IO](new UserSettingsStub[IO] {}, users(user, setting)).routes(usersMiddleware)
         res <-
           if (isAuthed)
             expectHttpBodyAndStatus(routes, req)(user, Status.Ok)

@@ -36,6 +36,18 @@ object User {
   @derive(decoder, encoder)
   case class UserWithPassword(user: User, password: PasswordHash[SCrypt])
 
+  @derive(decoder, encoder, show)
+  case class UserWithSetting(
+    user: User,
+    setting: UserSetting
+  )
+
+  @derive(decoder, encoder, show)
+  case class UserFilter(
+    typeBy: Option[UserFilterBy] = None,
+    sortBy: Boolean
+  )
+
   val userId: UserId = UserId(UUID.fromString("76c2c44c-8fbf-4184-9199-19303a042fa0"))
 
 }

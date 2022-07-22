@@ -62,6 +62,8 @@ object Generators {
 
   val messageFilterTypeGen: Gen[MessageFilterBy] = arbitrary[MessageFilterBy]
 
+  val userFilterTypeGen: Gen[UserFilterBy] = arbitrary[UserFilterBy]
+
   val deliveryStatusGen: Gen[DeliveryStatus] = arbitrary[DeliveryStatus]
 
   val paymentTypeGen: Gen[PaymentType] = arbitrary[PaymentType]
@@ -155,6 +157,12 @@ object Generators {
       f  <- option(timestampGen)
       to <- option(timestampGen)
     } yield ArrivalFilter(t, f, to)
+
+  val userFilterGen: Gen[UserFilter] =
+    for {
+      t  <- option(userFilterTypeGen)
+      s  <- booleanGen
+    } yield UserFilter(t, s)
 
   val messageFilterGen: Gen[MessagesFilter] =
     for {
