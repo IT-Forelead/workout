@@ -3,7 +3,7 @@ package workout.services
 import cats.effect.IO
 import cats.implicits.catsSyntaxOptionId
 import com.itforelead.workout.domain.Role.CLIENT
-import com.itforelead.workout.domain.custom.refinements.Tel
+import com.itforelead.workout.domain.custom.refinements.{Tel, ValidationCode}
 import com.itforelead.workout.domain.types.{MessageId, UserId}
 import com.itforelead.workout.services.{Members, MessageBroker, Messages, UserSettings, Users}
 import eu.timepit.refined.auto.autoUnwrap
@@ -24,8 +24,9 @@ object UsersSuite extends DBSuite {
     forall(createUserGen) { createUser =>
       SCrypt.hashpw[IO](createUser.password).flatMap { hash =>
         for {
-          _ <- members.sendValidationCode(UserId(UUID.randomUUID()), createUser.phone)
-          client1    <- users.create(createUser, hash)
+          _ <- members.sendValidationCode(phone = createUser.phone)
+          code <- RedisClient.get(createUser.phone.value)
+          client1    <- users.create(createUser.copy(code = ValidationCode.unsafeFrom(code.get)), hash)
           client2    <- users.find(client1.phone)
           getClients <- users.getClients
         } yield assert(getClients.contains(client2.get.user) && client2.get.user.role == CLIENT)

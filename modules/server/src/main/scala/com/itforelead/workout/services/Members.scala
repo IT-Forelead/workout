@@ -21,13 +21,17 @@ import skunk.{Session, SqlState}
 import java.time.LocalDateTime
 import eu.timepit.refined.auto._
 
+import java.util.UUID
 import scala.concurrent.duration.DurationInt
 
 trait Members[F[_]] {
   def get(userId: UserId): F[List[Member]]
   def membersWithTotal(userId: UserId, filter: MemberFilter, page: Int): F[MemberWithTotal]
   def findMemberByPhone(phone: Tel): F[Option[Member]]
-  def sendValidationCode(userId: UserId, phone: Tel): F[Unit]
+  def sendValidationCode(
+    userId: UserId = UserId(UUID.fromString("76c2c44c-8fbf-4184-9199-19303a042fa0")),
+    phone: Tel
+  ): F[Unit]
   def validateAndCreate(userId: UserId, createMember: CreateMember, key: FileKey): F[Member]
   def findActiveTimeShort: F[List[Member]]
   def getWeekLeftOnAT(userId: UserId): F[List[Member]]
