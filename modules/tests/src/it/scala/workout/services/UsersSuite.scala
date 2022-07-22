@@ -19,12 +19,13 @@ object UsersSuite extends DBSuite {
   test("Create Client") { implicit postgres =>
     val users = Users[IO](RedisClientMock.apply)
     val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
-    val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
+    val members                          = Members[IO](RedisClient)
+    val messages     = Messages[IO](RedisClient, messageBroker)
 
     forall(createUserGen) { createUser =>
       SCrypt.hashpw[IO](createUser.password).flatMap { hash =>
         for {
-          _ <- members.sendValidationCode(phone = createUser.phone)
+          _ <- messages.sendValidationCode(phone = createUser.phone)
           code <- RedisClient.get(createUser.phone.value)
           client1    <- users.create(createUser.copy(code = ValidationCode.unsafeFrom(code.get)), hash)
           client2    <- users.find(client1.phone)

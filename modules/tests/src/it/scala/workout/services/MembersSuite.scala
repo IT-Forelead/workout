@@ -18,11 +18,13 @@ object MembersSuite extends DBSuite {
 
   test("Create Member") { implicit postgres =>
     val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
-    val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
+    val members                          = Members[IO](RedisClient)
+    val messages                         = Messages[IO](RedisClient, messageBroker)
+
 
     forall(createMemberGen()) { createMember =>
       for {
-        _              <- members.sendValidationCode(defaultUserId, createMember.phone)
+        _              <- messages.sendValidationCode(defaultUserId, createMember.phone)
         validationCode <- RedisClient.get(createMember.phone.value)
         member1 <- members.validateAndCreate(
           defaultUserId,
@@ -37,7 +39,8 @@ object MembersSuite extends DBSuite {
 
   test("Create Member: Phone In Use") { implicit postgres =>
     val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
-    val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
+    val members                          = Members[IO](RedisClient)
+    val messages                         = Messages[IO](RedisClient, messageBroker)
 
     val gen = for {
       m  <- createMemberGen()
@@ -45,7 +48,7 @@ object MembersSuite extends DBSuite {
     } yield (m, nm)
     forall(gen) { case (createMember, createNewMember) =>
       (for {
-        _               <- members.sendValidationCode(defaultUserId, createMember.phone)
+        _               <- messages.sendValidationCode(defaultUserId, createMember.phone)
         validationCode1 <- RedisClient.get(createMember.phone.value)
         member1 <- members.validateAndCreate(
           defaultUserId,
@@ -66,7 +69,8 @@ object MembersSuite extends DBSuite {
 
   test("Create Member: Validation Code Incorrect") { implicit postgres =>
     val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
-    val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
+    val members                          = Members[IO](RedisClient)
+    val messages                         = Messages[IO](RedisClient, messageBroker)
 
     val gen = for {
       m <- createMemberGen()
@@ -74,7 +78,7 @@ object MembersSuite extends DBSuite {
     } yield (m, c)
     forall(gen) { case (createMember, validationCode) =>
       (for {
-        _ <- members.sendValidationCode(defaultUserId, createMember.phone)
+        _ <- messages.sendValidationCode(defaultUserId, createMember.phone)
         _ <- members.validateAndCreate(
           defaultUserId,
           createMember.copy(code = validationCode),
@@ -89,7 +93,8 @@ object MembersSuite extends DBSuite {
 
   test("Create Member: Validation Code Expired") { implicit postgres =>
     val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
-    val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
+    val members                          = Members[IO](RedisClient)
+    val messages                         = Messages[IO](RedisClient, messageBroker)
 
     val gen = for {
       m <- createMemberGen()
@@ -97,7 +102,7 @@ object MembersSuite extends DBSuite {
     } yield (m, p)
     forall(gen) { case (createMember, phone) =>
       (for {
-        _               <- members.sendValidationCode(defaultUserId, createMember.phone)
+        _               <- messages.sendValidationCode(defaultUserId, createMember.phone)
         validationCode1 <- RedisClient.get(createMember.phone.value)
         _ <- members.validateAndCreate(
           defaultUserId,
@@ -113,7 +118,8 @@ object MembersSuite extends DBSuite {
 
   test("Member By Id") { implicit postgres =>
     val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
-    val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
+    val members                          = Members[IO](RedisClient)
+    val messages                         = Messages[IO](RedisClient, messageBroker)
 
     val gen = for {
       p <- phoneGen
@@ -122,7 +128,7 @@ object MembersSuite extends DBSuite {
     forall(gen) { case (phone, createMember) =>
       val fileKey = FileKey.unsafeFrom("e8bcab0c-ef16-45b5-842d-7ec35468195e.jpg")
       for {
-        _              <- members.sendValidationCode(defaultUserId, phone)
+        _              <- messages.sendValidationCode(defaultUserId, phone)
         validationCode <- RedisClient.get(phone.value)
         member <- members.validateAndCreate(
           defaultUserId,
@@ -136,7 +142,8 @@ object MembersSuite extends DBSuite {
 
   test("Update member active time") { implicit postgres =>
     val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
-    val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
+    val members                          = Members[IO](RedisClient)
+    val messages                         = Messages[IO](RedisClient, messageBroker)
 
     val gen = for {
       p <- phoneGen
@@ -145,7 +152,7 @@ object MembersSuite extends DBSuite {
     forall(gen) { case (phone, createMember) =>
       val fileKey = FileKey.unsafeFrom("e8bcab0c-ef16-45b5-842d-7ec35468195e.jpg")
       for {
-        _              <- members.sendValidationCode(defaultUserId, phone)
+        _              <- messages.sendValidationCode(defaultUserId, phone)
         validationCode <- RedisClient.get(phone.value)
         member <- members.validateAndCreate(
           defaultUserId,
@@ -163,7 +170,8 @@ object MembersSuite extends DBSuite {
 
   test("Member By User Id") { implicit postgres =>
     val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
-    val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
+    val members                          = Members[IO](RedisClient)
+    val messages                         = Messages[IO](RedisClient, messageBroker)
 
     val gen = for {
       p <- phoneGen
@@ -172,7 +180,7 @@ object MembersSuite extends DBSuite {
     forall(gen) { case (phone, createMember) =>
       val fileKey = FileKey.unsafeFrom("e8bcab0c-ef16-45b5-842d-7ec35468195e.jpg")
       for {
-        _              <- members.sendValidationCode(defaultUserId, phone)
+        _              <- messages.sendValidationCode(defaultUserId, phone)
         validationCode <- RedisClient.get(phone.value)
         _ <- members.validateAndCreate(
           defaultUserId,
@@ -186,7 +194,8 @@ object MembersSuite extends DBSuite {
 
   test("Member By Phone") { implicit postgres =>
     val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
-    val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
+    val members                          = Members[IO](RedisClient)
+    val messages                         = Messages[IO](RedisClient, messageBroker)
 
     val gen = for {
       p <- phoneGen
@@ -195,7 +204,7 @@ object MembersSuite extends DBSuite {
     forall(gen) { case (phone, createMember) =>
       val fileKey = FileKey.unsafeFrom("e8bcab0c-ef16-45b5-842d-7ec35468195e.jpg")
       for {
-        _              <- members.sendValidationCode(defaultUserId, phone)
+        _              <- messages.sendValidationCode(defaultUserId, phone)
         validationCode <- RedisClient.get(phone.value)
         _ <- members.validateAndCreate(
           defaultUserId,

@@ -26,7 +26,8 @@ object ArrivalSuite extends DBSuite {
   def createArrival(methodName: String)(implicit res: Res): ArrivalSuite.F[Expectations] = {
     val arrivalService                   = ArrivalService[IO]
     val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
-    val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
+    val members                          = Members[IO](RedisClient)
+    val messages                         = Messages[IO](RedisClient, messageBroker)
 
     val gen = for {
       a <- createArrivalGen
@@ -36,7 +37,7 @@ object ArrivalSuite extends DBSuite {
 
     forall(gen) { case (createArrival, createMember, filter) =>
       for {
-        _              <- members.sendValidationCode(defaultUserId, createMember.phone)
+        _              <- messages.sendValidationCode(defaultUserId, createMember.phone)
         validationCode <- RedisClient.get(createMember.phone.value)
         code = ValidationCode.unsafeFrom(validationCode.get)
         member1     <- members.validateAndCreate(defaultUserId, createMember.copy(code = code), defaultFileKey)

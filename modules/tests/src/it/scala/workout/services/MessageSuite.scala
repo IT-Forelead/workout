@@ -20,9 +20,9 @@ import workout.utils.Generators.{
 object MessageSuite extends DBSuite {
 
   test("Create Message") { implicit postgres =>
-    val messages                         = Messages[IO]
     val messageBroker: MessageBroker[IO] = (_: MessageId, _: Tel, _: String) => IO.unit
-    val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
+    val members                          = Members[IO](RedisClient)
+    val messages                         = Messages[IO](RedisClient, messageBroker)
 
     val gen = for {
       cm <- createMessageGen(defaultUserId.some)
@@ -32,7 +32,7 @@ object MessageSuite extends DBSuite {
 
     forall(gen) { case (createMessage, createMember, filter) =>
       for {
-        _              <- members.sendValidationCode(defaultUserId, createMember.phone)
+        _              <- messages.sendValidationCode(defaultUserId, createMember.phone)
         validationCode <- RedisClient.get(createMember.phone.value)
         code = ValidationCode.unsafeFrom(validationCode.get)
         member1      <- members.validateAndCreate(defaultUserId, createMember.copy(code = code), defaultFileKey)
@@ -57,7 +57,9 @@ object MessageSuite extends DBSuite {
   }
 
   test("Create Message: Member Not Found") { implicit postgres =>
-    val messages = Messages[IO]
+    val messageBroker: MessageBroker[IO] = (_: MessageId, _: Tel, _: String) => IO.unit
+    val messages = Messages[IO](RedisClient, messageBroker)
+
     val gen = for {
       memberId <- memberIdGen
       message  <- createMessageGen(defaultUserId.some)
@@ -71,9 +73,9 @@ object MessageSuite extends DBSuite {
   }
 
   test("Change status") { implicit postgres =>
-    val messages                         = Messages[IO]
     val messageBroker: MessageBroker[IO] = (_: MessageId, _: Tel, _: String) => IO.unit
-    val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
+    val members                          = Members[IO](RedisClient)
+    val messages                         = Messages[IO](RedisClient, messageBroker)
 
     val gen = for {
       m  <- createMemberGen()
@@ -83,7 +85,7 @@ object MessageSuite extends DBSuite {
 
     forall(gen) { case (createMember, createMessage, statusGen) =>
       for {
-        _              <- members.sendValidationCode(defaultUserId, createMember.phone)
+        _              <- messages.sendValidationCode(defaultUserId, createMember.phone)
         validationCode <- RedisClient.get(createMember.phone.value)
         code = ValidationCode.unsafeFrom(validationCode.get)
         member1  <- members.validateAndCreate(defaultUserId, createMember.copy(code = code), defaultFileKey)
