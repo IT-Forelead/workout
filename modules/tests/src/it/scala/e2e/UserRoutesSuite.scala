@@ -23,6 +23,15 @@ object UserRoutesSuite extends ClientSuite {
     }
   }
 
+  test("Get Clients") { implicit client =>
+    for {
+      token <- loginReq.expectAs[JwtToken]
+      result <- GET(uri"/user/clients")
+        .putHeaders(makeAuth(token))
+        .expectHttpStatus(Status.Ok)
+    } yield result
+  }
+
   test("Settings By Id") { implicit client =>
     for {
       token <- loginReq.expectAs[JwtToken]

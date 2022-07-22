@@ -13,8 +13,8 @@ package object refinements {
   private type TelNumberPred      = MatchesRegex["^[+][0-9]{12}$"]
   private type ValidationCodePred = MatchesRegex["^[0-9]{4}$"]
   private type BucketPred         = MatchesRegex["^[a-z0-9/.-]{3,63}$"]
-  private type FilePathPred       = MatchesRegex["[a-z0-9-]+\\.+(png|jpg|jpeg|bmp|webp)"]
-  private type FileKeyPred        = MatchesRegex["[a-z0-9-]+\\.+(png|jpg|jpeg|bmp|webp)"]
+  private type FilePathPred       = MatchesRegex["^[\\w,\\s-]+\\.+(png|jpg|jpeg|bmp|webp)"]
+  private type FileKeyPred        = MatchesRegex["^[\\w,\\s-]+\\.+(png|jpg|jpeg|bmp|webp)"]
   private type ProductRatingPred  = Interval.Closed[1, 5] And Not[Negative]
 
   type EmailAddress = String Refined EmailPred

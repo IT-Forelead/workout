@@ -22,7 +22,7 @@ final class UserRoutes[F[_]: JsonDecoder: MonadThrow](settings: UserSettings[F],
       Ok(user)
 
     case GET -> Root / "clients" as user if user.role == ADMIN =>
-      users.getClients.flatMap(a => if (a.nonEmpty) Ok(a) else NotFound("Users Not Found"))
+      users.getClients.flatMap(Ok(_))
 
     case GET -> Root / "settings" as user =>
       settings.settings(user.id).flatMap(Ok(_))
