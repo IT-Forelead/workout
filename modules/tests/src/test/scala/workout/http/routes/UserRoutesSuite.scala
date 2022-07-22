@@ -1,13 +1,16 @@
 package workout.http.routes
 
+import cats.effect.IO.delay
 import cats.effect.{IO, Sync}
 import cats.implicits._
 import com.itforelead.workout.domain.User.{UserFilter, UserWithSetting}
+import com.itforelead.workout.domain.Role.ADMIN
 import com.itforelead.workout.domain.{User, UserSetting}
 import com.itforelead.workout.domain.UserSetting.UpdateSetting
 import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.routes.{UserRoutes, deriveEntityEncoder}
+import io.circe.generic.encoding.ReprAsObjectEncoder.deriveReprAsObjectEncoder
 import org.http4s.Method.{GET, PUT}
 import org.http4s.client.dsl.io._
 import org.http4s.headers.Authorization
@@ -81,6 +84,23 @@ object UserRoutesSuite extends HttpSuite {
             expectHttpBodyAndStatus(routes, req)(user, Status.Ok)
           else
             expectHttpStatus(routes, req)(Status.Forbidden)
+      } yield res
+    }
+  }
+
+  test("GET Clients") {
+    val gen = for {
+      u <- userGen(ADMIN)
+      c <- userGen()
+      s <- userSettingGen()
+    } yield (u, c, s)
+
+    forall(gen) { case (user, client, setting) =>
+      for {
+        token <- authToken(user)
+        req    = GET(uri"/user/clients").putHeaders(token)
+        routes = new UserRoutes[IO](settings(setting), users(client)).routes(usersMiddleware)
+        res <- expectHttpBodyAndStatus(routes, req)(List(client), Status.Ok)
       } yield res
     }
   }

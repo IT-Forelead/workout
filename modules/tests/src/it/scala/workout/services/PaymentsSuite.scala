@@ -34,9 +34,9 @@ object PaymentsSuite extends DBSuite {
           createMember.copy(code = ValidationCode.unsafeFrom(validationCode.get)),
           FileKey.unsafeFrom("e8bcab0c-ef16-45b5-842d-7ec35468195e.jpg")
         )
-        payment     <- payments.create(defaultUserId, createPayment.copy(memberId = member1.id))
-        getPayments <- payments.payments(defaultUserId)
-        getPayment  <- payments.getPaymentByMemberId(defaultUserId, payment.memberId)
+        payment              <- payments.create(defaultUserId, createPayment.copy(memberId = member1.id))
+        getPayments          <- payments.payments(defaultUserId)
+        getPayment           <- payments.getPaymentByMemberId(defaultUserId, payment.memberId)
       } yield assert(getPayments.exists(_.payment == payment) && getPayment.contains(payment))
     }
   }
