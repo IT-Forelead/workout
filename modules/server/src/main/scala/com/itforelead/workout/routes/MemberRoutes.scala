@@ -93,16 +93,22 @@ final class MemberRoutes[F[_]: Async](members: Members[F], s3Client: S3Client[F]
       }
   }
 
-  private val publicRoutes: HttpRoutes[F] = HttpRoutes.of[F] { case GET -> Root / "image" / imageUrl =>
-    val imageStream =
-      s3Client.downloadObject(FilePath.unsafeFrom(imageUrl))
-    Response(
-      body = imageStream,
-      headers = Headers(
-        nameToContentType(FileName.unsafeFrom(imageUrl)),
-        `Transfer-Encoding`(TransferCoding.chunked.pure[NonEmptyList])
-      )
-    ).pure[F]
+  private val publicRoutes: HttpRoutes[F] = HttpRoutes.of[F] {
+    case GET -> Root / "image" / imageUrl =>
+      val imageStream =
+        s3Client.downloadObject(FilePath.unsafeFrom(imageUrl))
+      Response(
+        body = imageStream,
+        headers = Headers(
+          nameToContentType(FileName.unsafeFrom(imageUrl)),
+          `Transfer-Encoding`(TransferCoding.chunked.pure[NonEmptyList])
+        )
+      ).pure[F]
+
+    case req @ POST -> Root / "sent-code" =>
+      req.decodeR[Validation] { validationPhone =>
+        members.sendValidationCode(phone = validationPhone.phone).flatMap(Ok(_))
+      }
 
   }
 
