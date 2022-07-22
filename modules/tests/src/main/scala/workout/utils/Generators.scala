@@ -94,7 +94,8 @@ object Generators {
       fn <- firstNameGen
       ln <- lastNameGen
       ph <- phoneGen
-    } yield User(i, fn, ln, ph, role)
+      bool <- booleanGen
+    } yield User(i, fn, ln, ph, role, bool)
 
   def userSettingGen(userId: Option[UserId] = None): Gen[UserSetting] =
     for {
@@ -116,8 +117,12 @@ object Generators {
       fn <- firstNameGen
       ln <- lastNameGen
       ph <- phoneGen
+      code <- validationCodeGen
       p  <- passwordGen
-    } yield CreateClient(fn, ln, ph, p)
+      gn <- gymNameGen
+      dp <- priceGen
+      mp <- priceGen
+    } yield CreateClient(fn, ln, gn, dp, mp, ph, code, p)
 
   val memberGen: Gen[Member] =
     for {

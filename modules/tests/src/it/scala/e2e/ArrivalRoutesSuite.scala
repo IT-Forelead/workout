@@ -39,7 +39,7 @@ object ArrivalRoutesSuite extends ClientSuite {
     forall(gen) { case (createArrival, createMember) =>
       for {
         token <- loginReq.expectAs[JwtToken]
-        _     <- POST(Validation(createMember.phone), uri"/member/sent-code").putHeaders(makeAuth(token)).expectAs[Unit]
+        _     <- POST(Validation(createMember.phone), uri"/message/sent-code").putHeaders(makeAuth(token)).expectAs[Unit]
         fileUrl: Option[URL] = Option(getClass.getResource("/photo_2022-06-28_16-27-20.jpg"))
         fileData = fileUrl.map { url =>
           Part.fileData("filename", url, `Content-Type`(MediaType.image.`jpeg`))

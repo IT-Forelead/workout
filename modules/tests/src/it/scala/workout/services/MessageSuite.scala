@@ -5,24 +5,17 @@ import cats.implicits.{catsSyntaxApplicativeError, catsSyntaxOptionId}
 import com.itforelead.workout.domain.custom.exception.MemberNotFound
 import com.itforelead.workout.domain.custom.refinements.{Tel, ValidationCode}
 import com.itforelead.workout.domain.types.MessageId
-import com.itforelead.workout.services.{Members, MessageBroker, Messages}
+import com.itforelead.workout.services.{Members, MessageBroker, Messages, Users}
 import workout.utils.DBSuite
-import workout.utils.Generators.{
-  createMemberGen,
-  createMessageGen,
-  defaultFileKey,
-  defaultUserId,
-  deliveryStatusGen,
-  memberIdGen,
-  messageFilterGen
-}
+import workout.utils.Generators.{createMemberGen, createMessageGen, defaultFileKey, defaultUserId, deliveryStatusGen, memberIdGen, messageFilterGen}
 
 object MessageSuite extends DBSuite {
 
   test("Create Message") { implicit postgres =>
-    val messages                         = Messages[IO]
     val messageBroker: MessageBroker[IO] = (_: MessageId, _: Tel, _: String) => IO.unit
-    val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
+    val members                          = Members[IO](RedisClient)
+    val users                            = Users[IO](RedisClient)
+    val messages                         = Messages[IO](RedisClient, messageBroker, users)
 
     val gen = for {
       cm <- createMessageGen(defaultUserId.some)
@@ -32,7 +25,7 @@ object MessageSuite extends DBSuite {
 
     forall(gen) { case (createMessage, createMember, filter) =>
       for {
-        _              <- members.sendValidationCode(defaultUserId, createMember.phone)
+        _              <- messages.sendValidationCode(defaultUserId.some, createMember.phone)
         validationCode <- RedisClient.get(createMember.phone.value)
         code = ValidationCode.unsafeFrom(validationCode.get)
         member1      <- members.validateAndCreate(defaultUserId, createMember.copy(code = code), defaultFileKey)
@@ -57,7 +50,10 @@ object MessageSuite extends DBSuite {
   }
 
   test("Create Message: Member Not Found") { implicit postgres =>
-    val messages = Messages[IO]
+    val messageBroker: MessageBroker[IO] = (_: MessageId, _: Tel, _: String) => IO.unit
+    val users                            = Users[IO](RedisClient)
+    val messages = Messages[IO](RedisClient, messageBroker, users)
+
     val gen = for {
       memberId <- memberIdGen
       message  <- createMessageGen(defaultUserId.some)
@@ -71,9 +67,10 @@ object MessageSuite extends DBSuite {
   }
 
   test("Change status") { implicit postgres =>
-    val messages                         = Messages[IO]
     val messageBroker: MessageBroker[IO] = (_: MessageId, _: Tel, _: String) => IO.unit
-    val members                          = Members[IO](messageBroker, Messages[IO], RedisClient)
+    val members                          = Members[IO](RedisClient)
+    val users                            = Users[IO](RedisClient)
+    val messages                         = Messages[IO](RedisClient, messageBroker, users)
 
     val gen = for {
       m  <- createMemberGen()
@@ -83,7 +80,7 @@ object MessageSuite extends DBSuite {
 
     forall(gen) { case (createMember, createMessage, statusGen) =>
       for {
-        _              <- members.sendValidationCode(defaultUserId, createMember.phone)
+        _              <- messages.sendValidationCode(defaultUserId.some, createMember.phone)
         validationCode <- RedisClient.get(createMember.phone.value)
         code = ValidationCode.unsafeFrom(validationCode.get)
         member1  <- members.validateAndCreate(defaultUserId, createMember.copy(code = code), defaultFileKey)
