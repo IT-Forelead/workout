@@ -8,7 +8,7 @@ import com.itforelead.workout.domain.custom.exception._
 import com.itforelead.workout.domain.custom.refinements.{FileKey, FileName, FilePath}
 import com.itforelead.workout.domain.{User, Validation}
 import com.itforelead.workout.implicits.PartOps
-import com.itforelead.workout.services.Members
+import com.itforelead.workout.services.{Members, Messages}
 import com.itforelead.workout.services.s3.S3Client
 import org.http4s._
 import org.http4s.dsl.Http4sDsl
@@ -17,7 +17,7 @@ import org.http4s.multipart.Multipart
 import org.http4s.server.{AuthMiddleware, Router}
 import org.typelevel.log4cats.Logger
 
-final class MemberRoutes[F[_]: Async](members: Members[F], s3Client: S3Client[F])(implicit
+final class MemberRoutes[F[_]: Async](members: Members[F], messages: Messages[F], s3Client: S3Client[F])(implicit
   logger: Logger[F]
 ) extends Http4sDsl[F] {
 
@@ -41,11 +41,6 @@ final class MemberRoutes[F[_]: Async](members: Members[F], s3Client: S3Client[F]
 
     case GET -> Root / "active-time" as user =>
       members.getWeekLeftOnAT(user.id).flatMap(Ok(_))
-
-    case aR @ POST -> Root / "sent-code" as user =>
-      aR.req.decodeR[Validation] { validationPhone =>
-        members.sendValidationCode(user.id, validationPhone.phone).flatMap(Ok(_))
-      }
 
     case aR @ PUT -> Root as user =>
       aR.req.decode[Multipart[F]] { multipart =>
@@ -80,8 +75,8 @@ final class MemberRoutes[F[_]: Async](members: Members[F], s3Client: S3Client[F]
             case phoneInUseError: PhoneInUse =>
               logger.error(s"Phone is already in use. Error: ${phoneInUseError.phone.value}") >>
                 NotAcceptable("Phone is already in use. Please try again with other phone number")
-            case calCodeError: ValidationCodeIncorrect =>
-              logger.error(s"Validation code is wrong. Error: ${calCodeError.code.value}") >>
+            case valCodeError: ValidationCodeIncorrect =>
+              logger.error(s"Validation code is wrong. Error: ${valCodeError.code.value}") >>
                 NotAcceptable("Validation code is wrong. Please try again")
             case error: MultipartDecodeError =>
               logger.error(s"Error occurred while parse multipart. Error: ${error.cause}") >>

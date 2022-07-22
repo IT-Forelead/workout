@@ -32,12 +32,13 @@ object UserRoutesSuite extends HttpSuite {
     val gen = for {
       u <- userGen()
       s <- userSettingGen()
-    } yield (u, s)
+      us <- updateSettingGen
+    } yield (u, s, us)
 
-    forall(gen) { case (user, setting) =>
+    forall(gen) { case (user, setting, updateSetting) =>
       for {
         token <- authToken(user)
-        req    = PUT(setting, uri"/user/settings").putHeaders(token)
+        req    = PUT(updateSetting, uri"/user/settings").putHeaders(token)
         routes = new UserRoutes[IO](settings(setting), users(user)).routes(usersMiddleware)
         res <- expectHttpBodyAndStatus(routes, req)(setting, Status.Ok)
       } yield res

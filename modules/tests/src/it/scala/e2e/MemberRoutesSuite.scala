@@ -34,7 +34,7 @@ object MemberRoutesSuite extends ClientSuite {
         _ <-
           if (validationCodeExpired)
             IO.unit
-          else POST(Validation(createMember.phone), uri"/member/sent-code").putHeaders(makeAuth(token)).expectAs[Unit]
+          else POST(Validation(createMember.phone), uri"/message/sent-code").putHeaders(makeAuth(token)).expectAs[Unit]
 
         fileData = fileUrl.map { url =>
           Part.fileData("filename", url, `Content-Type`(MediaType.image.`jpeg`))
@@ -72,7 +72,7 @@ object MemberRoutesSuite extends ClientSuite {
     forall(validationGen) { validation =>
       for {
         token <- loginReq.expectAs[JwtToken]
-        result <- POST(validation, uri"/member/sent-code")
+        result <- POST(validation, uri"/message/sent-code")
           .putHeaders(makeAuth(token))
           .expectHttpStatus(Status.Ok)
       } yield result
