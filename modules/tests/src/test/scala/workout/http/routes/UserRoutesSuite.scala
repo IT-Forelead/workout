@@ -11,7 +11,7 @@ import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.routes.{UserRoutes, deriveEntityEncoder}
 import io.circe.generic.encoding.ReprAsObjectEncoder.deriveReprAsObjectEncoder
-import org.http4s.Method.{GET, PUT}
+import org.http4s.Method.{GET, POST, PUT}
 import org.http4s.client.dsl.io._
 import org.http4s.headers.Authorization
 import org.http4s.implicits.http4sLiteralsSyntax
@@ -93,14 +93,15 @@ object UserRoutesSuite extends HttpSuite {
       u <- userGen(ADMIN)
       c <- userGen()
       s <- userSettingGen()
-    } yield (u, c, s)
+      f <- userFilterGen
+    } yield (u, c, s, f)
 
-    forall(gen) { case (user, client, setting) =>
+    forall(gen) { case (user, client, setting, filter) =>
       for {
         token <- authToken(user)
-        req    = GET(uri"/user/clients").putHeaders(token)
-        routes = new UserRoutes[IO](settings(setting), users(client)).routes(usersMiddleware)
-        res <- expectHttpBodyAndStatus(routes, req)(List(client), Status.Ok)
+        req    = POST(filter, uri"/user/clients").putHeaders(token)
+        routes = new UserRoutes[IO](settings(setting), users(client, setting)).routes(usersMiddleware)
+        res <- expectHttpBodyAndStatus(routes, req)(List(UserWithSetting(client, setting)), Status.Ok)
       } yield res
     }
   }
