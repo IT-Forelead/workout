@@ -14,22 +14,22 @@ import skunk.codec.all.bool
 object UserSQL {
   val userId: Codec[UserId] = identity[UserId]
 
-  private val Columns                = userId ~ firstName ~ lastName ~ tel ~ passwordHash ~ role ~ bool
-  private val ColumnsWithoutPassword = userId ~ firstName ~ lastName ~ tel ~ role
+  private val Columns                = userId ~ firstName ~ lastName ~ tel ~ passwordHash ~ role ~ bool ~ bool
+  private val ColumnsWithoutPassword = userId ~ firstName ~ lastName ~ tel ~ role ~ bool
 
   val encoder: Encoder[UserId ~ CreateClient ~ PasswordHash[SCrypt]] =
     Columns.contramap { case i ~ u ~ p =>
-      i ~ u.firstname ~ u.lastname ~ u.phone ~ p ~ Role.CLIENT ~ false
+      i ~ u.firstname ~ u.lastname ~ u.phone ~ p ~ Role.CLIENT ~ false ~ false
     }
 
   val decoder: Decoder[User] =
-    ColumnsWithoutPassword.map { case i ~ fn ~ ln ~ p ~ r =>
-      User(i, fn, ln, p, r)
+    ColumnsWithoutPassword.map { case i ~ fn ~ ln ~ p ~ r ~ ac =>
+      User(i, fn, ln, p, r, ac)
     }
 
   val decoderWithPassword: Decoder[User ~ PasswordHash[SCrypt]] =
-    Columns.map { case i ~ fn ~ ln ~ p ~ ps ~ r ~ _ =>
-      User(i, fn, ln, p, r) ~ ps
+    Columns.map { case i ~ fn ~ ln ~ p ~ ps ~ r ~ _ ~ ac =>
+      User(i, fn, ln, p, r, ac) ~ ps
     }
 
   private val userWithSettingColumns = decoder ~ UserSettingsSQL.decoder
@@ -62,6 +62,9 @@ object UserSQL {
            INNER JOIN user_settings ON users.id = user_settings.user_id
            WHERE users.role = 'client' AND users.activate = $bool #$filterBy""".apply(activate)
   }
+
+  val selectAdmin: Query[Void, User] =
+    sql"""SELECT id, firstname, lastname, phone, role, activate FROM users WHERE role = 'admin' """.query(usersDecoder)
 
   val insertUser: Query[UserId ~ CreateClient ~ PasswordHash[SCrypt], User ~ PasswordHash[SCrypt]] =
     sql"""INSERT INTO users VALUES ($encoder) returning *""".query(decoderWithPassword)

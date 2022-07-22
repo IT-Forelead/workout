@@ -1,33 +1,27 @@
 package com.itforelead.workout.services
 
 import cats.data.OptionT
-import cats.effect.std.Random
 import cats.effect.{Resource, Sync}
 import cats.implicits._
 import com.itforelead.workout.domain.Member.{CreateMember, MemberFilter, MemberWithTotal}
-import com.itforelead.workout.domain.Message.CreateMessage
 import com.itforelead.workout.domain.custom.exception.{PhoneInUse, ValidationCodeExpired, ValidationCodeIncorrect}
 import com.itforelead.workout.domain.custom.refinements.{FileKey, Tel}
-import com.itforelead.workout.domain.types.{MemberId, MessageText, UserId}
-import com.itforelead.workout.domain.{DeliveryStatus, ID, Member}
+import com.itforelead.workout.domain.types.{MemberId, UserId}
+import com.itforelead.workout.domain.{ID, Member}
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.services.sql.MemberSQL._
 import com.itforelead.workout.services.redis.RedisClient
 import com.itforelead.workout.services.sql.MemberSQL
-import eu.timepit.refined.types.string.NonEmptyString
 import skunk.implicits._
 import skunk.{Session, SqlState}
 
 import java.time.LocalDateTime
-import eu.timepit.refined.auto._
-
-import scala.concurrent.duration.DurationInt
 
 trait Members[F[_]] {
   def get(userId: UserId): F[List[Member]]
   def membersWithTotal(userId: UserId, filter: MemberFilter, page: Int): F[MemberWithTotal]
   def findMemberByPhone(phone: Tel): F[Option[Member]]
-  def sendValidationCode(userId: UserId, phone: Tel): F[Unit]
+
   def validateAndCreate(userId: UserId, createMember: CreateMember, key: FileKey): F[Member]
   def findActiveTimeShort: F[List[Member]]
   def getWeekLeftOnAT(userId: UserId): F[List[Member]]
@@ -37,8 +31,6 @@ trait Members[F[_]] {
 
 object Members {
   def apply[F[_]: GenUUID: Sync](
-    messageBroker: MessageBroker[F],
-    messages: Messages[F],
     redis: RedisClient[F]
   )(implicit
     session: Resource[F, Session[F]]
@@ -67,19 +59,6 @@ object Members {
 
       override def findMemberByPhone(phone: Tel): F[Option[Member]] =
         prepOptQuery(selectByPhone, phone)
-
-      override def sendValidationCode(userId: UserId, phone: Tel): F[Unit] = {
-        Random.scalaUtilRandom[F].flatMap { implicit random =>
-          for {
-            now            <- Sync[F].delay(LocalDateTime.now())
-            validationCode <- random.betweenInt(1000, 9999)
-            messageText = MessageText(NonEmptyString.unsafeFrom(s"Your Activation code is $validationCode"))
-            message <- messages.create(CreateMessage(userId, None, messageText, now, DeliveryStatus.SENT))
-            _       <- redis.put(phone.value, validationCode.toString, 3.minute)
-            _       <- messageBroker.send(message.id, phone, messageText.value)
-          } yield ()
-        }
-      }
 
       override def validateAndCreate(userId: UserId, createMember: CreateMember, key: FileKey): F[Member] =
         for {
