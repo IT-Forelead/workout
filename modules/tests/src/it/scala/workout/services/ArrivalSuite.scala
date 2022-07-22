@@ -3,7 +3,7 @@ package workout.services
 import cats.effect.IO
 import com.itforelead.workout.domain.custom.exception.MemberNotFound
 import com.itforelead.workout.domain.types.MessageId
-import com.itforelead.workout.services.{ArrivalService, Members, MessageBroker, Messages}
+import com.itforelead.workout.services.{ArrivalService, Members, MessageBroker, Messages, Users}
 import cats.implicits.{catsSyntaxApplicativeError, catsSyntaxOptionId}
 import com.itforelead.workout.domain.Arrival.ArrivalFilter
 import com.itforelead.workout.domain.custom.refinements.{Tel, ValidationCode}
@@ -27,7 +27,8 @@ object ArrivalSuite extends DBSuite {
     val arrivalService                   = ArrivalService[IO]
     val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
     val members                          = Members[IO](RedisClient)
-    val messages                         = Messages[IO](RedisClient, messageBroker)
+    val users                            = Users[IO](RedisClient)
+    val messages                         = Messages[IO](RedisClient, messageBroker, users)
 
     val gen = for {
       a <- createArrivalGen
@@ -37,7 +38,7 @@ object ArrivalSuite extends DBSuite {
 
     forall(gen) { case (createArrival, createMember, filter) =>
       for {
-        _              <- messages.sendValidationCode(defaultUserId, createMember.phone)
+        _              <- messages.sendValidationCode(defaultUserId.some, createMember.phone)
         validationCode <- RedisClient.get(createMember.phone.value)
         code = ValidationCode.unsafeFrom(validationCode.get)
         member1     <- members.validateAndCreate(defaultUserId, createMember.copy(code = code), defaultFileKey)

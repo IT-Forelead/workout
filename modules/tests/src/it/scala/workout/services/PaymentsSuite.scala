@@ -1,7 +1,7 @@
 package workout.services
 
 import cats.effect.IO
-import cats.implicits.catsSyntaxApplicativeError
+import cats.implicits.{catsSyntaxApplicativeError, catsSyntaxOptionId}
 import com.itforelead.workout.domain.PaymentType.{DAILY, MONTHLY}
 import com.itforelead.workout.domain.custom.exception.{CreatePaymentDailyTypeError, MemberNotFound}
 import com.itforelead.workout.domain.custom.refinements.{FileKey, Tel, ValidationCode}
@@ -18,7 +18,8 @@ object PaymentsSuite extends DBSuite {
     val members      = Members[IO](RedisClient)
     val userSettings = UserSettings[IO]
     val payments     = Payments[IO](userSettings, members)
-    val messages     = Messages[IO](RedisClient, messageBroker)
+    val users                            = Users[IO](RedisClient)
+    val messages     = Messages[IO](RedisClient, messageBroker, users)
 
     val gen = for {
       m  <- createMemberGen()
@@ -26,7 +27,7 @@ object PaymentsSuite extends DBSuite {
     } yield (m, cp)
     forall(gen) { case (createMember, createPayment) =>
       for {
-        _              <- messages.sendValidationCode(defaultUserId, createMember.phone)
+        _              <- messages.sendValidationCode(defaultUserId.some, createMember.phone)
         validationCode <- RedisClient.get(createMember.phone.value)
         member1 <- members.validateAndCreate(
           defaultUserId,
@@ -59,7 +60,8 @@ object PaymentsSuite extends DBSuite {
     val members      = Members[IO](RedisClient)
     val userSettings = UserSettings[IO]
     val payments     = Payments[IO](userSettings, members)
-    val messages     = Messages[IO](RedisClient, messageBroker)
+    val users                            = Users[IO](RedisClient)
+    val messages     = Messages[IO](RedisClient, messageBroker, users)
 
     val gen = for {
       m  <- createMemberGen()
@@ -67,7 +69,7 @@ object PaymentsSuite extends DBSuite {
     } yield (m, cp)
     forall(gen) { case (createMember, createPayment) =>
       (for {
-        _              <- messages.sendValidationCode(defaultUserId, createMember.phone)
+        _              <- messages.sendValidationCode(defaultUserId.some, createMember.phone)
         validationCode <- RedisClient.get(createMember.phone.value)
         member1 <- members.validateAndCreate(
           defaultUserId,

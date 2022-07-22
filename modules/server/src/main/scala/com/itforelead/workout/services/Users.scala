@@ -20,6 +20,7 @@ import tsec.passwordhashers.jca.SCrypt
 
 trait Users[F[_]] {
   def find(phoneNumber: Tel): F[Option[UserWithPassword]]
+  def findAdmin: F[List[User]]
   def create(userParam: CreateClient, password: PasswordHash[SCrypt]): F[User]
   def getClients: F[List[User]]
 }
@@ -60,5 +61,9 @@ object Users {
 
       def getClients: F[List[User]] =
         prepQueryList(selectClients, Void)
+
+      override def findAdmin: F[List[User]] =
+        prepQueryList(selectAdmin, Void)
+
     }
 }

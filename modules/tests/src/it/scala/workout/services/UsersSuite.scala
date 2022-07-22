@@ -20,7 +20,7 @@ object UsersSuite extends DBSuite {
     val users = Users[IO](RedisClientMock.apply)
     val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
     val members                          = Members[IO](RedisClient)
-    val messages     = Messages[IO](RedisClient, messageBroker)
+    val messages     = Messages[IO](RedisClient, messageBroker, users)
 
     forall(createUserGen) { createUser =>
       SCrypt.hashpw[IO](createUser.password).flatMap { hash =>

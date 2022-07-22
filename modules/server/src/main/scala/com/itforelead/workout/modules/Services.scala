@@ -18,7 +18,7 @@ object Services {
     redisClient: RedisClient[F]
   )(implicit session: Resource[F, Session[F]]): Services[F] = {
     val messageBroker = MessageBroker[F](httpClient, brokerConfig)
-    val messages      = Messages[F](redisClient, messageBroker)
+    val messages      = Messages[F](redisClient, messageBroker, Users[F](redisClient))
     val members       = Members[F](redisClient)
     val userSetting   = UserSettings[F]
 

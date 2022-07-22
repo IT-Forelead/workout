@@ -41,7 +41,7 @@ object MemberRoutesSuite extends HttpSuite {
   }
 
   private def messageService[F[_]: Sync] = new MessagesStub[F] {
-    override def sendValidationCode(userId: UserId, tel: Tel): F[Unit] = Sync[F].unit
+    override def sendValidationCode(userId: Option[UserId] = None, tel: Tel): F[Unit] = Sync[F].unit
   }
 
   private def memberService[F[_]: Sync: GenUUID](

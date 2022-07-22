@@ -25,7 +25,7 @@ object MessageRoutesSuite extends HttpSuite {
       Sync[F].delay(MessageWithTotal(List(MessageWithMember(message, member.some)), 1))
 
     override def sendValidationCode(
-      userId: UserId,
+      userId: Option[UserId] = None,
       tel: Tel
     ): F[Unit] = Sync[F].unit
   }

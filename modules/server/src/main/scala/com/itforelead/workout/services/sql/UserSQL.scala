@@ -37,6 +37,9 @@ object UserSQL {
   val selectClients: Query[Void, User] =
     sql"""SELECT id, firstname, lastname, phone, role, activate FROM users WHERE role = 'client' """.query(usersDecoder)
 
+  val selectAdmin: Query[Void, User] =
+    sql"""SELECT id, firstname, lastname, phone, role, activate FROM users WHERE role = 'admin' """.query(usersDecoder)
+
   val insertUser: Query[UserId ~ CreateClient ~ PasswordHash[SCrypt], User ~ PasswordHash[SCrypt]] =
     sql"""INSERT INTO users VALUES ($encoder) returning *""".query(userDecoder)
 

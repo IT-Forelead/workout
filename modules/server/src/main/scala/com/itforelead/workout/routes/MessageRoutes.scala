@@ -25,7 +25,7 @@ final class MessageRoutes[F[_]: Async](messages: Messages[F]) extends Http4sDsl[
 
     case aR @ POST -> Root / "sent-code" as user =>
       aR.req.decodeR[Validation] { validationPhone =>
-        messages.sendValidationCode(user.id, validationPhone.phone).flatMap(Ok(_))
+        messages.sendValidationCode(user.id.some, validationPhone.phone).flatMap(Ok(_))
       }
 
   }
