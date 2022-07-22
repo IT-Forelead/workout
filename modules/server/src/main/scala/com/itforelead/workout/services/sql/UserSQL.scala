@@ -57,14 +57,14 @@ object UserSQL {
         case LastnameZA  => "ORDER BY users.lastname DESC"
       }
 
-    sql"""SELECT users.id, users.firstname, users.lastname, users.phone, users.role, user_settings.*
+    sql"""SELECT users.id, users.firstname, users.lastname, users.phone, users.role, users.activate, user_settings.*
            FROM users
            INNER JOIN user_settings ON users.id = user_settings.user_id
            WHERE users.role = 'client' AND users.activate = $bool #$filterBy""".apply(activate)
   }
 
   val selectAdmin: Query[Void, User] =
-    sql"""SELECT id, firstname, lastname, phone, role, activate FROM users WHERE role = 'admin' """.query(usersDecoder)
+    sql"""SELECT id, firstname, lastname, phone, role, activate FROM users WHERE role = 'admin' """.query(decoder)
 
   val insertUser: Query[UserId ~ CreateClient ~ PasswordHash[SCrypt], User ~ PasswordHash[SCrypt]] =
     sql"""INSERT INTO users VALUES ($encoder) returning *""".query(decoderWithPassword)

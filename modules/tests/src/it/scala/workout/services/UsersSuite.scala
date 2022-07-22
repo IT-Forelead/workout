@@ -34,8 +34,8 @@ object UsersSuite extends DBSuite {
           code <- RedisClient.get(createUser.phone.value)
           client1    <- users.create(createUser.copy(code = ValidationCode.unsafeFrom(code.get)), hash)
           client2    <- users.find(client1.phone)
-          getClients <- users.getClients(filter)
-        } yield assert(getClients.contains(client2.get.user) && client2.get.user.role == CLIENT)
+          getClients <- users.getClients(filter.copy(sortBy = client2.get.user.activate))
+        } yield assert(getClients.exists(_.user == client2.get.user) && client2.get.user.role == CLIENT)
       }
     }
   }
