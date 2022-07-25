@@ -15,9 +15,9 @@ CREATE TABLE IF NOT EXISTS users
     activate BOOLEAN NOT NULL DEFAULT false
 );
 
-INSERT INTO "users" ("id", "firstname", "lastname", "phone", "password", "role")
+INSERT INTO "users" ("id", "firstname", "lastname", "phone", "password", "role", "deleted", "activate")
 VALUES ('76c2c44c-8fbf-4184-9199-19303a042fa0', 'Admin', 'Adminov', '+998901234567',
-        '$s0$e0801$5JK3Ogs35C2h5htbXQoeEQ==$N7HgNieSnOajn1FuEB7l4PhC6puBSq+e1E8WUaSJcGY=', 'admin');
+        '$s0$e0801$5JK3Ogs35C2h5htbXQoeEQ==$N7HgNieSnOajn1FuEB7l4PhC6puBSq+e1E8WUaSJcGY=', 'admin', 'false', 'true');
 
 CREATE TABLE IF NOT EXISTS user_settings
 (

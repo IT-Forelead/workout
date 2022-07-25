@@ -1,4 +1,5 @@
 package e2e
+
 import cats.effect.IO
 import com.itforelead.workout.domain._
 import com.itforelead.workout.domain.custom.refinements.ValidationCode
@@ -13,7 +14,7 @@ import org.http4s.implicits._
 import org.http4s.multipart.{Multipart, Part}
 import weaver.Expectations
 import workout.utils.ClientSuite
-import workout.utils.Generators.{createMemberGen, validationGen}
+import workout.utils.Generators.createMemberGen
 
 import java.net.URL
 
@@ -64,17 +65,6 @@ object MemberRoutesSuite extends ClientSuite {
           .withHeaders(multipart.headers)
           .putHeaders(makeAuth(token))
           .expectHttpStatus(shouldReturn)
-      } yield result
-    }
-  }
-
-  test("Send Code E2E") { implicit resources =>
-    forall(validationGen) { validation =>
-      for {
-        token <- loginReq.expectAs[JwtToken]
-        result <- POST(validation, uri"/message/sent-code")
-          .putHeaders(makeAuth(token))
-          .expectHttpStatus(Status.Ok)
       } yield result
     }
   }
