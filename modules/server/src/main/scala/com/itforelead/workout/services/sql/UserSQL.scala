@@ -9,7 +9,7 @@ import tsec.passwordhashers.PasswordHash
 import tsec.passwordhashers.jca.SCrypt
 import com.itforelead.workout.domain.custom.refinements.Tel
 import com.itforelead.workout.domain.types._
-import skunk.codec.all.bool
+import skunk.codec.all.{bool, int8}
 
 object UserSQL {
   val userId: Codec[UserId] = identity[UserId]
@@ -48,7 +48,7 @@ object UserSQL {
           INNER JOIN user_settings ON users.id = user_settings.user_id
          WHERE users.role = 'client' AND users.actived = $bool """.query(decUserWithSetting)
 
-  def selectClientsFilter(filter: Option[UserFilterBy], activate: Boolean): AppliedFragment = {
+  def selectClientsFilter(filter: Option[UserFilterBy], activate: Boolean, page: Int): AppliedFragment = {
     val filterBy = filter
       .fold("") {
         case FirstnameAZ => "ORDER BY users.firstname ASC"
@@ -57,16 +57,25 @@ object UserSQL {
         case LastnameZA  => "ORDER BY users.lastname DESC"
       }
 
-    sql"""SELECT users.id, users.firstname, users.lastname, users.phone, users.role, users.activate, user_settings.*
+    val res: AppliedFragment =
+      sql"""SELECT users.id, users.firstname, users.lastname, users.phone, users.role, users.activate, user_settings.*
            FROM users
            INNER JOIN user_settings ON users.id = user_settings.user_id
            WHERE users.role = 'client' AND users.activate = $bool #$filterBy""".apply(activate)
+    res.paginate(10, page)
   }
+
+  val total: Query[Boolean, Long] =
+    sql"""SELECT count(*) FROM users WHERE activate = $bool AND deleted = false""".query(int8)
 
   val selectAdmin: Query[Void, User] =
     sql"""SELECT id, firstname, lastname, phone, role, activate FROM users WHERE role = 'admin' """.query(decoder)
 
   val insertUser: Query[UserId ~ CreateClient ~ PasswordHash[SCrypt], User ~ PasswordHash[SCrypt]] =
     sql"""INSERT INTO users VALUES ($encoder) returning *""".query(decoderWithPassword)
+
+  val changeActivateSql: Query[UserId, User] =
+    sql"""UPDATE users SET activate = true WHERE id = $userId
+         RETURNING  id, firstname, lastname, phone, role, activate""".query(decoder)
 
 }

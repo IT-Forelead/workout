@@ -35,7 +35,8 @@ object User {
     monthlyPrice: Money,
     phone: Tel,
     code: ValidationCode,
-    password: Password)
+    password: Password
+  )
 
   @derive(decoder, encoder)
   case class UserWithPassword(user: User, password: PasswordHash[SCrypt])
@@ -47,10 +48,19 @@ object User {
   )
 
   @derive(decoder, encoder, show)
+  case class UserWithTotal(
+    user: List[UserWithSetting],
+    total: Long
+  )
+
+  @derive(decoder, encoder, show)
   case class UserFilter(
     typeBy: Option[UserFilterBy] = None,
     sortBy: Boolean
   )
+
+  @derive(decoder, encoder, show)
+  case class UserActivate(userId: UserId)
 
   val userId: UserId = UserId(UUID.fromString("76c2c44c-8fbf-4184-9199-19303a042fa0"))
 
