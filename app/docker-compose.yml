@@ -32,6 +32,8 @@ services:
       AWS_SIGNING_REGION: ${AWS_SIGNING_REGION}
       AWS_BUCKET_NAME: ${AWS_BUCKET_NAME}
       APP_ENV: ${APP_ENV}
+    volumes:
+      - "/srv/workout/logs:/srv/workout/logs"
   postgres:
     restart: always
     image: postgres:12
