@@ -11,7 +11,7 @@ import org.http4s.client.dsl.io._
 import org.http4s.implicits._
 import weaver.Expectations
 import workout.utils.ClientSuite
-import workout.utils.Generators.{createUserGen, updateSettingGen}
+import workout.utils.Generators.{createUserGen, updateSettingGen, userFilterGen}
 
 object UserRoutesSuite extends ClientSuite {
 
@@ -32,12 +32,14 @@ object UserRoutesSuite extends ClientSuite {
   }
 
   test("Get Clients") { implicit client =>
-    for {
-      token <- loginReq.expectAs[JwtToken]
-      result <- GET(uri"/user/clients")
-        .putHeaders(makeAuth(token))
-        .expectHttpStatus(Status.Ok)
-    } yield result
+    forall(userFilterGen) { filter =>
+      for {
+        token <- loginReq.expectAs[JwtToken]
+        result <- POST(filter, uri"/user/clients")
+          .putHeaders(makeAuth(token))
+          .expectHttpStatus(Status.Ok)
+      } yield result
+    }
   }
 
   test("Create client") { implicit client =>

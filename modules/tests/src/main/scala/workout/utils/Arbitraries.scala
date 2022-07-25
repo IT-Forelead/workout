@@ -1,7 +1,7 @@
 package workout.utils
 
 import com.itforelead.workout.domain.custom.refinements._
-import com.itforelead.workout.domain.{ArrivalType, DeliveryStatus, MessageFilterBy, PaymentType, Role}
+import com.itforelead.workout.domain.{ArrivalType, DeliveryStatus, MessageFilterBy, PaymentType, Role, UserFilterBy}
 import eu.timepit.refined.types.string.NonEmptyString
 import org.scalacheck.Gen._
 import org.scalacheck.{Arbitrary, Gen}
@@ -18,6 +18,8 @@ object Arbitraries {
   implicit lazy val arbPaymentType: Arbitrary[PaymentType] = Arbitrary(oneOf(PaymentType.paymentTypes))
 
   implicit lazy val arbMessageFilterType: Arbitrary[MessageFilterBy] = Arbitrary(oneOf(MessageFilterBy.types))
+
+  implicit lazy val arbUserFilterType: Arbitrary[UserFilterBy] = Arbitrary(oneOf(UserFilterBy.types))
 
   implicit lazy val arbRole: Arbitrary[Role] = Arbitrary(oneOf(Role.roles))
 
