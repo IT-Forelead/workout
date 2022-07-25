@@ -49,6 +49,12 @@ object User {
   )
 
   @derive(decoder, encoder, show)
+  case class UserWithTotal(
+    user: List[UserWithSetting],
+    total: Long
+  )
+
+  @derive(decoder, encoder, show)
   case class UserFilter(
     typeBy: Option[UserFilterBy] = None,
     sortBy: Boolean

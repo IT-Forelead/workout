@@ -3,7 +3,7 @@ package workout.http.routes
 import cats.effect.IO.delay
 import cats.effect.{IO, Sync}
 import cats.implicits._
-import com.itforelead.workout.domain.User.{UserActivate, UserFilter, UserWithSetting}
+import com.itforelead.workout.domain.User.{UserActivate, UserFilter, UserWithSetting, UserWithTotal}
 import com.itforelead.workout.domain.Role.ADMIN
 import com.itforelead.workout.domain.{User, UserSetting}
 import com.itforelead.workout.domain.UserSetting.UpdateSetting
@@ -29,8 +29,8 @@ object UserRoutesSuite extends HttpSuite {
   }
 
   private def users[F[_]: Sync: GenUUID](user: User, setting: UserSetting): UsersStub[F] = new UsersStub[F] {
-    override def getClients(filter: UserFilter): F[List[UserWithSetting]] =
-      Sync[F].delay(List(UserWithSetting(user, setting)))
+    override def getClients(filter: UserFilter, page: Int): F[UserWithTotal] =
+      Sync[F].delay(UserWithTotal(List(UserWithSetting(user, setting)), 1))
     override def userActivate(userActivate: UserActivate): F[User] = Sync[F].delay(user)
   }
 
@@ -117,9 +117,9 @@ object UserRoutesSuite extends HttpSuite {
     forall(gen) { case (user, client, setting, filter) =>
       for {
         token <- authToken(user)
-        req    = POST(filter, uri"/user/clients").putHeaders(token)
+        req    = POST(filter, uri"/user/clients/1").putHeaders(token)
         routes = new UserRoutes[IO](settings(setting), users(client, setting)).routes(usersMiddleware)
-        res <- expectHttpBodyAndStatus(routes, req)(List(UserWithSetting(client, setting)), Status.Ok)
+        res <- expectHttpBodyAndStatus(routes, req)(UserWithTotal(List(UserWithSetting(client, setting)), 1), Status.Ok)
       } yield res
     }
   }

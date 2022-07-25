@@ -35,7 +35,7 @@ object UserRoutesSuite extends ClientSuite {
     forall(userFilterGen) { filter =>
       for {
         token <- loginReq.expectAs[JwtToken]
-        result <- POST(filter, uri"/user/clients")
+        result <- POST(filter, uri"/user/clients/1")
           .putHeaders(makeAuth(token))
           .expectHttpStatus(Status.Ok)
       } yield result

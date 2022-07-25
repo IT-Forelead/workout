@@ -22,9 +22,9 @@ final class UserRoutes[F[_]: JsonDecoder: MonadThrow](settings: UserSettings[F],
     case GET -> Root as user =>
       Ok(user)
 
-    case ar @ POST -> Root / "clients" as user if user.role == ADMIN =>
+    case ar @ POST -> Root / "clients" / IntVar(page) as user if user.role == ADMIN =>
       ar.req.decodeR[UserFilter] { filter =>
-        users.getClients(filter).flatMap(Ok(_))
+        users.getClients(filter, page).flatMap(Ok(_))
       }
 
     case GET -> Root / "settings" as user =>

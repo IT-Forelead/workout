@@ -36,8 +36,8 @@ object UsersSuite extends DBSuite {
           client1    <- users.create(createUser.copy(code = ValidationCode.unsafeFrom(code.get)), hash)
           _          <- users.userActivate(UserActivate(client1.id))
           client2    <- users.find(client1.phone)
-          getClients <- users.getClients(filter.copy(sortBy = client2.get.user.activate))
-        } yield assert(getClients.exists(_.user == client2.get.user) && client2.get.user.role == CLIENT)
+          getClients <- users.getClients(filter.copy(typeBy = None, sortBy = client2.get.user.activate), 1)
+        } yield assert(getClients.user.exists(_.user == client2.get.user) && client2.get.user.role == CLIENT)
       }
     }
   }
