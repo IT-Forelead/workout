@@ -126,6 +126,11 @@ object Generators {
       mp <- priceGen
     } yield CreateClient(fn, ln, gn, dp, mp, ph, code, p)
 
+  val userActivateGen: Gen[UserActivate] =
+    for {
+      id <- userIdGen
+    } yield UserActivate(id)
+
   val memberGen: Gen[Member] =
     for {
       i  <- memberIdGen

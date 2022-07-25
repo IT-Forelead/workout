@@ -3,7 +3,7 @@ package com.itforelead.workout.services
 import cats.data.OptionT
 import cats.effect._
 import cats.syntax.all._
-import com.itforelead.workout.domain.User.{CreateClient, UserFilter, UserWithPassword, UserWithSetting}
+import com.itforelead.workout.domain.User.{CreateClient, UserActivate, UserFilter, UserWithPassword, UserWithSetting}
 import com.itforelead.workout.domain.custom.exception.{PhoneInUse, ValidationCodeExpired, ValidationCodeIncorrect}
 import com.itforelead.workout.domain.custom.refinements.Tel
 import com.itforelead.workout.domain.types.{GymName, UZS, UserId}
@@ -23,6 +23,7 @@ trait Users[F[_]] {
   def find(phoneNumber: Tel): F[Option[UserWithPassword]]
   def findAdmin: F[List[User]]
   def create(userParam: CreateClient, password: PasswordHash[SCrypt]): F[User]
+  def userActivate(userActivate: UserActivate): F[User]
   def getClients(filter: UserFilter): F[List[UserWithSetting]]
 }
 
@@ -68,6 +69,9 @@ object Users {
 
       override def findAdmin: F[List[User]] =
         prepQueryList(selectAdmin, Void)
+
+      override def userActivate(userActivate: UserActivate): F[User] =
+        prepQueryUnique(changeActivateSql, userActivate.userId)
 
     }
 }

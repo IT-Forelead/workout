@@ -5,7 +5,7 @@ import cats.implicits.toFlatMapOps
 import com.itforelead.workout.domain.Role.ADMIN
 import com.itforelead.workout.domain.UserSetting.UpdateSetting
 import com.itforelead.workout.domain.User
-import com.itforelead.workout.domain.User.UserFilter
+import com.itforelead.workout.domain.User.{UserActivate, UserFilter}
 import com.itforelead.workout.services.{Auth, UserSettings, Users}
 import org.http4s._
 import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
@@ -29,6 +29,11 @@ final class UserRoutes[F[_]: JsonDecoder: MonadThrow](settings: UserSettings[F],
 
     case GET -> Root / "settings" as user =>
       settings.settings(user.id).flatMap(Ok(_))
+
+    case ar @ POST -> Root / "activate" as user if user.role == ADMIN =>
+      ar.req.decodeR[UserActivate] { form =>
+        users.userActivate(form).flatMap(Ok(_))
+      }
 
     case ar @ PUT -> Root / "settings" as user =>
       ar.req.decodeR[UpdateSetting] { updateSettings =>

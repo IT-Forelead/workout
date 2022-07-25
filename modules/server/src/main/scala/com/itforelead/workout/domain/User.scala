@@ -54,6 +54,9 @@ object User {
     sortBy: Boolean
   )
 
+  @derive(decoder, encoder, show)
+  case class UserActivate(userId: UserId)
+
   val userId: UserId = UserId(UUID.fromString("76c2c44c-8fbf-4184-9199-19303a042fa0"))
 
 }

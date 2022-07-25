@@ -12,4 +12,5 @@ class UsersStub[F[_]] extends Users[F] {
   override def create(userParam: CreateClient, password: PasswordHash[SCrypt]): F[User] = ???
   override def getClients(filter: UserFilter): F[List[UserWithSetting]] = ???
   override def findAdmin: F[List[User]] = ???
+  override def userActivate(userActivate: User.UserActivate): F[User] = ???
 }

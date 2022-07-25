@@ -3,6 +3,7 @@ package workout.services
 import cats.effect.IO
 import cats.implicits.catsSyntaxOptionId
 import com.itforelead.workout.domain.Role.CLIENT
+import com.itforelead.workout.domain.User.UserActivate
 import com.itforelead.workout.domain.custom.refinements.{Tel, ValidationCode}
 import com.itforelead.workout.domain.types.{MessageId, UserId}
 import com.itforelead.workout.services.{Members, MessageBroker, Messages, UserSettings, Users}
@@ -33,6 +34,7 @@ object UsersSuite extends DBSuite {
           _ <- messages.sendValidationCode(phone = createUser.phone)
           code <- RedisClient.get(createUser.phone.value)
           client1    <- users.create(createUser.copy(code = ValidationCode.unsafeFrom(code.get)), hash)
+          _          <- users.userActivate(UserActivate(client1.id))
           client2    <- users.find(client1.phone)
           getClients <- users.getClients(filter.copy(sortBy = client2.get.user.activate))
         } yield assert(getClients.exists(_.user == client2.get.user) && client2.get.user.role == CLIENT)

@@ -69,4 +69,8 @@ object UserSQL {
   val insertUser: Query[UserId ~ CreateClient ~ PasswordHash[SCrypt], User ~ PasswordHash[SCrypt]] =
     sql"""INSERT INTO users VALUES ($encoder) returning *""".query(decoderWithPassword)
 
+  val changeActivateSql: Query[UserId, User] =
+    sql"""UPDATE users SET activate = true WHERE id = $userId
+         RETURNING  id, firstname, lastname, phone, role, activate""".query(decoder)
+
 }
