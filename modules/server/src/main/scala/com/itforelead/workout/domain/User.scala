@@ -35,7 +35,8 @@ object User {
     monthlyPrice: Money,
     phone: Tel,
     code: ValidationCode,
-    password: Password)
+    password: Password
+  )
 
   @derive(decoder, encoder)
   case class UserWithPassword(user: User, password: PasswordHash[SCrypt])
