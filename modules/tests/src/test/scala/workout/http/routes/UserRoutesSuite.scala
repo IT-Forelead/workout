@@ -16,14 +16,14 @@ import org.http4s.client.dsl.io._
 import org.http4s.headers.Authorization
 import org.http4s.implicits.http4sLiteralsSyntax
 import org.http4s.{AuthScheme, Credentials, Status}
-import workout.stub_services.{AuthMock, UserSettingsMock, UserSettingsStub, UsersStub}
+import workout.stub_services.{AuthMock, UserSettingsStub, UsersStub}
 import workout.utils.Generators._
 import workout.utils.HttpSuite
 
 import scala.concurrent.duration.DurationInt
 
 object UserRoutesSuite extends HttpSuite {
-  private def settings[F[_]: Sync: GenUUID](setting: UserSetting): UserSettingsMock[F] = new UserSettingsMock[F] {
+  private def settings[F[_]: Sync: GenUUID](setting: UserSetting): UserSettingsStub[F] = new UserSettingsStub[F] {
     override def settings(userId: UserId): F[UserSetting]                                = Sync[F].delay(setting)
     override def updateSettings(userId: UserId, settings: UpdateSetting): F[UserSetting] = Sync[F].delay(setting)
   }

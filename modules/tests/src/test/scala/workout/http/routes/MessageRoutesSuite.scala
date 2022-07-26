@@ -52,7 +52,7 @@ object MessageRoutesSuite extends HttpSuite {
       u  <- userGen()
       ms <- messageGen
       m  <- memberGen
-      f <- messageFilterGen
+      f  <- messageFilterGen
     } yield (u, ms, m, f)
 
     forall(gen) { case (user, message, member, filter) =>
@@ -70,8 +70,8 @@ object MessageRoutesSuite extends HttpSuite {
 
   test("Send Validation Code - [SUCCESS]") {
     val gen: Gen[(User, Member, Message)] = for {
-      u <- userGen()
-      m <- memberGen
+      u  <- userGen()
+      m  <- memberGen
       ms <- messageGen
     } yield (u, m, ms)
     forall(gen) { case (user, member, message) =>
@@ -82,6 +82,19 @@ object MessageRoutesSuite extends HttpSuite {
           .routes(usersMiddleware)
         res <- expectHttpStatus(routes, req)(Status.Ok)
       } yield res
+    }
+  }
+
+  test("Send Validation Code public - [SUCCESS]") {
+    val gen: Gen[(Member, Message)] = for {
+      m  <- memberGen
+      ms <- messageGen
+    } yield m -> ms
+    forall(gen) { case (member, message) =>
+      val req = POST(Validation(member.phone), uri"/message/public/sent-code")
+      val routes = new MessageRoutes[IO](messages(message, member))
+        .routes(usersMiddleware)
+      expectHttpStatus(routes, req)(Status.Ok)
     }
   }
 

@@ -30,7 +30,7 @@ final class MessageRoutes[F[_]: Async](messages: Messages[F]) extends Http4sDsl[
 
   }
 
-  private val publicRoutes: HttpRoutes[F] = HttpRoutes.of[F] { case req @ POST -> Root / "sent-code" =>
+  private val publicRoutes: HttpRoutes[F] = HttpRoutes.of[F] { case req @ POST -> Root / "public" / "sent-code" =>
     req.decodeR[Validation] { validationPhone =>
       messages.sendValidationCode(phone = validationPhone.phone).flatMap(Ok(_))
     }

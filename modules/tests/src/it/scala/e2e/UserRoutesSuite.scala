@@ -20,12 +20,10 @@ object UserRoutesSuite extends ClientSuite {
   )(implicit resources: Res): PaymentRoutesSuite.F[Expectations] = {
     forall(createUserGen) { createUser =>
       for {
-        token <- loginReq.expectAs[JwtToken]
-        _     <- POST(Validation(createUser.phone), uri"/message/sent-code").putHeaders(makeAuth(token)).expectAs[Unit]
+        _    <- POST(Validation(createUser.phone), uri"/message/public/sent-code").expectAs[Unit]
         code <- resources.redis.get(createUser.phone.value)
         user = createUser.copy(code = ValidationCode.unsafeFrom(code.get))
         result <- POST(user, uri"/auth/user")
-          .putHeaders(makeAuth(token))
           .expectHttpStatus(shouldReturn)
       } yield result
     }

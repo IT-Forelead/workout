@@ -1,6 +1,5 @@
 package com.itforelead.workout.domain
 
-import com.itforelead.workout.domain.Role.CLIENT
 import com.itforelead.workout.domain.custom.refinements.{Password, Tel, ValidationCode}
 import com.itforelead.workout.domain.types._
 import derevo.cats._
