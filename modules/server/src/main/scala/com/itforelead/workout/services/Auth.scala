@@ -8,7 +8,7 @@ import eu.timepit.refined.auto.autoUnwrap
 import tsec.passwordhashers.jca.SCrypt
 import com.itforelead.workout.domain._
 import com.itforelead.workout.domain.User._
-import com.itforelead.workout.domain.custom.exception.{InvalidPassword, PhoneInUse, UserNotFound}
+import com.itforelead.workout.domain.custom.exception.{InvalidPassword, PhoneInUse, UserNotActivated, UserNotFound}
 import com.itforelead.workout.domain.custom.refinements.Tel
 import com.itforelead.workout.security.Tokens
 import com.itforelead.workout.services.redis.RedisClient
@@ -49,6 +49,8 @@ object Auth {
         users.find(credentials.phone).flatMap {
           case None =>
             UserNotFound(credentials.phone).raiseError[F, JwtToken]
+          case Some(userWithPass) if !userWithPass.user.activate =>
+            UserNotActivated.raiseError[F, JwtToken]
           case Some(user) if !SCrypt.checkpwUnsafe(credentials.password, user.password) =>
             InvalidPassword(credentials.phone).raiseError[F, JwtToken]
           case Some(userWithPass) =>
