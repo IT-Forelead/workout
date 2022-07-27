@@ -1,6 +1,6 @@
 package workout.services
 
-import cats.effect.{IO, Sync}
+import cats.effect.IO
 import cats.implicits.{catsSyntaxApplicativeError, catsSyntaxOptionId}
 import com.itforelead.workout.domain.Member.MemberFilter
 import com.itforelead.workout.domain.custom.exception.{PhoneInUse, ValidationCodeExpired, ValidationCodeIncorrect}
@@ -8,8 +8,6 @@ import com.itforelead.workout.domain.custom.refinements.{FileKey, Tel, Validatio
 import com.itforelead.workout.domain.types.MessageId
 import com.itforelead.workout.services.{Members, MessageBroker, Messages, Users}
 import eu.timepit.refined.cats.refTypeShow
-import workout.services.ArrivalSuite.RedisClient
-import workout.services.MessageSuite.failure
 import workout.utils.DBSuite
 import workout.utils.Generators.{createMemberGen, defaultFileKey, defaultUserId, phoneGen, validationCodeGen}
 
@@ -22,7 +20,6 @@ object MembersSuite extends DBSuite {
     val members                          = Members[IO](RedisClient)
     val users                            = Users[IO](RedisClient)
     val messages                         = Messages[IO](RedisClient, messageBroker, users)
-
 
     forall(createMemberGen()) { createMember =>
       for {
@@ -166,7 +163,7 @@ object MembersSuite extends DBSuite {
           createMember.copy(code = ValidationCode.unsafeFrom(validationCode.get)),
           fileKey
         )
-        memberDB <- members.updateActiveTime(member.id, LocalDateTime.now.minusDays(3))
+        _ <- members.updateActiveTime(member.id, LocalDateTime.now.minusDays(3))
         members  <- members.findActiveTimeShort
       } yield members match {
         case Nil            => failure(s"the test failed.")
@@ -222,6 +219,57 @@ object MembersSuite extends DBSuite {
         )
         memberDB <- members.findMemberByPhone(phone)
       } yield assert(memberDB.nonEmpty)
+    }
+  }
+
+  test("Get members with total") { implicit postgres =>
+    val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
+    val members                          = Members[IO](RedisClient)
+    val users                            = Users[IO](RedisClient)
+    val messages                         = Messages[IO](RedisClient, messageBroker, users)
+
+    val gen = for {
+      p <- phoneGen
+      m <- createMemberGen(p.some)
+    } yield (p, m)
+    forall(gen) { case (phone, createMember) =>
+      val fileKey = FileKey.unsafeFrom("e8bcab0c-ef16-45b5-842d-7ec35468195e.jpg")
+      for {
+        _              <- messages.sendValidationCode(defaultUserId.some, phone)
+        validationCode <- RedisClient.get(phone.value)
+        _ <- members.validateAndCreate(
+          defaultUserId,
+          createMember.copy(code = ValidationCode.unsafeFrom(validationCode.get)),
+          fileKey
+        )
+        memberDB <- members.membersWithTotal(defaultUserId, MemberFilter.apply(), 1)
+      } yield assert(memberDB.member.nonEmpty)
+    }
+  }
+
+  test("Get active time expired 7 days ago members by userId") { implicit postgres =>
+    val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
+    val members                          = Members[IO](RedisClient)
+    val users                            = Users[IO](RedisClient)
+    val messages                         = Messages[IO](RedisClient, messageBroker, users)
+
+    val gen = for {
+      p <- phoneGen
+      m <- createMemberGen(p.some)
+    } yield (p, m)
+    forall(gen) { case (phone, createMember) =>
+      val fileKey = FileKey.unsafeFrom("e8bcab0c-ef16-45b5-842d-7ec35468195e.jpg")
+      for {
+        _              <- messages.sendValidationCode(defaultUserId.some, phone)
+        validationCode <- RedisClient.get(phone.value)
+        member <- members.validateAndCreate(
+          defaultUserId,
+          createMember.copy(code = ValidationCode.unsafeFrom(validationCode.get)),
+          fileKey
+        )
+        _ <- members.updateActiveTime(member.id, LocalDateTime.now.plusDays(3))
+        members  <- members.getWeekLeftOnAT(defaultUserId)
+      } yield assert(members.nonEmpty)
     }
   }
 

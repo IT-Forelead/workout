@@ -36,8 +36,8 @@ object UserRoutesSuite extends HttpSuite {
 
   test("PUT User Settings") {
     val gen = for {
-      u <- userGen()
-      s <- userSettingGen()
+      u  <- userGen()
+      s  <- userSettingGen()
       us <- updateSettingGen
     } yield (u, s, us)
 
@@ -53,7 +53,7 @@ object UserRoutesSuite extends HttpSuite {
 
   test("POST User activate") {
     val gen = for {
-      u <- userGen(ADMIN)
+      u  <- userGen(ADMIN)
       us <- userSettingGen()
       ua <- userActivateGen
     } yield (u, us, ua)

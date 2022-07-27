@@ -2,7 +2,12 @@ package workout.http.routes
 
 import cats.effect.{IO, Sync}
 import cats.implicits.{catsSyntaxApplicativeErrorId, catsSyntaxOptionId}
-import com.itforelead.workout.domain.Payment.{CreatePayment, PaymentFilter, PaymentMemberId, PaymentWithMember, PaymentWithTotal}
+import com.itforelead.workout.domain.Payment.{
+  CreatePayment,
+  PaymentFilter,
+  PaymentWithMember,
+  PaymentWithTotal
+}
 import com.itforelead.workout.domain.custom.exception.{CreatePaymentDailyTypeError, MemberNotFound}
 import com.itforelead.workout.domain.types.UserId
 import com.itforelead.workout.domain.{Member, Payment, types}
