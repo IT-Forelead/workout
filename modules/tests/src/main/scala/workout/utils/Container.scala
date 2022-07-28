@@ -9,6 +9,7 @@ import org.typelevel.log4cats.noop.NoOpLogger
 import weaver.scalacheck.CheckConfig
 
 import scala.io.Source
+import scala.jdk.CollectionConverters.MapHasAsJava
 
 trait Container {
   type Res
@@ -45,7 +46,8 @@ trait Container {
     for {
       container <- Resource.fromAutoCloseable {
         IO {
-          container.start()
+        container.start()
+        container.withCommand("postgres -c max_connections=50")
           container
         }
       }
