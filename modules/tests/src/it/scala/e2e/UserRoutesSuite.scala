@@ -1,6 +1,5 @@
 package e2e
 
-import com.itforelead.workout.domain.User.CreateClient
 import com.itforelead.workout.domain._
 import com.itforelead.workout.domain.custom.refinements.ValidationCode
 import com.itforelead.workout.routes.{deriveEntityDecoder, deriveEntityEncoder}
