@@ -2,6 +2,7 @@ package workout.services
 
 import cats.effect.IO
 import cats.implicits.{catsSyntaxApplicativeError, catsSyntaxOptionId}
+import com.itforelead.workout.domain.Payment.PaymentFilter
 import com.itforelead.workout.domain.PaymentType.{DAILY, MONTHLY}
 import com.itforelead.workout.domain.custom.exception.{CreatePaymentDailyTypeError, MemberNotFound}
 import com.itforelead.workout.domain.custom.refinements.{FileKey, Tel, ValidationCode}
@@ -18,7 +19,7 @@ object PaymentsSuite extends DBSuite {
     val members      = Members[IO](RedisClient)
     val userSettings = UserSettings[IO]
     val payments     = Payments[IO](userSettings, members)
-    val users                            = Users[IO](RedisClient)
+    val users        = Users[IO](RedisClient)
     val messages     = Messages[IO](RedisClient, messageBroker, users)
 
     val gen = for {
@@ -37,7 +38,10 @@ object PaymentsSuite extends DBSuite {
         payment              <- payments.create(defaultUserId, createPayment.copy(memberId = member1.id))
         getPayments          <- payments.payments(defaultUserId)
         getPayment           <- payments.getPaymentByMemberId(defaultUserId, payment.memberId)
-      } yield assert(getPayments.exists(_.payment == payment) && getPayment.contains(payment))
+        getPaymentsWithTotal <- payments.getPaymentsWithTotal(defaultUserId, PaymentFilter(), 1)
+      } yield assert(
+        getPayments.exists(_.payment == payment) && getPayment.contains(payment) && getPaymentsWithTotal.payment.exists(_.payment == payment)
+      )
     }
   }
 
@@ -57,11 +61,11 @@ object PaymentsSuite extends DBSuite {
 
   test("Create Payment: Daily Type Error") { implicit postgres =>
     val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
-    val members      = Members[IO](RedisClient)
-    val userSettings = UserSettings[IO]
-    val payments     = Payments[IO](userSettings, members)
+    val members                          = Members[IO](RedisClient)
+    val userSettings                     = UserSettings[IO]
+    val payments                         = Payments[IO](userSettings, members)
     val users                            = Users[IO](RedisClient)
-    val messages     = Messages[IO](RedisClient, messageBroker, users)
+    val messages                         = Messages[IO](RedisClient, messageBroker, users)
 
     val gen = for {
       m  <- createMemberGen()

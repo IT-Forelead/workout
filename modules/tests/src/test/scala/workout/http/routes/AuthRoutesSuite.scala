@@ -69,23 +69,23 @@ object AuthRoutesSuite extends HttpSuite {
     }
   }
 
-  test("create user - 'Success'") {
+  test("POST User - 'Success'") {
     createUserReq(Status.Created)
   }
 
-  test("create user validationCodeIncorrect - 'Fail'") {
+  test("POST User Validation Code Incorrect - 'Fail'") {
     createUserReq(Status.NotAcceptable, "validationCodeIncorrect".some)
   }
 
-  test("create user validationCodeExpired - 'Fail'") {
+  test("POST User Validation Code Expired - 'Fail'") {
     createUserReq(Status.NotAcceptable, "validationCodeExpired".some)
   }
 
-  test("create user validationPhoneInUse - 'Fail'") {
+  test("POST User Validation Phone In Use - 'Fail'") {
     createUserReq(Status.NotAcceptable, "phoneInUse".some)
   }
 
-  test("create user Unknown Error - 'Fail'") {
+  test("POST User Unknown Error - 'Fail'") {
     createUserReq(Status.BadRequest, "".some)
   }
 
