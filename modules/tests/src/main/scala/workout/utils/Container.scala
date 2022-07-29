@@ -45,8 +45,8 @@ trait Container {
     for {
       container <- Resource.fromAutoCloseable {
         IO {
-          container.setCommand("postgres", "-c", "max_connections=150")
           container.start()
+          container.setCommand("postgres", "-c", "max_connections=150")
           container
         }
       }
