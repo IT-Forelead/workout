@@ -80,3 +80,15 @@ services:
       - ./buckets:/docker-entrypoint-initaws.d
       - /srv/workout/s3_storage:/tmp/localstack
     restart: always
+
+  frontend:
+    image: workout-frontend:latest
+    ports:
+      - "3001:80"
+    restart: always
+
+  nginx-server:
+    image: nginx
+    network_mode: host
+    volumes:
+      - /srv/nginx_conf:/etc/nginx/conf.d
