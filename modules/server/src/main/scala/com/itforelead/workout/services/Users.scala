@@ -3,24 +3,16 @@ package com.itforelead.workout.services
 import cats.data.OptionT
 import cats.effect._
 import cats.syntax.all._
-import com.itforelead.workout.domain.User.{
-  CreateClient,
-  UserActivate,
-  UserFilter,
-  UserWithPassword,
-  UserWithSetting,
-  UserWithTotal
-}
+import com.itforelead.workout.domain.User.{CreateClient, UserActivate, UserFilter, UserWithPassword, UserWithTotal}
 import com.itforelead.workout.domain.custom.exception.{PhoneInUse, ValidationCodeExpired, ValidationCodeIncorrect}
 import com.itforelead.workout.domain.custom.refinements.Tel
-import com.itforelead.workout.domain.types.{GymName, UZS, UserId}
-import com.itforelead.workout.domain.{ID, Role, User, UserSetting}
+import com.itforelead.workout.domain.types.UserId
+import com.itforelead.workout.domain.{ID, User, UserSetting}
 import com.itforelead.workout.effects.GenUUID
-import com.itforelead.workout.services.sql.{UserSQL, UserSettingsSQL}
 import com.itforelead.workout.services.redis.RedisClient
+import com.itforelead.workout.services.sql.UserSQL
 import com.itforelead.workout.services.sql.UserSQL._
 import com.itforelead.workout.services.sql.UserSettingsSQL.insertSettings
-import eu.timepit.refined.types.string.NonEmptyString
 import skunk._
 import skunk.implicits._
 import tsec.passwordhashers.PasswordHash
@@ -60,7 +52,7 @@ object Users {
                   prepQueryUnique(
                     insertSettings,
                     UserSetting(user.id, userParam.gymName, userParam.dailyPrice, userParam.monthlyPrice)
-                  ).as(user)
+                  ).as(user).flatTap(a => redis.del(a.phone.value))
                 })
             )
             .getOrElseF {

@@ -1,14 +1,14 @@
 package workout.services
 
 import cats.effect.IO
-import cats.implicits.{catsSyntaxApplicativeError, catsSyntaxOptionId}
+import eu.timepit.refined.auto.autoUnwrap
+import cats.implicits.catsSyntaxApplicativeError
 import com.itforelead.workout.domain.Role.CLIENT
 import com.itforelead.workout.domain.User.UserActivate
 import com.itforelead.workout.domain.custom.exception.PhoneInUse
 import com.itforelead.workout.domain.custom.refinements.{Tel, ValidationCode}
 import com.itforelead.workout.domain.types.MessageId
 import com.itforelead.workout.services.{Members, MessageBroker, Messages, UserSettings, Users}
-
 import tsec.passwordhashers.jca.SCrypt
 import workout.stub_services.RedisClientMock
 import workout.utils.DBSuite
@@ -40,7 +40,7 @@ object UsersSuite extends DBSuite {
     }
   }
 
-  test("Create Client Phone In Use") { implicit postgres =>
+  test("Create Client: Phone In Use") { implicit postgres =>
     val users                            = Users[IO](RedisClientMock.apply)
     val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
     val members                          = Members[IO](RedisClient)
@@ -49,18 +49,18 @@ object UsersSuite extends DBSuite {
     val gen = for {
       cu1 <- createUserGen
       cu2 <- createUserGen
-      f   <- userFilterGen
-    } yield (cu1, cu2, f)
+    } yield (cu1, cu2)
 
-    forall(gen) { case (createUser1, createUser2, filter) =>
+    forall(gen) { case (createUser1, createUser2) =>
       SCrypt.hashpw[IO](createUser1.password).flatMap { hash =>
         (for {
           _       <- messages.sendValidationCode(phone = createUser1.phone)
-          code    <- RedisClient.get(createUser1.phone.value)
-          client1 <- users.create(createUser1.copy(code = ValidationCode.unsafeFrom(code.get)), hash)
+          code1    <- RedisClient.get(createUser1.phone.value)
+          client1 <- users.create(createUser1.copy(code = ValidationCode.unsafeFrom(code1.get)), hash)
           _       <- users.userActivate(UserActivate(client1.id))
-          _ <- users
-            .create(createUser2.copy(code = ValidationCode.unsafeFrom(code.get), phone = createUser1.phone), hash)
+          _       <- messages.sendValidationCode(phone = createUser1.phone)
+          code2    <- RedisClient.get(createUser1.phone.value)
+          _ <- users.create(createUser2.copy(code = ValidationCode.unsafeFrom(code2.get), phone = createUser1.phone), hash)
         } yield failure(s"The test should return error")).recover {
           case _: PhoneInUse => success
           case error         => failure(s"the test failed. $error")
