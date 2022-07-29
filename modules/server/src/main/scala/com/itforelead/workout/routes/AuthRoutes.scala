@@ -15,6 +15,7 @@ import com.itforelead.workout.domain
 import com.itforelead.workout.domain.custom.exception.{
   InvalidPassword,
   PhoneInUse,
+  UserNotActivated,
   UserNotFound,
   ValidationCodeExpired,
   ValidationCodeIncorrect
@@ -34,8 +35,10 @@ final case class AuthRoutes[F[_]: Monad: JsonDecoder: MonadThrow](auth: Auth[F])
         auth
           .login(credentials)
           .flatMap(Ok(_))
-          .recoverWith { case UserNotFound(_) | InvalidPassword(_) =>
-            Forbidden()
+          .recoverWith {
+            case UserNotFound(_) | InvalidPassword(_) =>
+              Forbidden()
+            case UserNotActivated => NotAcceptable("User not activated!")
           }
       }
 

@@ -100,10 +100,11 @@ object AuthRoutesSuite extends HttpSuite {
       for {
         auth <- AuthMock[IO](users(user, c.password), RedisClient)
         (postData, shouldReturn) =
-          if (isCorrect)
+          if (isCorrect && user.activate)
             (c.copy(phone = user.phone), Status.Ok)
-          else
-            (c, Status.Forbidden)
+          else if (!user.activate)
+            (c.copy(phone = user.phone), Status.NotAcceptable)
+          else (c, Status.Forbidden)
         req    = POST(postData, uri"/auth/login")
         routes = AuthRoutes[IO](auth).routes(usersMiddleware)
         res <- expectHttpStatus(routes, req)(shouldReturn)

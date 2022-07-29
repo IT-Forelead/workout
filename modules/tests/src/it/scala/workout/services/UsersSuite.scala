@@ -6,23 +6,19 @@ import com.itforelead.workout.domain.Role.CLIENT
 import com.itforelead.workout.domain.User.UserActivate
 import com.itforelead.workout.domain.custom.exception.PhoneInUse
 import com.itforelead.workout.domain.custom.refinements.{Tel, ValidationCode}
-import com.itforelead.workout.domain.types.{MessageId, UserId}
+import com.itforelead.workout.domain.types.MessageId
 import com.itforelead.workout.services.{Members, MessageBroker, Messages, UserSettings, Users}
-import eu.timepit.refined.auto.autoUnwrap
+
 import tsec.passwordhashers.jca.SCrypt
-import workout.services.MembersSuite.{failure, success}
 import workout.stub_services.RedisClientMock
 import workout.utils.DBSuite
 import workout.utils.Generators.{createUserGen, defaultUserId, updateSettingGen, userFilterGen}
-
-import java.util.UUID
 
 object UsersSuite extends DBSuite {
 
   test("Create Client") { implicit postgres =>
     val users                            = Users[IO](RedisClientMock.apply)
     val messageBroker: MessageBroker[IO] = (messageId: MessageId, phone: Tel, text: String) => IO.unit
-    val members                          = Members[IO](RedisClient)
     val messages                         = Messages[IO](RedisClient, messageBroker, users)
 
     val gen = for {
