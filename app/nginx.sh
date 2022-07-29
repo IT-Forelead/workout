@@ -10,7 +10,7 @@ server {
 
  	server_name trim.uz www.trim.uz;
  	location / {
-    proxy_pass http://127.0.0.1:80;
+    proxy_pass http://127.0.0.1:3001;
   }
   location ~ ^/api/*$ {
     proxy_pass http://127.0.0.1:9000;
