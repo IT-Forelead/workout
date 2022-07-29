@@ -11,15 +11,8 @@ server {
  	server_name trim.uz www.trim.uz;
  	location / {
     proxy_pass http://127.0.0.1:80;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection 'upgrade';
-    proxy_set_header Host $host;
   }
   location ~ ^/api/*$ {
     proxy_pass http://127.0.0.1:9000;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection 'upgrade';
-    proxy_set_header Host $host;
-  }
 }
 EOT
