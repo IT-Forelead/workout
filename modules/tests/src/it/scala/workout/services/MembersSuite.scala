@@ -9,7 +9,7 @@ import com.itforelead.workout.domain.types.MessageId
 import com.itforelead.workout.services.{Members, MessageBroker, Messages, Users}
 import eu.timepit.refined.cats.refTypeShow
 import workout.utils.DBSuite
-import workout.utils.Generators.{createMemberGen, defaultFileKey, defaultUserId, phoneGen, validationCodeGen}
+import workout.utils.Generators._
 
 import java.time.LocalDateTime
 
@@ -55,9 +55,11 @@ object MembersSuite extends DBSuite {
           createMember.copy(code = ValidationCode.unsafeFrom(validationCode1.get)),
           defaultFileKey
         )
+        _               <- messages.sendValidationCode(defaultUserId.some, createMember.phone)
+        validationCode2 <- RedisClient.get(createMember.phone.value)
         _ <- members.validateAndCreate(
           defaultUserId,
-          createNewMember.copy(code = ValidationCode.unsafeFrom(validationCode1.get), phone = member1.phone),
+          createNewMember.copy(code = ValidationCode.unsafeFrom(validationCode2.get), phone = member1.phone),
           defaultFileKey
         )
       } yield failure(s"The test should return error")).recover {
