@@ -38,7 +38,10 @@ object PaymentsSuite extends DBSuite {
         payment     <- payments.create(defaultUserId, createPayment.copy(memberId = member1.id))
         getPayments <- payments.payments(defaultUserId)
         getPayment  <- payments.getPaymentByMemberId(defaultUserId, payment.memberId)
-      } yield assert(getPayments.exists(_.payment == payment) && getPayment.contains(payment))
+        getPaymentsWithTotal <- payments.getPaymentsWithTotal(defaultUserId, PaymentFilter(), 1)
+      } yield assert(
+        getPayments.exists(_.payment == payment) && getPayment.contains(payment) && getPaymentsWithTotal.payment.exists(_.payment == payment)
+      )
     }
   }
 

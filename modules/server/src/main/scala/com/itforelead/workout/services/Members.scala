@@ -70,6 +70,7 @@ object Members {
               OptionT(findMemberByPhone(createMember.phone))
                 .semiflatMap(_ => PhoneInUse(createMember.phone).raiseError[F, Member])
                 .getOrElseF(create(userId, createMember, key))
+                .flatTap(a => redis.del(a.phone.value))
             )
             .getOrElseF {
               ValidationCodeIncorrect(createMember.code).raiseError[F, Member]
