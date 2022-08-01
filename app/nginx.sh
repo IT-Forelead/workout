@@ -12,8 +12,8 @@ server {
  	location / {
     proxy_pass http://127.0.0.1:3001;
   }
-  location ~ ^/api/*$ {
-    proxy_pass http://127.0.0.1:9000;
+  location /api/ {
+    proxy_pass http://127.0.0.1:9000/;
   }
 }
 EOT
