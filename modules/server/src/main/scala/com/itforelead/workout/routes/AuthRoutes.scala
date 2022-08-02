@@ -1,7 +1,7 @@
 package com.itforelead.workout.routes
 
 import cats.syntax.all._
-import cats.{Monad, MonadThrow}
+import cats.{ Monad, MonadThrow }
 import com.itforelead.workout.domain.User
 import com.itforelead.workout.domain.User.CreateClient
 import com.itforelead.workout.services.Auth
@@ -10,7 +10,7 @@ import org.http4s._
 import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
 import org.http4s.circe.JsonDecoder
 import org.http4s.dsl.Http4sDsl
-import org.http4s.server.{AuthMiddleware, Router}
+import org.http4s.server.{ AuthMiddleware, Router }
 import com.itforelead.workout.domain
 import com.itforelead.workout.domain.custom.exception.{
   InvalidPassword,
@@ -18,15 +18,16 @@ import com.itforelead.workout.domain.custom.exception.{
   UserNotActivated,
   UserNotFound,
   ValidationCodeExpired,
-  ValidationCodeIncorrect
+  ValidationCodeIncorrect,
 }
 import com.itforelead.workout.domain.tokenCodec
 import org.typelevel.log4cats.Logger
 
-final case class AuthRoutes[F[_]: Monad: JsonDecoder: MonadThrow](auth: Auth[F])(implicit
-  logger: Logger[F]
-) extends Http4sDsl[F] {
-
+final case class AuthRoutes[F[_]: Monad: JsonDecoder: MonadThrow](
+    auth: Auth[F]
+  )(implicit
+    logger: Logger[F]
+  ) extends Http4sDsl[F] {
   private[routes] val prefixPath = "/auth"
 
   private val publicRoutes: HttpRoutes[F] = HttpRoutes.of[F] {
@@ -65,15 +66,15 @@ final case class AuthRoutes[F[_]: Monad: JsonDecoder: MonadThrow](auth: Auth[F])
 
   }
 
-  private[this] val privateRoutes: AuthedRoutes[User, F] = AuthedRoutes.of { case ar @ GET -> Root / "logout" as user =>
-    AuthHeaders
-      .getBearerToken(ar.req)
-      .traverse_(auth.logout(_, user.phone)) *> NoContent()
+  private[this] val privateRoutes: AuthedRoutes[User, F] = AuthedRoutes.of {
+    case ar @ GET -> Root / "logout" as user =>
+      AuthHeaders
+        .getBearerToken(ar.req)
+        .traverse_(auth.logout(_, user.phone)) *> NoContent()
 
   }
 
   def routes(authMiddleware: AuthMiddleware[F, User]): HttpRoutes[F] = Router(
     prefixPath -> (publicRoutes <+> authMiddleware(privateRoutes))
   )
-
 }

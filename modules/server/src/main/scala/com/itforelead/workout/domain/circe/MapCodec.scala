@@ -1,5 +1,6 @@
 package com.itforelead.workout.domain.circe
-import io.circe.{Decoder, Encoder, HCursor}
+
+import io.circe.{ Decoder, Encoder, HCursor }
 
 trait MapCodec {
   implicit def mapEncoder[K: Encoder, V: Encoder]: Encoder[Map[K, V]] =
