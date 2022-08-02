@@ -5,16 +5,16 @@ import cats.implicits.toFlatMapOps
 import com.itforelead.workout.domain.Role.ADMIN
 import com.itforelead.workout.domain.UserSetting.UpdateSetting
 import com.itforelead.workout.domain.User
-import com.itforelead.workout.domain.User.{UserActivate, UserFilter}
-import com.itforelead.workout.services.{Auth, UserSettings, Users}
+import com.itforelead.workout.domain.User.{ UserActivate, UserFilter }
+import com.itforelead.workout.services.{ Auth, UserSettings, Users }
 import org.http4s._
 import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
 import org.http4s.circe.JsonDecoder
 import org.http4s.dsl.Http4sDsl
-import org.http4s.server.{AuthMiddleware, Router}
+import org.http4s.server.{ AuthMiddleware, Router }
 
-final class UserRoutes[F[_]: JsonDecoder: MonadThrow](settings: UserSettings[F], users: Users[F]) extends Http4sDsl[F] {
-
+final class UserRoutes[F[_]: JsonDecoder: MonadThrow](settings: UserSettings[F], users: Users[F])
+    extends Http4sDsl[F] {
   private[routes] val prefixPath = "/user"
 
   private[this] val httpRoutes: AuthedRoutes[User, F] = AuthedRoutes.of {
@@ -44,5 +44,4 @@ final class UserRoutes[F[_]: JsonDecoder: MonadThrow](settings: UserSettings[F],
   def routes(authMiddleware: AuthMiddleware[F, User]): HttpRoutes[F] = Router(
     prefixPath -> authMiddleware(httpRoutes)
   )
-
 }

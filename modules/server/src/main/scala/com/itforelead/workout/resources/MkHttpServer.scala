@@ -1,7 +1,7 @@
 package com.itforelead.workout.resources
 
-import cats.effect.kernel.{Async, Resource}
-import com.comcast.ip4s.{Host, Port}
+import cats.effect.kernel.{ Async, Resource }
+import com.comcast.ip4s.{ Host, Port }
 import org.http4s._
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.server.Server

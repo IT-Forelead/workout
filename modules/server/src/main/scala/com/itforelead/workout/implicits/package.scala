@@ -1,22 +1,21 @@
 package com.itforelead.workout
 
-import cats.effect.{Async, Sync}
+import cats.effect.{ Async, Sync }
 import cats.implicits._
 import io.circe.parser.decode
 import io.circe.syntax.EncoderOps
-import io.circe.{Decoder, Encoder, Printer}
+import io.circe.{ Decoder, Encoder, Printer }
 import org.http4s.MediaType
 import org.http4s.headers.`Content-Type`
 import org.http4s.multipart.Part
 import com.itforelead.workout.domain.custom.exception.MultipartDecodeError
-import com.itforelead.workout.domain.custom.refinements.{FilePath, Prefix}
+import com.itforelead.workout.domain.custom.refinements.{ FilePath, Prefix }
 import com.itforelead.workout.domain.custom.utils.MapConvert
 import com.itforelead.workout.domain.custom.utils.MapConvert.ValidationResult
 
 import java.time.LocalDateTime
 
 package object implicits {
-
   implicit class PartOps[F[_]: Async](parts: Vector[Part[F]]) {
     private def filterFileTypes(part: Part[F]): Boolean = part.filename.exists(_.trim.nonEmpty)
 
@@ -40,10 +39,8 @@ package object implicits {
         }
         entity <- mapper.fromMap(collectKV.toMap)
         validEntity <- entity.fold(
-          error => {
-            F.raiseError[A](MultipartDecodeError(error.toList.mkString(" | ")))
-          },
-          success => success.pure[F]
+          error => F.raiseError[A](MultipartDecodeError(error.toList.mkString(" | "))),
+          success => success.pure[F],
         )
       } yield validEntity
   }
@@ -60,17 +57,20 @@ package object implicits {
     def toJson(implicit encoder: Encoder[A]): String = obj.asJson.printWith(printer)
 
     def toFormData[F[_]](implicit encoder: Encoder.AsObject[A]): Vector[Part[F]] =
-      obj.asJsonObject.toVector
-        .map { case k -> v =>
-          k -> v.asString
+      obj
+        .asJsonObject
+        .toVector
+        .map {
+          case k -> v =>
+            k -> v.asString
         }
-        .collect { case k -> Some(v) =>
-          Part.formData[F](k, v)
+        .collect {
+          case k -> Some(v) =>
+            Part.formData[F](k, v)
         }
   }
 
   implicit class LocalDateTimeOps(ldt: LocalDateTime) {
     def endOfDay: LocalDateTime = ldt.withHour(23).withMinute(59).withSecond(59)
   }
-
 }

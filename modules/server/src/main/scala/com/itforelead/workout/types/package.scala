@@ -12,7 +12,6 @@ import ciris.refined._
 import eu.timepit.refined.cats._
 
 package object types {
-
   @derive(configDecoder, show)
   @newtype case class JwtAccessTokenKeyConfig(secret: NonEmptyString)
 
@@ -20,5 +19,4 @@ package object types {
   @newtype case class PasswordSalt(secret: NonEmptyString)
 
   @newtype case class TokenExpiration(value: FiniteDuration)
-
 }

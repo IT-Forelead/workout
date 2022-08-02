@@ -6,10 +6,10 @@ import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
 
 case class DBConfig(
-  host: NonEmptyString,
-  port: NonSystemPortNumber,
-  user: NonEmptyString,
-  password: Secret[NonEmptyString],
-  database: NonEmptyString,
-  poolSize: PosInt
-)
+    host: NonEmptyString,
+    port: NonSystemPortNumber,
+    user: NonEmptyString,
+    password: Secret[NonEmptyString],
+    database: NonEmptyString,
+    poolSize: PosInt,
+  )

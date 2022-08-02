@@ -8,7 +8,12 @@ import eu.timepit.refined.auto.autoUnwrap
 import tsec.passwordhashers.jca.SCrypt
 import com.itforelead.workout.domain._
 import com.itforelead.workout.domain.User._
-import com.itforelead.workout.domain.custom.exception.{InvalidPassword, PhoneInUse, UserNotActivated, UserNotFound}
+import com.itforelead.workout.domain.custom.exception.{
+  InvalidPassword,
+  PhoneInUse,
+  UserNotActivated,
+  UserNotFound,
+}
 import com.itforelead.workout.domain.custom.refinements.Tel
 import com.itforelead.workout.security.Tokens
 import com.itforelead.workout.services.redis.RedisClient
@@ -22,13 +27,12 @@ trait Auth[F[_]] {
 
 object Auth {
   def apply[F[_]: Sync](
-    tokenExpiration: TokenExpiration,
-    tokens: Tokens[F],
-    users: Users[F],
-    redis: RedisClient[F]
-  ): Auth[F] =
+      tokenExpiration: TokenExpiration,
+      tokens: Tokens[F],
+      users: Users[F],
+      redis: RedisClient[F],
+    ): Auth[F] =
     new Auth[F] {
-
       private val TokenExpiration = tokenExpiration.value
 
       override def newUser(userParam: CreateClient): F[JwtToken] =
@@ -39,9 +43,9 @@ object Auth {
             for {
               hash <- SCrypt.hashpw[F](userParam.password)
               user <- users.create(userParam, hash)
-              t    <- tokens.create
-              _    <- redis.put(t.value, user, TokenExpiration)
-              _    <- redis.put(user.phone, t.value, TokenExpiration)
+              t <- tokens.create
+              _ <- redis.put(t.value, user, TokenExpiration)
+              _ <- redis.put(user.phone, t.value, TokenExpiration)
             } yield t
         }
 
@@ -66,6 +70,5 @@ object Auth {
 
       def logout(token: JwtToken, phone: Tel): F[Unit] =
         redis.del(token.show, phone)
-
     }
 }
