@@ -15,14 +15,16 @@ import java.time.LocalDateTime
 object MessagesSQL {
   val messageId: Codec[MessageId] = identity[MessageId]
 
-  private val Columns = messageId ~ userId ~ memberId.opt ~ messageText ~ timestamp ~ deliveryStatus
+  private val Columns = messageId ~ userId ~ memberId.opt ~ tel ~ messageText ~ timestamp ~ messageType ~ deliveryStatus
 
   val encoder: Encoder[Message] =
-    Columns.contramap(m => m.id ~ m.userId ~ m.memberId ~ m.text ~ m.sentDate ~ m.deliveryStatus)
+    Columns.contramap(m =>
+      m.id ~ m.userId ~ m.memberId ~ m.phone ~ m.text ~ m.sentDate ~ m.messageType ~ m.deliveryStatus
+    )
 
   val decoder: Decoder[Message] =
-    Columns.map { case id ~ userId ~ memberId ~ text ~ sentDate ~ deliveryStatus =>
-      Message(id, userId, memberId, text, sentDate, deliveryStatus)
+    Columns.map { case id ~ userId ~ memberId ~ phone ~ text ~ sentDate ~ messageType ~ deliveryStatus =>
+      Message(id, userId, memberId, phone, text, sentDate, messageType, deliveryStatus)
     }
 
   private val MessageColumns = decoder ~ MemberSQL.decoder.opt

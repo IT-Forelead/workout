@@ -1,7 +1,7 @@
 package com.itforelead.workout.services
 
 import cats.implicits._
-import com.itforelead.workout.domain.{ArrivalType, DeliveryStatus, PaymentType, MemberFilterBy, Role}
+import com.itforelead.workout.domain.{ArrivalType, DeliveryStatus, MemberFilterBy, MessageType, PaymentType, Role}
 import com.itforelead.workout.domain.custom.refinements.{FileKey, Tel}
 import com.itforelead.workout.domain.types._
 import com.itforelead.workout.types.IsUUID
@@ -40,6 +40,9 @@ package object sql {
 
   val deliveryStatus: Codec[DeliveryStatus] =
     `enum`[DeliveryStatus](_.value, DeliveryStatus.find, Type("delivery_status"))
+
+  val messageType: Codec[MessageType] =
+    `enum`[MessageType](_.value, MessageType.find, Type("message_type"))
 
   val role: Codec[Role] = `enum`[Role](_.value, Role.find, Type("role"))
 

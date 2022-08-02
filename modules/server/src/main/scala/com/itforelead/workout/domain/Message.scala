@@ -1,9 +1,12 @@
 package com.itforelead.workout.domain
 
+import com.itforelead.workout.domain.custom.refinements.Tel
 import com.itforelead.workout.domain.types.{MemberId, MessageId, MessageText, UserId}
 import derevo.cats.show
 import derevo.circe.magnolia.{decoder, encoder}
 import derevo.derive
+import io.circe.refined._
+import eu.timepit.refined.cats._
 
 import java.time.LocalDateTime
 
@@ -12,8 +15,10 @@ case class Message(
   id: MessageId,
   userId: UserId,
   memberId: Option[MemberId],
+  phone: Tel,
   text: MessageText,
   sentDate: LocalDateTime,
+  messageType: MessageType,
   deliveryStatus: DeliveryStatus
 )
 
@@ -22,8 +27,10 @@ object Message {
   case class CreateMessage(
     userId: UserId,
     memberId: Option[MemberId],
+    phone: Tel,
     text: MessageText,
     sentDate: LocalDateTime,
+    messageType: MessageType,
     deliveryStatus: DeliveryStatus
   )
 
