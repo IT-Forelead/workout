@@ -11,6 +11,7 @@ import com.itforelead.workout.services.sql.MessagesSQL._
 import skunk._
 import skunk.implicits.toIdOps
 import cats.syntax.all._
+import com.itforelead.workout.domain.MessageType.SENTCODE
 import com.itforelead.workout.domain.custom.exception.{AdminNotFound, MemberNotFound, UserNotFound}
 import com.itforelead.workout.domain.custom.refinements.Tel
 import com.itforelead.workout.services.redis.RedisClient
@@ -42,7 +43,7 @@ object Messages {
           now <- Sync[F].delay(LocalDateTime.now())
           message <- prepQueryUnique(
             insertMessage,
-            Message(id, msg.userId, msg.memberId, msg.text, now, msg.deliveryStatus)
+            Message(id, msg.userId, msg.memberId, msg.phone, msg.text, now, msg.messageType, msg.deliveryStatus)
           )
         } yield message).recoverWith { case SqlState.ForeignKeyViolation(_) =>
           MemberNotFound.raiseError[F, Message]
@@ -69,7 +70,7 @@ object Messages {
             AdminNotFound.raiseError[F, Unit],
             adminId =>
               for {
-                message <- create(CreateMessage(adminId, None, msgtext, sentDate, status))
+                message <- create(CreateMessage(adminId, None, phone, msgtext, sentDate, SENTCODE, status))
                 _       <- redis.put(phone.value, code.toString, 3.minute)
                 _       <- messageBroker.send(message.id, phone, msgtext.value.value)
               } yield ()

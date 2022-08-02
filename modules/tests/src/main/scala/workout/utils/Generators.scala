@@ -66,6 +66,8 @@ object Generators {
 
   val deliveryStatusGen: Gen[DeliveryStatus] = arbitrary[DeliveryStatus]
 
+  val messageTypeGen: Gen[MessageType] = arbitrary[MessageType]
+
   val paymentTypeGen: Gen[PaymentType] = arbitrary[PaymentType]
 
   val phoneGen: Gen[Tel] = arbitrary[Tel]
@@ -189,19 +191,23 @@ object Generators {
       i  <- messageIdGen
       ui <- userIdGen
       mi <- option(memberIdGen)
+      p  <- phoneGen
       t  <- textGen
       dt <- timestampGen
+      mt <- messageTypeGen
       ds <- deliveryStatusGen
-    } yield Message(i, ui, mi, t, dt, ds)
+    } yield Message(i, ui, mi, p, t, dt, mt, ds)
 
   def createMessageGen(userId: Option[UserId] = None): Gen[CreateMessage] =
     for {
       ui <- userIdGen
       mi <- option(memberIdGen)
+      p  <- phoneGen
       t  <- textGen
       dt <- timestampGen
+      mt <- messageTypeGen
       ds <- deliveryStatusGen
-    } yield CreateMessage(userId.getOrElse(ui), mi, t, dt, ds)
+    } yield CreateMessage(userId.getOrElse(ui), mi, p, t, dt, mt, ds)
 
   val userCredentialGen: Gen[Credentials] =
     for {

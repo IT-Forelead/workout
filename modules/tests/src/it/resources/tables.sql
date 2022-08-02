@@ -2,9 +2,9 @@ CREATE TYPE PAYMENT_TYPE AS ENUM ('daily', 'monthly');
 CREATE TYPE ARRIVAL_TYPE AS ENUM ('come_in', 'go_out');
 CREATE TYPE DELIVERY_STATUS AS ENUM ('sent', 'delivered', 'failed', 'unknown');
 CREATE TYPE ROLE AS ENUM ('admin', 'client');
+CREATE TYPE MESSAGE_TYPE AS ENUM ('reminder', 'sent_code', 'activation');
 
-CREATE TABLE IF NOT EXISTS users
-(
+CREATE TABLE IF NOT EXISTS users(
     id        UUID PRIMARY KEY,
     firstname VARCHAR        NOT NULL,
     lastname  VARCHAR        NOT NULL,
@@ -19,8 +19,7 @@ INSERT INTO "users" ("id", "firstname", "lastname", "phone", "password", "role",
 VALUES ('76c2c44c-8fbf-4184-9199-19303a042fa0', 'Admin', 'Adminov', '+998901234567',
         '$s0$e0801$5JK3Ogs35C2h5htbXQoeEQ==$N7HgNieSnOajn1FuEB7l4PhC6puBSq+e1E8WUaSJcGY=', 'admin', 'false', 'true');
 
-CREATE TABLE IF NOT EXISTS user_settings
-(
+CREATE TABLE IF NOT EXISTS user_settings(
     user_id       UUID    NOT NULL
         CONSTRAINT fk_user_id REFERENCES users (id) ON UPDATE NO ACTION ON DELETE NO ACTION,
     name          VARCHAR NOT NULL,
@@ -31,8 +30,7 @@ CREATE TABLE IF NOT EXISTS user_settings
 INSERT INTO "user_settings" ("user_id", "name", "daily_price", "monthly_price")
 VALUES ('76c2c44c-8fbf-4184-9199-19303a042fa0', 'GYM-Forelead', 11000, 88000);
 
-CREATE TABLE IF NOT EXISTS members
-(
+CREATE TABLE IF NOT EXISTS members(
     id          UUID PRIMARY KEY,
     user_id     UUID           NOT NULL
         CONSTRAINT fk_user_id REFERENCES users (id) ON UPDATE NO ACTION ON DELETE NO ACTION,
@@ -45,8 +43,7 @@ CREATE TABLE IF NOT EXISTS members
     deleted     BOOLEAN        NOT NULL DEFAULT false
 );
 
-CREATE TABLE IF NOT EXISTS payments
-(
+CREATE TABLE IF NOT EXISTS payments(
     id           UUID PRIMARY KEY,
     user_id      UUID         NOT NULL
         CONSTRAINT fk_user_id REFERENCES users (id) ON UPDATE NO ACTION ON DELETE NO ACTION,
@@ -58,8 +55,7 @@ CREATE TABLE IF NOT EXISTS payments
     deleted      BOOLEAN      NOT NULL DEFAULT false
 );
 
-CREATE TABLE IF NOT EXISTS arrival_event
-(
+CREATE TABLE IF NOT EXISTS arrival_event(
     id         UUID PRIMARY KEY,
     user_id    UUID         NOT NULL
         CONSTRAINT fk_user_id REFERENCES users (id) ON UPDATE NO ACTION ON DELETE NO ACTION,
@@ -70,14 +66,15 @@ CREATE TABLE IF NOT EXISTS arrival_event
     deleted    BOOLEAN      NOT NULL DEFAULT false
 );
 
-CREATE TABLE IF NOT EXISTS messages
-(
+CREATE TABLE IF NOT EXISTS messages(
     id              UUID PRIMARY KEY,
     user_id         UUID            NOT NULL
         CONSTRAINT fk_user_id REFERENCES users (id) ON UPDATE NO ACTION ON DELETE NO ACTION,
     member_id       UUID
         CONSTRAINT fk_member_id REFERENCES members (id) ON UPDATE CASCADE ON DELETE CASCADE,
+    phone           VARCHAR         NOT NULL,
     text            VARCHAR         NOT NULL,
     sent_date       TIMESTAMP       NOT NULL,
+    message_type    MESSAGE_TYPE    NOT NULL,
     delivery_status DELIVERY_STATUS NOT NULL
 );
