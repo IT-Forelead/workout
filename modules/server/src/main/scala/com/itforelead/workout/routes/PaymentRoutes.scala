@@ -6,6 +6,7 @@ import com.itforelead.workout.domain.Payment.{CreatePayment, PaymentFilter, Paym
 import com.itforelead.workout.domain.User
 import com.itforelead.workout.domain.custom.exception.{CreatePaymentDailyTypeError, MemberNotFound}
 import com.itforelead.workout.services.Payments
+import com.itforelead.workout.implicits.http4SyntaxReqOps
 import org.http4s._
 import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
 import org.http4s.circe.JsonDecoder

@@ -4,6 +4,7 @@ import cats.MonadThrow
 import com.itforelead.workout.domain.Arrival.{ArrivalFilter, ArrivalMemberId, CreateArrival}
 import cats.implicits.{catsSyntaxApplicativeError, catsSyntaxFlatMapOps, toFlatMapOps}
 import com.itforelead.workout.domain.User
+import com.itforelead.workout.implicits.http4SyntaxReqOps
 import com.itforelead.workout.domain.custom.exception.MemberNotFound
 import com.itforelead.workout.services.ArrivalService
 import org.http4s._

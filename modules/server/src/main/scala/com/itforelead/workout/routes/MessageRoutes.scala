@@ -5,6 +5,7 @@ import cats.implicits._
 import com.itforelead.workout.domain.Message.MessagesFilter
 import com.itforelead.workout.domain.{User, Validation}
 import com.itforelead.workout.services.Messages
+import com.itforelead.workout.implicits._
 import org.http4s._
 import org.http4s.dsl.Http4sDsl
 import org.http4s.server.{AuthMiddleware, Router}

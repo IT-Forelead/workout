@@ -3,10 +3,11 @@ package com.itforelead.workout.routes
 import cats.MonadThrow
 import cats.implicits.toFlatMapOps
 import com.itforelead.workout.domain.Role.ADMIN
-import com.itforelead.workout.domain.UserSetting.UpdateSetting
 import com.itforelead.workout.domain.User
 import com.itforelead.workout.domain.User.{UserActivate, UserFilter}
-import com.itforelead.workout.services.{Auth, UserSettings, Users}
+import com.itforelead.workout.domain.UserSetting.UpdateSetting
+import com.itforelead.workout.implicits.http4SyntaxReqOps
+import com.itforelead.workout.services.{UserSettings, Users}
 import org.http4s._
 import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
 import org.http4s.circe.JsonDecoder

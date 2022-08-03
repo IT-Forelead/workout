@@ -10,7 +10,7 @@ import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.services.sql.PaymentSQL._
 import cats.syntax.all._
 import com.itforelead.workout.domain.PaymentType.{DAILY, MONTHLY}
-import com.itforelead.workout.implicits.LocalDateTimeOps
+import com.itforelead.workout.implicits.javaTimeSyntaxLocalDateTimeOps
 import com.itforelead.workout.services.sql.PaymentSQL
 import skunk._
 import skunk.codec.all.int8

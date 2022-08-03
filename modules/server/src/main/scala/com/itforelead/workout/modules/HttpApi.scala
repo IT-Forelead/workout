@@ -5,7 +5,7 @@ import cats.effect._
 import cats.syntax.all._
 import com.itforelead.workout.config.LogConfig
 import com.itforelead.workout.domain.User
-import com.itforelead.workout.implicits.CirceDecoderOps
+import com.itforelead.workout.implicits.circeSyntaxDecoderOps
 import com.itforelead.workout.routes._
 import com.itforelead.workout.services.redis.RedisClient
 import com.itforelead.workout.services.s3.S3Client

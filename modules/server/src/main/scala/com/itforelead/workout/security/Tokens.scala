@@ -6,7 +6,7 @@ import com.itforelead.workout.effects.GenUUID
 import dev.profunktor.auth.jwt._
 import eu.timepit.refined.auto._
 import pdi.jwt._
-import com.itforelead.workout.implicits.GenericTypeOps
+import com.itforelead.workout.implicits.genericSyntaxGenericTypeOps
 import com.itforelead.workout.types.{JwtAccessTokenKeyConfig, TokenExpiration}
 
 trait Tokens[F[_]] {

@@ -5,6 +5,7 @@ import cats.{Monad, MonadThrow}
 import com.itforelead.workout.domain.User
 import com.itforelead.workout.domain.User.CreateClient
 import com.itforelead.workout.services.Auth
+import com.itforelead.workout.implicits.http4SyntaxReqOps
 import dev.profunktor.auth.AuthHeaders
 import org.http4s._
 import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
@@ -12,14 +13,7 @@ import org.http4s.circe.JsonDecoder
 import org.http4s.dsl.Http4sDsl
 import org.http4s.server.{AuthMiddleware, Router}
 import com.itforelead.workout.domain
-import com.itforelead.workout.domain.custom.exception.{
-  InvalidPassword,
-  PhoneInUse,
-  UserNotActivated,
-  UserNotFound,
-  ValidationCodeExpired,
-  ValidationCodeIncorrect
-}
+import com.itforelead.workout.domain.custom.exception._
 import com.itforelead.workout.domain.tokenCodec
 import org.typelevel.log4cats.Logger
 

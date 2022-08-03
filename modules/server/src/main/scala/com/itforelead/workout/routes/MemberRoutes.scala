@@ -7,7 +7,7 @@ import com.itforelead.workout.domain.Member.{CreateMember, MemberFilter}
 import com.itforelead.workout.domain.User
 import com.itforelead.workout.domain.custom.exception._
 import com.itforelead.workout.domain.custom.refinements.{FileKey, FileName, FilePath}
-import com.itforelead.workout.implicits.PartOps
+import com.itforelead.workout.implicits._
 import com.itforelead.workout.services.s3.S3Client
 import com.itforelead.workout.services.{Members, Messages}
 import org.http4s._

@@ -4,7 +4,7 @@ import cats._
 import cats.implicits.toFunctorOps
 import dev.profunktor.redis4cats.RedisCommands
 import io.circe.Encoder
-import com.itforelead.workout.implicits.GenericTypeOps
+import com.itforelead.workout.implicits.genericSyntaxGenericTypeOps
 
 import scala.concurrent.duration.FiniteDuration
 
