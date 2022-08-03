@@ -198,10 +198,11 @@ object Generators {
     for {
       ui <- userIdGen
       mi <- option(memberIdGen)
+      p <- phoneGen
       t  <- textGen
       dt <- timestampGen
       ds <- deliveryStatusGen
-    } yield CreateMessage(userId.getOrElse(ui), mi, t, dt, ds)
+    } yield CreateMessage(userId.getOrElse(ui), mi, p, t, dt, ds)
 
   val userCredentialGen: Gen[Credentials] =
     for {

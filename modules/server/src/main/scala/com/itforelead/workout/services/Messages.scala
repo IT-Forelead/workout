@@ -1,6 +1,6 @@
 package com.itforelead.workout.services
 
-import cats.data.{ EitherT, OptionT }
+import cats.data.OptionT
 import cats.effect.std.Random
 import cats.effect.{ Resource, Sync }
 import com.itforelead.workout.domain.{ DeliveryStatus, ID, Message }
@@ -86,7 +86,7 @@ object Messages {
             AdminNotFound.raiseError[F, Unit],
             adminId =>
               for {
-                message <- create(CreateMessage(adminId, None, msgtext, sentDate, status))
+                message <- create(CreateMessage(adminId, None, phone, msgtext, sentDate, status))
                 _ <- redis.put(phone.value, code.toString, 3.minute)
                 _ <- messageBroker.send(message.id, phone, msgtext.value.value)
               } yield (),

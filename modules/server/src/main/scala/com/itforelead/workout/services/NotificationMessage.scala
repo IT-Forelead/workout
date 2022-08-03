@@ -6,6 +6,7 @@ import com.itforelead.workout.config.SchedulerConfig
 import com.itforelead.workout.domain.{ DeliveryStatus, Member, Message }
 import com.itforelead.workout.domain.Message.CreateMessage
 import com.itforelead.workout.domain.types.{ FirstName, MemberId, MessageText, UserId }
+import com.itforelead.workout.domain.custom.refinements.Tel
 import com.itforelead.workout.effects.Background
 import eu.timepit.refined.types.string.NonEmptyString
 import org.typelevel.log4cats.Logger
@@ -49,9 +50,10 @@ object NotificationMessage {
               sentTodayList.contains(member.id)
             }
             .traverse_ { member =>
-              createMessage(member.userId, member.id, text(member.firstname)).flatMap { message =>
-                send(member, text(member.firstname).value, message)
-              }
+              createMessage(member.userId, member.id, member.phone, text(member.firstname))
+                .flatMap { message =>
+                  send(member, text(member.firstname).value, message)
+                }
             }
         } yield ()
       }
@@ -59,11 +61,12 @@ object NotificationMessage {
       private def createMessage(
           userId: UserId,
           memberId: MemberId,
+          phone: Tel,
           text: NonEmptyString,
         ): F[Message] =
         Sync[F].delay(LocalDateTime.now()).flatMap { now =>
           messages.create(
-            CreateMessage(userId, memberId.some, MessageText(text), now, DeliveryStatus.SENT)
+            CreateMessage(userId, memberId.some, phone, MessageText(text), now, DeliveryStatus.SENT)
           )
         }
 
