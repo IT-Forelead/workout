@@ -3,11 +3,19 @@ package com.itforelead.workout.services
 import cats.data.OptionT
 import cats.effect._
 import cats.syntax.all._
+import com.itforelead.workout.config.ConfigLoader.messageBroker
+import com.itforelead.workout.domain.Message.CreateMessage
+import com.itforelead.workout.domain.MessageType.ACTIVATION
 import com.itforelead.workout.domain.User.{CreateClient, UserActivate, UserFilter, UserWithPassword, UserWithTotal}
-import com.itforelead.workout.domain.custom.exception.{PhoneInUse, ValidationCodeExpired, ValidationCodeIncorrect}
+import com.itforelead.workout.domain.custom.exception.{
+  AdminNotFound,
+  PhoneInUse,
+  ValidationCodeExpired,
+  ValidationCodeIncorrect
+}
 import com.itforelead.workout.domain.custom.refinements.Tel
-import com.itforelead.workout.domain.types.UserId
-import com.itforelead.workout.domain.{ID, User, UserSetting}
+import com.itforelead.workout.domain.types.{MessageText, UserId}
+import com.itforelead.workout.domain.{DeliveryStatus, ID, User, UserSetting}
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.services.redis.RedisClient
 import com.itforelead.workout.services.sql.UserSQL
@@ -17,6 +25,8 @@ import skunk._
 import skunk.implicits._
 import tsec.passwordhashers.PasswordHash
 import tsec.passwordhashers.jca.SCrypt
+
+import java.time.LocalDateTime
 
 trait Users[F[_]] {
   def find(phoneNumber: Tel): F[Option[UserWithPassword]]

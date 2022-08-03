@@ -37,8 +37,8 @@ final case class AuthRoutes[F[_]: Monad: JsonDecoder: MonadThrow](auth: Auth[F])
           .flatMap(Ok(_))
           .recoverWith {
             case UserNotFound(_) | InvalidPassword(_) =>
-              Forbidden()
-            case UserNotActivated => NotAcceptable("User not activated!")
+              Forbidden("Telefon raqam yoki parol noto'g'ri.")
+            case UserNotActivated => NotAcceptable("Sizning profilingiz aktivlash jarayonida. Iltimos biroz kuting!")
           }
       }
 
@@ -50,16 +50,16 @@ final case class AuthRoutes[F[_]: Monad: JsonDecoder: MonadThrow](auth: Auth[F])
           .recoverWith {
             case codeExpiredError: ValidationCodeExpired =>
               logger.error(s"Validation code expired. Error: ${codeExpiredError.phone.value}") >>
-                NotAcceptable("Validation code expired. Please try again")
+                NotAcceptable("Tasdiqlash kodi muddati tugagan. Iltimos, yana bir bor urinib ko'ring.")
             case phoneInUseError: PhoneInUse =>
               logger.error(s"Phone is already in use. Error: ${phoneInUseError.phone.value}") >>
-                NotAcceptable("Phone is already in use. Please try again with other phone number")
+                NotAcceptable("Telefon allaqachon ishlatilmoqda. Boshqa telefon raqami bilan qayta urinib koʻring")
             case valCodeError: ValidationCodeIncorrect =>
               logger.error(s"Validation code is wrong. Error: ${valCodeError.code.value}") >>
-                NotAcceptable("Validation code is wrong. Please try again")
+                NotAcceptable("Tasdiqlash kodi noto'g'ri. Iltimos, yana bir bor urinib ko'ring")
             case error =>
               logger.error(error)("Error occurred creating user!") >>
-                BadRequest("Error occurred creating user. Please try again!")
+                BadRequest("Foydalanuvchini yaratishda xatolik yuz berdi. Iltimos, yana bir bor urinib ko'ring!")
           }
       }
 

@@ -41,13 +41,15 @@ final class PaymentRoutes[F[_]: JsonDecoder: MonadThrow](payments: Payments[F])(
         .recoverWith {
           case _: CreatePaymentDailyTypeError.type =>
             logger.error(s"This user has access to the GYM.") >>
-              Response[F](status = MethodNotAllowed).withEntity("This user has access to the GYM.").pure[F]
+              Response[F](status = MethodNotAllowed)
+                .withEntity("Bu foydalanuvchi Fitnes zaliga kirish huquqiga ega.")
+                .pure[F]
           case _: MemberNotFound.type =>
             logger.error(s"This member not found from DB.") >>
-              BadRequest("This member not found from DB.")
+              BadRequest("Bu a'zo ma'lumotlar bazasidan topilmadi.")
           case error =>
             logger.error(error)("Error occurred creating payment!") >>
-              BadRequest("Error occurred creating payment. Please try again!")
+              BadRequest("Toʻlovni yaratishda xatolik yuz berdi. Iltimos, yana bir bor urinib ko'ring!")
         }
   }
 

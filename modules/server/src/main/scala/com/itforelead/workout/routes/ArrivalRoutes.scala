@@ -36,7 +36,7 @@ final class ArrivalRoutes[F[_]: JsonDecoder: MonadThrow](arrivalService: Arrival
         }
         .recoverWith { case error: MemberNotFound.type =>
           logger.error(s"Member not found. Error: ${error}") >>
-            NotFound("Member not found. Please try again")
+            NotFound("A'zo topilmadi. Iltimos, yana bir bor urinib ko'ring.")
         }
 
     case ar @ POST -> Root / "member" as user =>

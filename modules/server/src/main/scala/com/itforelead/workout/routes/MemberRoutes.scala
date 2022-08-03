@@ -66,24 +66,24 @@ final class MemberRoutes[F[_]: Async](members: Members[F], messages: Messages[F]
           response <-
             if (multipart.parts.isFilePartExists) {
               createMember(form).flatMap(Created(_))
-            } else BadRequest("File part isn't defined")
+            } else BadRequest("Fayl aniqlanmagan.")
         } yield response)
           .recoverWith {
             case codeExpiredError: ValidationCodeExpired =>
               logger.error(s"Validation code expired. Error: ${codeExpiredError.phone.value}") >>
-                NotAcceptable("Validation code expired. Please try again")
+                NotAcceptable("Tasdiqlash kodi muddati tugagan. Iltimos, yana bir bor urinib ko'ring.")
             case phoneInUseError: PhoneInUse =>
               logger.error(s"Phone is already in use. Error: ${phoneInUseError.phone.value}") >>
-                NotAcceptable("Phone is already in use. Please try again with other phone number")
+                NotAcceptable("Telefon allaqachon ishlatilmoqda. Boshqa telefon raqami bilan qayta urinib koʻring.")
             case valCodeError: ValidationCodeIncorrect =>
               logger.error(s"Validation code is wrong. Error: ${valCodeError.code.value}") >>
-                NotAcceptable("Validation code is wrong. Please try again")
+                NotAcceptable("Tasdiqlash kodi noto'g'ri. Iltimos, yana bir bor urinib ko'ring")
             case error: MultipartDecodeError =>
               logger.error(s"Error occurred while parse multipart. Error: ${error.cause}") >>
-                BadRequest(s"Bad form data. ${error.cause}")
+                BadRequest(s"Noto'g'ri shakl ma'lumotlari. ${error.cause}")
             case error =>
               logger.error(error)("Error occurred creating member!") >>
-                BadRequest("Error occurred creating member. Please try again!")
+                BadRequest("A'zo yaratishda xatolik yuz berdi. Iltimos, yana bir bor urinib ko'ring!")
           }
       }
   }
