@@ -7,26 +7,29 @@ import com.itforelead.workout.domain.custom.exception.MultipartDecodeError
 import com.itforelead.workout.domain.custom.utils.MapConvert
 import com.itforelead.workout.domain.custom.utils.MapConvert.ValidationResult
 import io.circe.Decoder
-import org.http4s.circe.{JsonDecoder, toMessageSyntax}
+import org.http4s.circe.{ JsonDecoder, toMessageSyntax }
 import org.http4s.dsl.Http4sDsl
 import org.http4s.headers.`Content-Type`
 import org.http4s.multipart.Part
-import org.http4s.{MediaType, Request, Response}
+import org.http4s.{ MediaType, Request, Response }
 
 trait Http4Syntax {
-  implicit def http4SyntaxReqOps[F[_]: JsonDecoder: MonadThrow](request: Request[F]): RequestOps[F] =
+  implicit def http4SyntaxReqOps[F[_]: JsonDecoder: MonadThrow](
+      request: Request[F]
+    ): RequestOps[F] =
     new RequestOps(request)
   implicit def http4SyntaxPartOps[F[_]](parts: Vector[Part[F]]): PartOps[F] =
     new PartOps(parts)
 }
 
-final class RequestOps[F[_]: JsonDecoder: MonadThrow](private val request: Request[F]) extends Http4sDsl[F] {
+final class RequestOps[F[_]: JsonDecoder: MonadThrow](private val request: Request[F])
+    extends Http4sDsl[F] {
   def decodeR[A: Decoder](f: A => F[Response[F]]): F[Response[F]] =
     request.asJsonDecode[A].attempt.flatMap {
       case Left(e) =>
         Option(e.getCause) match {
           case Some(c) if c.getMessage.startsWith("Predicate") => BadRequest(c.getMessage)
-          case _                                               => UnprocessableEntity()
+          case _ => UnprocessableEntity()
         }
       case Right(a) => f(a)
     }
@@ -51,10 +54,8 @@ final class PartOps[F[_]](private val parts: Vector[Part[F]]) {
       }
       entity <- mapper.fromMap(collectKV.toMap)
       validEntity <- entity.fold(
-        error => {
-          F.raiseError[A](MultipartDecodeError(error.toList.mkString(" | ")))
-        },
-        success => success.pure[F]
+        error => F.raiseError[A](MultipartDecodeError(error.toList.mkString(" | "))),
+        success => success.pure[F],
       )
     } yield validEntity
 }

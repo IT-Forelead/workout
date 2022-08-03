@@ -1,10 +1,10 @@
 package com.itforelead.workout.syntax
 
 import cats.effect.Async
-import io.circe.{Decoder, Encoder, HCursor}
+import io.circe.{ Decoder, Encoder, HCursor }
 import io.circe.parser.decode
-import org.http4s.circe.{jsonEncoderOf, jsonOf}
-import org.http4s.{EntityDecoder, EntityEncoder}
+import org.http4s.circe.{ jsonEncoderOf, jsonOf }
+import org.http4s.{ EntityDecoder, EntityEncoder }
 
 trait CirceSyntax {
   implicit def circeSyntaxDecoderOps(s: String): DecoderOps = new DecoderOps(s)
