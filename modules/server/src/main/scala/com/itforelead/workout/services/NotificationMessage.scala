@@ -4,17 +4,17 @@ import cats.effect.Sync
 import cats.implicits._
 import com.itforelead.workout.config.SchedulerConfig
 import com.itforelead.workout.domain.DeliveryStatus.SENT
-import com.itforelead.workout.domain.{DeliveryStatus, Member, Message}
+import com.itforelead.workout.domain.{ DeliveryStatus, Member, Message }
 import com.itforelead.workout.domain.Message.CreateMessage
 import com.itforelead.workout.domain.MessageType.REMINDER
 import com.itforelead.workout.domain.custom.refinements.Tel
-import com.itforelead.workout.domain.types.{FirstName, MemberId, MessageText, UserId}
+import com.itforelead.workout.domain.types.{ FirstName, MemberId, MessageText, UserId }
 import com.itforelead.workout.effects.Background
 import eu.timepit.refined.types.string.NonEmptyString
 import org.typelevel.log4cats.Logger
 
-import java.time.{LocalDateTime, LocalTime}
-import scala.concurrent.duration.{DurationInt, FiniteDuration}
+import java.time.{ LocalDateTime, LocalTime }
+import scala.concurrent.duration.{ DurationInt, FiniteDuration }
 
 trait NotificationMessage[F[_]] {
   def start: F[Unit]
@@ -22,30 +22,30 @@ trait NotificationMessage[F[_]] {
 
 object NotificationMessage {
   def make[F[_]: Sync: Logger: Background](
-    members: Members[F],
-    messages: Messages[F],
-    messageBroker: MessageBroker[F],
-    schedulerConfig: SchedulerConfig
-  ): NotificationMessage[F] =
+      members: Members[F],
+      messages: Messages[F],
+      messageBroker: MessageBroker[F],
+      schedulerConfig: SchedulerConfig,
+    ): NotificationMessage[F] =
     new NotificationMessage[F] {
-
       private val fixedTime: FiniteDuration = {
         val now = schedulerConfig.startTime.toSecondOfDay - LocalTime.now.toSecondOfDay
         if (now <= 0) 1.minute else now.seconds
       }
 
       override def start: F[Unit] =
-        Logger[F].debug(Console.GREEN + s"NotificationMessage will start after $fixedTime" + Console.RESET) >>
+        Logger[F].debug(
+          Console.GREEN + s"NotificationMessage will start after $fixedTime" + Console.RESET
+        ) >>
           Background[F].schedule(startSendExpireDate, fixedTime, schedulerConfig.period)
 
       private def startSendExpireDate: F[Unit] = {
-        def text(firstName: FirstName): NonEmptyString = {
+        def text(firstName: FirstName): NonEmptyString =
           NonEmptyString.unsafeFrom(
             s"Assalomu alaykum ${firstName}. Sizning to'lov vaqtingiz tugashiga 3 kun qoldi."
           )
-        }
         for {
-          membersList   <- members.findActiveTimeShort
+          membersList <- members.findActiveTimeShort
           sentTodayList <- messages.sentSMSTodayMemberIds
           _ <- membersList
             .filterNot { member =>
@@ -59,15 +59,20 @@ object NotificationMessage {
         } yield ()
       }
 
-      private def createMessage(userId: UserId, memberId: MemberId, phone: Tel, text: NonEmptyString): F[Message] = {
+      private def createMessage(userId: UserId, memberId: MemberId, phone: Tel, text: NonEmptyString,
+        ): F[Message] =
         Sync[F].delay(LocalDateTime.now()).flatMap { now =>
-          messages.create(CreateMessage(userId, memberId.some, phone, MessageText(text), now, REMINDER, SENT))
+          messages.create(
+            CreateMessage(userId, memberId.some, phone, MessageText(text), now, REMINDER, SENT)
+          )
         }
-      }
 
-      private def send(member: Member, text: String, message: Message): F[Unit] =
+      private def send(
+          member: Member,
+          text: String,
+          message: Message,
+        ): F[Unit] =
         messages.changeStatus(message.id, status = DeliveryStatus.DELIVERED) >>
           messageBroker.send(message.id, member.phone, text)
-
     }
 }

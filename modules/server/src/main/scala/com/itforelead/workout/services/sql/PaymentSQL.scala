@@ -1,12 +1,12 @@
 package com.itforelead.workout.services.sql
 
-import com.itforelead.workout.domain.{Payment, PaymentType}
-import com.itforelead.workout.domain.Payment.{PaymentFilter, PaymentWithMember}
-import com.itforelead.workout.domain.types.{MemberId, PaymentId, UserId}
+import com.itforelead.workout.domain.{ Payment, PaymentType }
+import com.itforelead.workout.domain.Payment.{ PaymentFilter, PaymentWithMember }
+import com.itforelead.workout.domain.types.{ MemberId, PaymentId, UserId }
 import com.itforelead.workout.services.sql.MemberSQL.memberId
 import com.itforelead.workout.services.sql.UserSQL.userId
 import skunk._
-import skunk.codec.all.{bool, int8, timestamp}
+import skunk.codec.all.{ bool, int8, timestamp }
 import skunk.implicits._
 
 import java.time.LocalDateTime
@@ -18,16 +18,20 @@ object PaymentSQL {
     paymentId ~ UserSQL.userId ~ MemberSQL.memberId ~ paymentType ~ price ~ timestamp ~ bool
 
   val encoder: Encoder[Payment] =
-    Columns.contramap { p => p.id ~ p.userId ~ p.memberId ~ p.paymentType ~ p.cost ~ p.createdAt ~ false }
+    Columns.contramap { p =>
+      p.id ~ p.userId ~ p.memberId ~ p.paymentType ~ p.cost ~ p.createdAt ~ false
+    }
 
   val decoder: Decoder[Payment] =
-    Columns.map { case i ~ ui ~ mi ~ pt ~ c ~ ca ~ _ =>
-      Payment(i, ui, mi, pt, c, ca)
+    Columns.map {
+      case i ~ ui ~ mi ~ pt ~ c ~ ca ~ _ =>
+        Payment(i, ui, mi, pt, c, ca)
     }
 
   val decPaymentWithMember: Decoder[PaymentWithMember] =
-    (decoder ~ MemberSQL.decoder).map { case payment ~ member =>
-      PaymentWithMember(payment, member)
+    (decoder ~ MemberSQL.decoder).map {
+      case payment ~ member =>
+        PaymentWithMember(payment, member)
     }
 
   def typeFilter: Option[PaymentType] => Option[AppliedFragment] =
@@ -39,7 +43,11 @@ object PaymentSQL {
   def endTimeFilter: Option[LocalDateTime] => Option[AppliedFragment] =
     _.map(sql"payments.created_at <= $timestamp")
 
-  def selectPaymentWithTotal(id: UserId, params: PaymentFilter, page: Int): AppliedFragment = {
+  def selectPaymentWithTotal(
+      id: UserId,
+      params: PaymentFilter,
+      page: Int,
+    ): AppliedFragment = {
     val base: Fragment[UserId] = sql"""SELECT payments.*, members.* FROM payments
            LEFT JOIN members ON members.id = payments.member_id
            WHERE payments.user_id = $userId
@@ -49,7 +57,7 @@ object PaymentSQL {
       List(
         typeFilter(params.typeBy),
         startTimeFilter(params.filterDateFrom),
-        endTimeFilter(params.filterDateTo)
+        endTimeFilter(params.filterDateTo),
       ).flatMap(_.toList)
 
     val filter: AppliedFragment =
@@ -66,7 +74,7 @@ object PaymentSQL {
       List(
         typeFilter(params.typeBy),
         startTimeFilter(params.filterDateFrom),
-        endTimeFilter(params.filterDateTo)
+        endTimeFilter(params.filterDateTo),
       ).flatMap(_.toList)
 
     base(id).andOpt(filters)
@@ -86,5 +94,4 @@ object PaymentSQL {
     sql"""SELECT * FROM payments
          WHERE user_id = $userId AND member_id = $memberId AND deleted = false
          ORDER BY created_at DESC""".query(decoder)
-
 }

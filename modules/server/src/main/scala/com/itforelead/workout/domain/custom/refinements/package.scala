@@ -1,21 +1,22 @@
 package com.itforelead.workout.domain.custom
 
-import eu.timepit.refined.api.{Refined, RefinedTypeOps}
-import eu.timepit.refined.boolean.{And, Not}
+import eu.timepit.refined.api.{ Refined, RefinedTypeOps }
+import eu.timepit.refined.boolean.{ And, Not }
 import eu.timepit.refined.collection.NonEmpty
-import eu.timepit.refined.numeric.{Interval, Negative}
-import eu.timepit.refined.string.{MatchesRegex, Uri, Url}
+import eu.timepit.refined.numeric.{ Interval, Negative }
+import eu.timepit.refined.string.{ MatchesRegex, Uri, Url }
 
 package object refinements {
-  private type EmailPred          = MatchesRegex["^[a-zA-Z0-9.-_]+@[a-zA-Z0-9]+\\.[a-zA-Z]+$"]
-  private type PasswordPred       = MatchesRegex["^(?=.*[0-9])(?=.*[!@#$%^&*])(?=.*[A-Z])[a-zA-Z0-9!@#$%^&*]{6,32}$"]
-  private type FileNamePred       = MatchesRegex["^[\\w,\\s-]+\\.+(png|jpg|jpeg|bmp|webp)"]
-  private type TelNumberPred      = MatchesRegex["^[+][0-9]{12}$"]
+  private type EmailPred = MatchesRegex["^[a-zA-Z0-9.-_]+@[a-zA-Z0-9]+\\.[a-zA-Z]+$"]
+  private type PasswordPred =
+    MatchesRegex["^(?=.*[0-9])(?=.*[!@#$%^&*])(?=.*[A-Z])[a-zA-Z0-9!@#$%^&*]{6,32}$"]
+  private type FileNamePred = MatchesRegex["^[\\w,\\s-]+\\.+(png|jpg|jpeg|bmp|webp)"]
+  private type TelNumberPred = MatchesRegex["^[+][0-9]{12}$"]
   private type ValidationCodePred = MatchesRegex["^[0-9]{4}$"]
-  private type BucketPred         = MatchesRegex["^[a-z0-9/.-]{3,63}$"]
-  private type FilePathPred       = MatchesRegex["[a-z0-9-]+\\.+(png|jpg|jpeg|bmp|webp)"]
-  private type FileKeyPred        = MatchesRegex["[a-z0-9-]+\\.+(png|jpg|jpeg|bmp|webp)"]
-  private type ProductRatingPred  = Interval.Closed[1, 5] And Not[Negative]
+  private type BucketPred = MatchesRegex["^[a-z0-9/.-]{3,63}$"]
+  private type FilePathPred = MatchesRegex["[a-z0-9-]+\\.+(png|jpg|jpeg|bmp|webp)"]
+  private type FileKeyPred = MatchesRegex["[a-z0-9-]+\\.+(png|jpg|jpeg|bmp|webp)"]
+  private type ProductRatingPred = Interval.Closed[1, 5] And Not[Negative]
 
   type EmailAddress = String Refined EmailPred
   object EmailAddress extends RefinedTypeOps[EmailAddress, String]
@@ -55,5 +56,4 @@ package object refinements {
 
   type FileKey = String Refined (NonEmpty And FileKeyPred)
   object FileKey extends RefinedTypeOps[FileKey, String]
-
 }

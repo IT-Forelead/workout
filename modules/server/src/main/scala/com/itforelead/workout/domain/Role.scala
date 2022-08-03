@@ -1,12 +1,12 @@
 package com.itforelead.workout.domain
 
 import cats.Show
-import io.circe.{Decoder, Encoder}
+import io.circe.{ Decoder, Encoder }
 
 sealed abstract class Role(val value: String)
 
 object Role {
-  case object ADMIN  extends Role("admin")
+  case object ADMIN extends Role("admin")
   case object CLIENT extends Role("client")
 
   val roles: List[Role] = List(ADMIN, CLIENT)
@@ -19,6 +19,5 @@ object Role {
 
   implicit val encStatus: Encoder[Role] = Encoder.encodeString.contramap[Role](_.value)
   implicit val decStatus: Decoder[Role] = Decoder.decodeString.map(unsafeFrom)
-  implicit val show: Show[Role]         = Show.show(_.value)
-
+  implicit val show: Show[Role] = Show.show(_.value)
 }

@@ -1,12 +1,12 @@
 package com.itforelead.workout.services.sql
 
-import com.itforelead.workout.domain.{Arrival, ArrivalType}
-import com.itforelead.workout.domain.Arrival.{ArrivalFilter, ArrivalWithMember}
+import com.itforelead.workout.domain.{ Arrival, ArrivalType }
+import com.itforelead.workout.domain.Arrival.{ ArrivalFilter, ArrivalWithMember }
 import com.itforelead.workout.domain.types._
 import com.itforelead.workout.services.sql.MemberSQL.memberId
 import com.itforelead.workout.services.sql.UserSQL.userId
 import skunk._
-import skunk.codec.all.{bool, int8, timestamp}
+import skunk.codec.all.{ bool, int8, timestamp }
 import skunk.implicits._
 
 import java.time.LocalDateTime
@@ -20,13 +20,15 @@ object ArrivalSQL {
     Columns.contramap(a => a.id ~ a.userId ~ a.memberId ~ a.createdAt ~ a.arrivalType ~ false)
 
   val decoder: Decoder[Arrival] =
-    Columns.map { case id ~ userId ~ memberId ~ createdAt ~ arrivalType ~ _ =>
-      Arrival(id, userId, memberId, createdAt, arrivalType)
+    Columns.map {
+      case id ~ userId ~ memberId ~ createdAt ~ arrivalType ~ _ =>
+        Arrival(id, userId, memberId, createdAt, arrivalType)
     }
 
   val decArrivalWithMember: Decoder[ArrivalWithMember] =
-    (decoder ~ MemberSQL.decoder).map { case arrival ~ member =>
-      ArrivalWithMember(arrival, member)
+    (decoder ~ MemberSQL.decoder).map {
+      case arrival ~ member =>
+        ArrivalWithMember(arrival, member)
     }
 
   def typeFilter: Option[ArrivalType] => Option[AppliedFragment] =
@@ -38,7 +40,11 @@ object ArrivalSQL {
   def endTimeFilter: Option[LocalDateTime] => Option[AppliedFragment] =
     _.map(sql"arrival_event.created_at <= $timestamp")
 
-  def selectArrivalWithTotal(id: UserId, params: ArrivalFilter, page: Int): AppliedFragment = {
+  def selectArrivalWithTotal(
+      id: UserId,
+      params: ArrivalFilter,
+      page: Int,
+    ): AppliedFragment = {
     val base: Fragment[UserId] = sql"""SELECT arrival_event.*, members.* FROM arrival_event
           INNER JOIN members ON members.id = arrival_event.member_id
           WHERE arrival_event.user_id = $userId AND arrival_event.deleted = false
@@ -48,7 +54,7 @@ object ArrivalSQL {
       List(
         typeFilter(params.typeBy),
         startTimeFilter(params.filterDateFrom),
-        endTimeFilter(params.filterDateTo)
+        endTimeFilter(params.filterDateTo),
       ).flatMap(_.toList)
 
     val filter: AppliedFragment =
@@ -65,14 +71,16 @@ object ArrivalSQL {
       List(
         typeFilter(params.typeBy),
         startTimeFilter(params.filterDateFrom),
-        endTimeFilter(params.filterDateTo)
+        endTimeFilter(params.filterDateTo),
       ).flatMap(_.toList)
 
     base(id).andOpt(filters)
   }
 
   val total: Query[UserId, Long] =
-    sql"""SELECT count(*) FROM arrival_event WHERE user_id = $userId AND deleted = false""".query(int8)
+    sql"""SELECT count(*) FROM arrival_event WHERE user_id = $userId AND deleted = false""".query(
+      int8
+    )
 
   val selectSql: Query[UserId, ArrivalWithMember] =
     sql"""SELECT arrival_event.*, members.* FROM arrival_event
@@ -87,5 +95,4 @@ object ArrivalSQL {
     sql"""SELECT * FROM arrival_event
          WHERE user_id = $userId AND member_id = $memberId AND deleted = false
          ORDER BY created_at DESC""".query(decoder)
-
 }

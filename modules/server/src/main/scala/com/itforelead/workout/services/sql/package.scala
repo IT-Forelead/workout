@@ -1,8 +1,9 @@
 package com.itforelead.workout.services
 
 import cats.implicits._
-import com.itforelead.workout.domain.{ArrivalType, DeliveryStatus, MemberFilterBy, MessageType, PaymentType, Role}
-import com.itforelead.workout.domain.custom.refinements.{FileKey, Tel}
+import com.itforelead.workout.domain.{ArrivalType, DeliveryStatus, MemberFilterBy, MessageType, PaymentType, Role,
+}
+import com.itforelead.workout.domain.custom.refinements.{ FileKey, Tel }
 import com.itforelead.workout.domain.types._
 import com.itforelead.workout.types.IsUUID
 import skunk._
@@ -19,7 +20,6 @@ import squants.Money
 import java.time.LocalDateTime
 
 package object sql {
-
   def identity[A: IsUUID]: Codec[A] = uuid.imap[A](IsUUID[A]._UUID.get)(IsUUID[A]._UUID.apply)
 
   val nes: Codec[NonEmptyString] = varchar.imap[NonEmptyString](NonEmptyString.unsafeFrom)(_.value)
@@ -32,11 +32,13 @@ package object sql {
 
   val gymName: Codec[GymName] = nes.imap[GymName](GymName.apply)(_.value)
 
-  val passwordHash: Codec[PasswordHash[SCrypt]] = varchar.imap[PasswordHash[SCrypt]](PasswordHash[SCrypt])(_.toString)
+  val passwordHash: Codec[PasswordHash[SCrypt]] =
+    varchar.imap[PasswordHash[SCrypt]](PasswordHash[SCrypt])(_.toString)
 
   val tel: Codec[Tel] = varchar.imap[Tel](Tel.unsafeFrom)(_.value)
 
-  val paymentType: Codec[PaymentType] = `enum`[PaymentType](_.value, PaymentType.find, Type("payment_type"))
+  val paymentType: Codec[PaymentType] =
+    `enum`[PaymentType](_.value, PaymentType.find, Type("payment_type"))
 
   val deliveryStatus: Codec[DeliveryStatus] =
     `enum`[DeliveryStatus](_.value, DeliveryStatus.find, Type("delivery_status"))
@@ -48,14 +50,15 @@ package object sql {
 
   val price: Codec[Money] = numeric.imap[Money](money => UZS(money))(_.amount)
 
-  val fileKey: Codec[FileKey] = varchar.imap[FileKey](fileKey => FileKey.unsafeFrom(fileKey))(_.value)
+  val fileKey: Codec[FileKey] =
+    varchar.imap[FileKey](fileKey => FileKey.unsafeFrom(fileKey))(_.value)
 
   val arrivalType: Codec[ArrivalType] =
     `enum`[ArrivalType](_.value, ArrivalType.find, Type("arrival_type"))
 
   final implicit class FragmentOps(af: AppliedFragment) {
     def paginate(lim: Int, index: Int): AppliedFragment = {
-      val offset                      = (index - 1) * lim
+      val offset = (index - 1) * lim
       val filter: Fragment[Int ~ Int] = sql" LIMIT $int4 OFFSET $int4 "
       af |+| filter(lim ~ offset)
     }
@@ -78,7 +81,5 @@ package object sql {
           fs.foldSmash(void" AND ", void" AND ", AppliedFragment.empty)
       af |+| filters
     }
-
   }
-
 }

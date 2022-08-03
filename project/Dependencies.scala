@@ -25,6 +25,7 @@ object Dependencies {
     val squants       = "1.8.3"
     val catsRetry     = "3.1.0"
     val guava         = "31.0.1-jre"
+    val mailer        = "1.4.7"
 
     val weaver        = "0.7.11"
     val testContainer = "1.17.1"
@@ -75,9 +76,9 @@ object Dependencies {
     val refinedCats = refined("refined-cats")
     val squants     = "org.typelevel" %% "squants" % Versions.squants
 
-    val redis4catsEffects  = "dev.profunktor" %% "redis4cats-effects"  % Versions.redis4cats
-    val redis4catsLog4cats = "dev.profunktor" %% "redis4cats-log4cats" % Versions.redis4cats
-    val guava              = "com.google.guava"       % "guava"               % Versions.guava
+    val redis4catsEffects  = "dev.profunktor"  %% "redis4cats-effects"  % Versions.redis4cats
+    val redis4catsLog4cats = "dev.profunktor"  %% "redis4cats-log4cats" % Versions.redis4cats
+    val guava              = "com.google.guava" % "guava"               % Versions.guava
 
     val http4sJwtAuth  = "dev.profunktor"     %% "http4s-jwt-auth" % Versions.http4sJwtAuth
     val catsRetry      = "com.github.cb372"   %% "cats-retry"      % Versions.catsRetry
@@ -89,6 +90,8 @@ object Dependencies {
     val log4cats       = "org.typelevel"      %% "log4cats-slf4j"  % Versions.log4cats
     val logback        = "ch.qos.logback"      % "logback-classic" % Versions.logback
     val monocleCore    = "dev.optics"         %% "monocle-core"    % Versions.monocle
+    val mailer         = "javax.mail"          % "mail"            % Versions.mailer
+
     // Test
     val log4catsNoOp      = "org.typelevel"       %% "log4cats-noop"      % Versions.log4cats
     val refinedScalacheck = "eu.timepit"          %% "refined-scalacheck" % Versions.refined
@@ -128,7 +131,8 @@ object Dependencies {
         http4sJwtAuth,
         newtype,
         monocleCore,
-        squants
+        squants,
+        mailer
       )
 
   val testLibraries: Seq[ModuleID] = s3Libraries ++ Seq(

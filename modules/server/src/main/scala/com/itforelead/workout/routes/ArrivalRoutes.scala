@@ -1,22 +1,24 @@
 package com.itforelead.workout.routes
 
 import cats.MonadThrow
-import com.itforelead.workout.domain.Arrival.{ArrivalFilter, ArrivalMemberId, CreateArrival}
-import cats.implicits.{catsSyntaxApplicativeError, catsSyntaxFlatMapOps, toFlatMapOps}
+import com.itforelead.workout.domain.Arrival.{ ArrivalFilter, ArrivalMemberId, CreateArrival }
+import cats.implicits.{ catsSyntaxApplicativeError, catsSyntaxFlatMapOps, toFlatMapOps }
 import com.itforelead.workout.domain.User
+import com.itforelead.workout.implicits.http4SyntaxReqOps
 import com.itforelead.workout.domain.custom.exception.MemberNotFound
 import com.itforelead.workout.services.ArrivalService
 import org.http4s._
 import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
 import org.http4s.circe.JsonDecoder
 import org.http4s.dsl.Http4sDsl
-import org.http4s.server.{AuthMiddleware, Router}
+import org.http4s.server.{ AuthMiddleware, Router }
 import org.typelevel.log4cats.Logger
 
-final class ArrivalRoutes[F[_]: JsonDecoder: MonadThrow](arrivalService: ArrivalService[F])(implicit
-  logger: Logger[F]
-) extends Http4sDsl[F] {
-
+final class ArrivalRoutes[F[_]: JsonDecoder: MonadThrow](
+    arrivalService: ArrivalService[F]
+  )(implicit
+    logger: Logger[F]
+  ) extends Http4sDsl[F] {
   private[routes] val prefixPath = "/arrival"
 
   private[this] val httpRoutes: AuthedRoutes[User, F] = AuthedRoutes.of {
@@ -34,9 +36,10 @@ final class ArrivalRoutes[F[_]: JsonDecoder: MonadThrow](arrivalService: Arrival
         .decodeR[CreateArrival] { form =>
           arrivalService.create(user.id, form).flatMap(Created(_))
         }
-        .recoverWith { case error: MemberNotFound.type =>
-          logger.error(s"Member not found. Error: ${error}") >>
-            NotFound("A'zo topilmadi. Iltimos, yana bir bor urinib ko'ring.")
+        .recoverWith {
+          case error: MemberNotFound.type =>
+            logger.error(s"Member not found. Error: ${error}") >>
+              NotFound("A'zo topilmadi. Iltimos, yana bir bor urinib ko'ring.")
         }
 
     case ar @ POST -> Root / "member" as user =>
@@ -49,5 +52,4 @@ final class ArrivalRoutes[F[_]: JsonDecoder: MonadThrow](arrivalService: Arrival
   def routes(authMiddleware: AuthMiddleware[F, User]): HttpRoutes[F] = Router(
     prefixPath -> authMiddleware(httpRoutes)
   )
-
 }

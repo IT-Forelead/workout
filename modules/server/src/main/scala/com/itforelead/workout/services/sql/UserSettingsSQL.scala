@@ -7,7 +7,6 @@ import skunk._
 import skunk.implicits._
 
 object UserSettingsSQL {
-
   private val Columns = userId ~ gymName ~ price ~ price
 
   val encoder: Encoder[UserSetting] =
@@ -16,8 +15,9 @@ object UserSettingsSQL {
     }
 
   val decoder: Decoder[UserSetting] =
-    Columns.map { case ui ~ gn ~ dp ~ mp =>
-      UserSetting(ui, gn, dp, mp)
+    Columns.map {
+      case ui ~ gn ~ dp ~ mp =>
+        UserSetting(ui, gn, dp, mp)
     }
 
   val insertSettings: Query[UserSetting, UserSetting] =

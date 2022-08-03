@@ -3,7 +3,7 @@ package uz.tokens
 import cats.effect._
 import dev.profunktor.auth.jwt._
 import io.circe.Decoder
-import io.circe.parser.{decode => jsonDecode}
+import io.circe.parser.{ decode => jsonDecode }
 import io.estatico.newtype.macros._
 import pdi.jwt._
 import pdi.jwt.algorithms.JwtHmacAlgorithm
@@ -47,7 +47,6 @@ class TokenGenerator extends IOApp {
       c <- decodeToken(t)
       _ <- putStrLn(c)
     } yield ExitCode.Success
-
 }
 
 object data {

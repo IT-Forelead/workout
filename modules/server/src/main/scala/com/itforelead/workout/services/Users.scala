@@ -6,16 +6,17 @@ import cats.syntax.all._
 import com.itforelead.workout.config.ConfigLoader.messageBroker
 import com.itforelead.workout.domain.Message.CreateMessage
 import com.itforelead.workout.domain.MessageType.ACTIVATION
-import com.itforelead.workout.domain.User.{CreateClient, UserActivate, UserFilter, UserWithPassword, UserWithTotal}
+import com.itforelead.workout.domain.User.{CreateClient, UserActivate, UserFilter, UserWithPassword, UserWithTotal,}
 import com.itforelead.workout.domain.custom.exception.{
   AdminNotFound,
   PhoneInUse,
   ValidationCodeExpired,
   ValidationCodeIncorrect
+,
 }
 import com.itforelead.workout.domain.custom.refinements.Tel
 import com.itforelead.workout.domain.types.{MessageText, UserId}
-import com.itforelead.workout.domain.{DeliveryStatus, ID, User, UserSetting}
+import com.itforelead.workout.domain.{ DeliveryStatus, ID, User, UserSetting}
 import com.itforelead.workout.effects.GenUUID
 import com.itforelead.workout.services.redis.RedisClient
 import com.itforelead.workout.services.sql.UserSQL
@@ -37,15 +38,16 @@ trait Users[F[_]] {
 }
 
 object Users {
-
-  def apply[F[_]: GenUUID: Sync](redis: RedisClient[F])(implicit
-    session: Resource[F, Session[F]]
-  ): Users[F] =
+  def apply[F[_]: GenUUID: Sync](
+      redis: RedisClient[F]
+    )(implicit
+      session: Resource[F, Session[F]]
+    ): Users[F] =
     new Users[F] with SkunkHelper[F] {
-
       def find(phoneNumber: Tel): F[Option[UserWithPassword]] =
-        OptionT(prepOptQuery(selectUser, phoneNumber)).map { case user ~ p =>
-          UserWithPassword(user, p)
+        OptionT(prepOptQuery(selectUser, phoneNumber)).map {
+          case user ~ p =>
+            UserWithPassword(user, p)
         }.value
 
       def create(userParam: CreateClient, password: PasswordHash[SCrypt]): F[User] =
@@ -58,11 +60,17 @@ object Users {
             .whenF(code == userParam.code.value)(
               OptionT(find(userParam.phone))
                 .semiflatMap(_ => PhoneInUse(userParam.phone).raiseError[F, User])
-                .getOrElseF(prepQueryUnique(insertUser, id ~ userParam ~ password).flatMap { case (user, _) =>
-                  prepQueryUnique(
-                    insertSettings,
-                    UserSetting(user.id, userParam.gymName, userParam.dailyPrice, userParam.monthlyPrice)
-                  ).as(user).flatTap(a => redis.del(a.phone.value))
+                .getOrElseF(prepQueryUnique(insertUser, id ~ userParam ~ password).flatMap {
+                  case (user, _) =>
+                    prepQueryUnique(
+                      insertSettings,
+                      UserSetting(
+                        user.id,
+                        userParam.gymName,
+                        userParam.dailyPrice,
+                        userParam.monthlyPrice,
+                      ),
+                    ).as(user).flatTap(a => redis.del(a.phone.value))
                 })
             )
             .getOrElseF {
@@ -72,9 +80,9 @@ object Users {
 
       def getClients(filter: UserFilter, page: Int): F[UserWithTotal] =
         for {
-          fr      <- selectClientsFilter(filter.typeBy, filter.sortBy, page).pure[F]
+          fr <- selectClientsFilter(filter.typeBy, filter.sortBy, page).pure[F]
           clients <- prepQueryList(fr.fragment.query(UserSQL.decUserWithSetting), fr.argument)
-          total   <- prepQueryUnique(total, filter.sortBy)
+          total <- prepQueryUnique(total, filter.sortBy)
         } yield UserWithTotal(clients, total)
 
       override def findAdmin: F[List[User]] =
@@ -82,6 +90,5 @@ object Users {
 
       override def userActivate(userActivate: UserActivate): F[User] =
         prepQueryUnique(changeActivateSql, userActivate.userId)
-
     }
 }
