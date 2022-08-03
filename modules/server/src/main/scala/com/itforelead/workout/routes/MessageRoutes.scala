@@ -3,15 +3,14 @@ package com.itforelead.workout.routes
 import cats.effect.Async
 import cats.implicits._
 import com.itforelead.workout.domain.Message.MessagesFilter
-import com.itforelead.workout.domain.{User, Validation}
+import com.itforelead.workout.domain.{ User, Validation }
 import com.itforelead.workout.services.Messages
 import com.itforelead.workout.implicits._
 import org.http4s._
 import org.http4s.dsl.Http4sDsl
-import org.http4s.server.{AuthMiddleware, Router}
+import org.http4s.server.{ AuthMiddleware, Router }
 
 final class MessageRoutes[F[_]: Async](messages: Messages[F]) extends Http4sDsl[F] {
-
   private[routes] val prefixPath = "/message"
 
   private[this] val privateRoutes: AuthedRoutes[User, F] = AuthedRoutes.of {
@@ -31,15 +30,15 @@ final class MessageRoutes[F[_]: Async](messages: Messages[F]) extends Http4sDsl[
 
   }
 
-  private val publicRoutes: HttpRoutes[F] = HttpRoutes.of[F] { case req @ POST -> Root / "public" / "sent-code" =>
-    req.decodeR[Validation] { validationPhone =>
-      messages.sendValidationCode(phone = validationPhone.phone).flatMap(Ok(_))
-    }
+  private val publicRoutes: HttpRoutes[F] = HttpRoutes.of[F] {
+    case req @ POST -> Root / "public" / "sent-code" =>
+      req.decodeR[Validation] { validationPhone =>
+        messages.sendValidationCode(phone = validationPhone.phone).flatMap(Ok(_))
+      }
 
   }
 
   def routes(authMiddleware: AuthMiddleware[F, User]): HttpRoutes[F] = Router(
     prefixPath -> (publicRoutes <+> authMiddleware(privateRoutes))
   )
-
 }

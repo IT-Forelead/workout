@@ -8,7 +8,11 @@ import cats.syntax.all._
 
 trait Background[F[_]] {
   def scheduleOnce[A](fa: F[A], duration: FiniteDuration): F[Unit]
-  def schedule[A](fa: F[A], duration: FiniteDuration, interval: FiniteDuration): F[Unit]
+  def schedule[A](
+      fa: F[A],
+      duration: FiniteDuration,
+      interval: FiniteDuration,
+    ): F[Unit]
 }
 
 object Background {
@@ -22,7 +26,11 @@ object Background {
       def scheduleOnce[A](fa: F[A], delay: FiniteDuration): F[Unit] =
         S.supervise(T.delayBy(fa, delay)).void
 
-      def schedule[A](fa: F[A], delay: FiniteDuration, interval: FiniteDuration): F[Unit] =
+      def schedule[A](
+          fa: F[A],
+          delay: FiniteDuration,
+          interval: FiniteDuration,
+        ): F[Unit] =
         scheduleOnce(fa >> retry(interval, fa), delay)
     }
 }

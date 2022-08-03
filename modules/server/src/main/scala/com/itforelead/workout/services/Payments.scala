@@ -21,17 +21,21 @@ import java.time.LocalDateTime
 trait Payments[F[_]] {
   def payments(userId: UserId): F[List[PaymentWithMember]]
   def getPaymentByMemberId(userId: UserId, memberId: MemberId): F[List[Payment]]
-  def getPaymentsWithTotal(userId: UserId, filter: PaymentFilter, page: Int): F[PaymentWithTotal]
+  def getPaymentsWithTotal(
+    userId: UserId,
+    filter: PaymentFilter,
+    page: Int
+  ): F[PaymentWithTotal]
   def create(userId: UserId, payment: CreatePayment): F[Payment]
 }
 
 object Payments {
-
   def apply[F[_]: GenUUID: Sync](
     userSettings: UserSettings[F],
     members: Members[F]
-  )(implicit session: Resource[F, Session[F]]): Payments[F] = new Payments[F] with SkunkHelper[F] {
-
+  )(implicit
+    session: Resource[F, Session[F]]
+  ): Payments[F] = new Payments[F] with SkunkHelper[F] {
     override def create(userId: UserId, payment: CreatePayment): F[Payment] = {
       def createPay(payment: CreatePayment, activeTime: LocalDateTime): F[Payment] =
         for {
@@ -60,26 +64,31 @@ object Payments {
         .cataF(
           MemberNotFound.raiseError[F, Payment],
           member =>
-            Sync[F].delay(LocalDateTime.now()).flatMap { now =>
-              if (now.isAfter(member.activeTime)) {
-                payment.paymentType match {
-                  case MONTHLY => createPay(payment, now.plusMonths(1).endOfDay)
-                  case DAILY   => createPay(payment, now.endOfDay)
-                }
-              } else {
-                payment.paymentType match {
-                  case MONTHLY => createPay(payment, member.activeTime.plusMonths(1).endOfDay)
-                  case DAILY   => CreatePaymentDailyTypeError.raiseError[F, Payment]
-                }
-              }
-            }
+            Sync[F]
+              .delay(LocalDateTime.now())
+              .flatMap { now =>
+                if (now.isAfter(member.activeTime))
+                  payment.paymentType match {
+                    case MONTHLY => createPay(payment, now.plusMonths(1).endOfDay)
+                    case DAILY   => createPay(payment, now.endOfDay)
+                  }
+                else
+                  payment.paymentType match {
+                    case MONTHLY => createPay(payment, member.activeTime.plusMonths(1).endOfDay)
+                    case DAILY   => CreatePaymentDailyTypeError.raiseError[F, Payment]
+                  }
+              },
         )
     }
 
     override def payments(userId: UserId): F[List[PaymentWithMember]] =
       prepQueryList(selectAll, userId)
 
-    override def getPaymentsWithTotal(userId: UserId, filter: PaymentFilter, page: Int): F[PaymentWithTotal] =
+    override def getPaymentsWithTotal(
+      userId: UserId,
+      filter: PaymentFilter,
+      page: Int
+    ): F[PaymentWithTotal] =
       for {
         fr       <- selectPaymentWithTotal(userId, filter, page).pure[F]
         t        <- total(userId, filter).pure[F]
@@ -89,6 +98,5 @@ object Payments {
 
     override def getPaymentByMemberId(userId: UserId, memberId: MemberId): F[List[Payment]] =
       prepQueryList(selectPaymentByMemberId, userId ~ memberId)
-
   }
 }

@@ -17,10 +17,11 @@ import com.itforelead.workout.domain.custom.exception._
 import com.itforelead.workout.domain.tokenCodec
 import org.typelevel.log4cats.Logger
 
-final case class AuthRoutes[F[_]: Monad: JsonDecoder: MonadThrow](auth: Auth[F])(implicit
+final case class AuthRoutes[F[_]: Monad: JsonDecoder: MonadThrow](
+  auth: Auth[F]
+)(implicit
   logger: Logger[F]
 ) extends Http4sDsl[F] {
-
   private[routes] val prefixPath = "/auth"
 
   private val publicRoutes: HttpRoutes[F] = HttpRoutes.of[F] {
@@ -69,5 +70,4 @@ final case class AuthRoutes[F[_]: Monad: JsonDecoder: MonadThrow](auth: Auth[F])
   def routes(authMiddleware: AuthMiddleware[F, User]): HttpRoutes[F] = Router(
     prefixPath -> (publicRoutes <+> authMiddleware(privateRoutes))
   )
-
 }

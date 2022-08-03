@@ -17,10 +17,13 @@ import org.http4s.multipart.Multipart
 import org.http4s.server.{AuthMiddleware, Router}
 import org.typelevel.log4cats.Logger
 
-final class MemberRoutes[F[_]: Async](members: Members[F], messages: Messages[F], s3Client: S3Client[F])(implicit
+final class MemberRoutes[F[_]: Async](
+  members: Members[F],
+  messages: Messages[F],
+  s3Client: S3Client[F]
+)(implicit
   logger: Logger[F]
 ) extends Http4sDsl[F] {
-
   private[routes] val prefixPath = "/member"
 
   private def uploadToS3(filename: FileName): fs2.Pipe[F, Byte, FileKey] = body =>
@@ -64,9 +67,9 @@ final class MemberRoutes[F[_]: Async](members: Members[F], messages: Messages[F]
         (for {
           form <- multipart.parts.convert[CreateMember]
           response <-
-            if (multipart.parts.isFilePartExists) {
+            if (multipart.parts.isFilePartExists)
               createMember(form).flatMap(Created(_))
-            } else BadRequest("File part isn't defined")
+            else BadRequest("File part isn't defined")
         } yield response)
           .recoverWith {
             case codeExpiredError: ValidationCodeExpired =>
@@ -104,5 +107,4 @@ final class MemberRoutes[F[_]: Async](members: Members[F], messages: Messages[F]
   def routes(authMiddleware: AuthMiddleware[F, User]): HttpRoutes[F] = Router(
     prefixPath -> (publicRoutes <+> authMiddleware(privateRoutes))
   )
-
 }

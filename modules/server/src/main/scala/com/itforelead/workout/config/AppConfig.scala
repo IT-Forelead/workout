@@ -1,14 +1,16 @@
 package com.itforelead.workout.config
+
 import com.itforelead.workout.domain.AppEnv
 
 case class AppConfig(
-  env: AppEnv,
-  jwtConfig: JwtConfig,
-  dbConfig: DBConfig,
-  redis: RedisConfig,
-  serverConfig: HttpServerConfig,
-  logConfig: LogConfig,
-  messageBroker: BrokerConfig,
-  scheduler: SchedulerConfig,
-  awsConfig: AWSConfig
-)
+    env: AppEnv,
+    jwtConfig: JwtConfig,
+    dbConfig: DBConfig,
+    redis: RedisConfig,
+    serverConfig: HttpServerConfig,
+    logConfig: LogConfig,
+    messageBroker: BrokerConfig,
+    scheduler: SchedulerConfig,
+    awsConfig: AWSConfig,
+    mailerConfig: MailerConfig,
+  )

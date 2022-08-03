@@ -24,6 +24,14 @@
         <appender-ref ref="FILE"/>
     </appender>
 
+    <appender name="NOTIFICATION" class="com.itforelead.workout.NotifierAppender">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
     <logger name="org.http4s.client.middleware" level="DEBUG"/>
     <logger name="org.http4s.server.middleware" level="DEBUG"/>
     <logger name="com.itforelead.workout" level="DEBUG"/>
@@ -31,6 +39,7 @@
     <root level="INFO">
         <appender-ref ref="ASYNCFILE"/>
         <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="NOTIFICATION" />
     </root>
 
 </configuration>
