@@ -27,16 +27,19 @@ object HttpApi {
       s3Client: S3Client[F],
       redis: RedisClient[F],
       logConfig: LogConfig,
-    ): HttpApi[F] =
-    new HttpApi[F](security, services, s3Client, redis, logConfig)
+    ): HttpApi[F] = {
+    implicit val redisClient: RedisClient[F] = redis
+    new HttpApi[F](security, services, s3Client, logConfig)
+  }
 }
 
 final class HttpApi[F[_]: Async: Logger] private (
     security: Security[F],
     services: Services[F],
     s3Client: S3Client[F],
-    redis: RedisClient[F],
     logConfig: LogConfig,
+  )(implicit
+    redis: RedisClient[F]
   ) {
   private[this] val baseURL: String = "/"
 

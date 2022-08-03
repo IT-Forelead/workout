@@ -1,17 +1,22 @@
 package com.itforelead.workout.syntax
 
 import cats.MonadThrow
+import cats.data.OptionT
 import cats.effect.Sync
 import cats.syntax.all._
 import com.itforelead.workout.domain.custom.exception.MultipartDecodeError
 import com.itforelead.workout.domain.custom.utils.MapConvert
 import com.itforelead.workout.domain.custom.utils.MapConvert.ValidationResult
+import com.itforelead.workout.implicits.circeSyntaxDecoderOps
+import com.itforelead.workout.services.redis.RedisClient
 import io.circe.Decoder
 import org.http4s.circe.{ JsonDecoder, toMessageSyntax }
 import org.http4s.dsl.Http4sDsl
 import org.http4s.headers.`Content-Type`
 import org.http4s.multipart.Part
 import org.http4s.{ MediaType, Request, Response }
+
+import scala.concurrent.duration.DurationInt
 
 trait Http4Syntax {
   implicit def http4SyntaxReqOps[F[_]: JsonDecoder: MonadThrow](
@@ -32,6 +37,28 @@ final class RequestOps[F[_]: JsonDecoder: MonadThrow](private val request: Reque
           case _ => UnprocessableEntity()
         }
       case Right(a) => f(a)
+    }
+
+  def checkIp(
+      allowedAttempt: Int = 3
+    )(
+      response: => F[Response[F]]
+    )(implicit
+      redis: RedisClient[F]
+    ): F[Response[F]] =
+    request.remoteAddr match {
+      case Some(ipAddress) =>
+        OptionT(redis.get(ipAddress.toString))
+          .map(_.as[Int])
+          .cataF(
+            redis.put(ipAddress.toString, 1, 1.days) >> response,
+            attempt =>
+              if (attempt < allowedAttempt)
+                redis.put(ipAddress.toString, attempt + 1, 1.days) >> response
+              else
+                TooManyRequests("Requests have exceeded the specified limit"),
+          )
+      case None => Forbidden("Request without IP-Address")
     }
 }
 

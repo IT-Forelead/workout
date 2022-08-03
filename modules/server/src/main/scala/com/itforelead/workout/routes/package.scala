@@ -2,7 +2,7 @@ package com.itforelead.workout
 
 import cats.effect.Sync
 import cats.syntax.all._
-import com.itforelead.workout.domain.custom.refinements.{FileKey, FileName, FilePath}
+import com.itforelead.workout.domain.custom.refinements.{ FileKey, FileName, FilePath }
 import com.itforelead.workout.effects.GenUUID
 import eu.timepit.refined.auto.autoUnwrap
 import org.http4s.MediaType
@@ -22,5 +22,4 @@ package object routes {
     MediaType
       .forExtension(filename.value.substring(filename.lastIndexOf('.') + 1))
       .map(`Content-Type`(_))
-
 }

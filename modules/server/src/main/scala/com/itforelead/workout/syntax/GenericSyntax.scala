@@ -9,7 +9,7 @@ trait GenericSyntax {
     new GenericTypeOps[A](obj)
 }
 
-final class GenericTypeOps[A](obj: A) {
+final class GenericTypeOps[A](private val obj: A) {
   private val printer: Printer = Printer.noSpaces.copy(dropNullValues = true)
 
   def toOptWhen(cond: => Boolean): Option[A] = if (cond) Some(obj) else None
@@ -20,6 +20,15 @@ final class GenericTypeOps[A](obj: A) {
     obj
       .asJsonObject
       .toVector
+      /** EndMarker */
+      .map {
+        case k -> v =>
+          k -> v.asString
+      }
+      .collect {
+        case k -> Some(v) =>
+          Part.formData[F](k, v)
+      }
       .map {
         case k -> v =>
           k -> v.asString
