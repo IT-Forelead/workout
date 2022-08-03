@@ -16,12 +16,9 @@ import com.itforelead.workout.services.sql.MessagesSQL._
 import skunk._
 import skunk.implicits.toIdOps
 import cats.syntax.all._
+import com.itforelead.workout.domain.DeliveryStatus.SENT
 import com.itforelead.workout.domain.MessageType.SENTCODE
-import com.itforelead.workout.domain.custom.exception.{
-  AdminNotFound,
-  MemberNotFound,
-  UserNotFound,
-}
+import com.itforelead.workout.domain.custom.exception.MemberNotFound
 import com.itforelead.workout.domain.custom.refinements.Tel
 import com.itforelead.workout.services.redis.RedisClient
 import com.itforelead.workout.services.sql.MessagesSQL
@@ -34,7 +31,7 @@ import java.time.LocalDateTime
 trait Messages[F[_]] {
   def create(msg: CreateMessage): F[Message]
   def sentSMSTodayMemberIds: F[List[MemberId]]
-  def sendValidationCode(userId: Option[UserId] = None, phone: Tel): F[Unit]
+  def sendValidationCode(userId: UserId, phone: Tel): F[Unit]
   def get(userId: UserId): F[List[MessageWithMember]]
   def getMessagesWithTotal(
       userId: UserId,
@@ -48,7 +45,6 @@ object Messages {
   def apply[F[_]: GenUUID: Sync](
       redis: RedisClient[F],
       messageBroker: MessageBroker[F],
-      users: Users[F],
     )(implicit
       session: Resource[F, Session[F]]
     ): Messages[F] =
@@ -59,7 +55,16 @@ object Messages {
           now <- Sync[F].delay(LocalDateTime.now())
           message <- prepQueryUnique(
             insertMessage,
-            Message(id, msg.userId, msg.memberId, msg.phone, msg.text, now, msg.messageType, msg.deliveryStatus),
+            Message(
+              id,
+              msg.userId,
+              msg.memberId,
+              msg.phone,
+              msg.text,
+              now,
+              msg.messageType,
+              msg.deliveryStatus,
+            ),
           )
         } yield message).recoverWith {
           case SqlState.ForeignKeyViolation(_) =>
@@ -69,31 +74,7 @@ object Messages {
       override def get(userId: UserId): F[List[MessageWithMember]] =
         prepQueryList(select, userId)
 
-      private def getUserId: F[Option[UserId]] =
-        users.findAdmin.map(_.headOption.map(_.id))
-
-      private def createAndSendMessage(
-          userId: Option[UserId] = None,
-          phone: Tel,
-          code: Int,
-          msgtext: MessageText,
-          sentDate: LocalDateTime,
-          status: DeliveryStatus,
-        ): F[Unit] =
-        OptionT
-          .fromOption(userId)
-          .orElseF(getUserId)
-          .cataF(
-            AdminNotFound.raiseError[F, Unit],
-            adminId =>
-              for {
-                message <- create(CreateMessage(adminId, None, phone, msgtext, sentDate, SENTCODE, status))
-                _ <- redis.put(phone.value, code.toString, 3.minute)
-                _ <- messageBroker.send(message.id, phone, msgtext.value.value)
-              } yield (),
-          )
-
-      override def sendValidationCode(userId: Option[UserId] = None, phone: Tel): F[Unit] =
+      override def sendValidationCode(userId: UserId, phone: Tel): F[Unit] =
         Random.scalaUtilRandom[F].flatMap { implicit random =>
           for {
             now <- Sync[F].delay(LocalDateTime.now())
@@ -101,14 +82,9 @@ object Messages {
             messageText = MessageText(
               NonEmptyString.unsafeFrom(s"Your Activation code is $validationCode")
             )
-            _ <- createAndSendMessage(
-              userId,
-              phone,
-              validationCode,
-              messageText,
-              now,
-              DeliveryStatus.SENT,
-            )
+            message <- create(CreateMessage(userId, None, phone, messageText, now, SENTCODE, SENT))
+            _ <- redis.put(phone.value, validationCode.toString, 3.minute)
+            _ <- messageBroker.send(message.id, phone, messageText.value.value)
           } yield ()
         }
 

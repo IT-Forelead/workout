@@ -52,14 +52,19 @@ object NotificationMessage {
               sentTodayList.contains(member.id)
             }
             .traverse_ { member =>
-              createMessage(member.userId, member.id, member.phone, text(member.firstname)).flatMap { message =>
-                send(member, text(member.firstname).value, message)
-              }
+              createMessage(member.userId, member.id, member.phone, text(member.firstname))
+                .flatMap { message =>
+                  send(member, text(member.firstname).value, message)
+                }
             }
         } yield ()
       }
 
-      private def createMessage(userId: UserId, memberId: MemberId, phone: Tel, text: NonEmptyString,
+      private def createMessage(
+          userId: UserId,
+          memberId: MemberId,
+          phone: Tel,
+          text: NonEmptyString,
         ): F[Message] =
         Sync[F].delay(LocalDateTime.now()).flatMap { now =>
           messages.create(

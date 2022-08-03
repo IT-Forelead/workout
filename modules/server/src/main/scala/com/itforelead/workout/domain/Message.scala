@@ -16,9 +16,9 @@ case class Message(
     userId: UserId,
     memberId: Option[MemberId],
     phone: Tel,
-  text: MessageText,
-  sentDate: LocalDateTime,
-  messageType: MessageType,
+    text: MessageText,
+    sentDate: LocalDateTime,
+    messageType: MessageType,
     deliveryStatus: DeliveryStatus,
   )
 
@@ -26,11 +26,11 @@ object Message {
   @derive(decoder, encoder, show)
   case class CreateMessage(
       userId: UserId,
-      memberId: Option[MemberId],
+      memberId: Option[MemberId] = None,
       phone: Tel,
-    text: MessageText,
-    sentDate: LocalDateTime,
-    messageType: MessageType,
+      text: MessageText,
+      sentDate: LocalDateTime,
+      messageType: MessageType,
       deliveryStatus: DeliveryStatus,
     )
 

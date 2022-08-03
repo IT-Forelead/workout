@@ -1,7 +1,13 @@
 package com.itforelead.workout.services
 
 import cats.implicits._
-import com.itforelead.workout.domain.{ArrivalType, DeliveryStatus, MemberFilterBy, MessageType, PaymentType, Role,
+import com.itforelead.workout.domain.{
+  ArrivalType,
+  DeliveryStatus,
+  MemberFilterBy,
+  MessageType,
+  PaymentType,
+  Role,
 }
 import com.itforelead.workout.domain.custom.refinements.{ FileKey, Tel }
 import com.itforelead.workout.domain.types._

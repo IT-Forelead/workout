@@ -34,7 +34,8 @@ final case class AuthRoutes[F[_]: Monad: JsonDecoder: MonadThrow](
             .recoverWith {
               case UserNotFound(_) | InvalidPassword(_) =>
                 Forbidden("Telefon raqam yoki parol noto'g'ri.")
-              case UserNotActivated => NotAcceptable("Sizning profilingiz aktivlash jarayonida. Iltimos biroz kuting!")
+              case UserNotActivated =>
+                NotAcceptable("Sizning profilingiz aktivlash jarayonida. Iltimos biroz kuting!")
             }
         }
 
@@ -46,16 +47,22 @@ final case class AuthRoutes[F[_]: Monad: JsonDecoder: MonadThrow](
             .recoverWith {
               case codeExpiredError: ValidationCodeExpired =>
                 logger.error(s"Validation code expired. Error: ${codeExpiredError.phone.value}") >>
-                  NotAcceptable("Tasdiqlash kodi muddati tugagan. Iltimos, yana bir bor urinib ko'ring.")
+                  NotAcceptable(
+                    "Tasdiqlash kodi muddati tugagan. Iltimos, yana bir bor urinib ko'ring."
+                  )
               case phoneInUseError: PhoneInUse =>
                 logger.error(s"Phone is already in use. Error: ${phoneInUseError.phone.value}") >>
-                  NotAcceptable("Telefon allaqachon ishlatilmoqda. Boshqa telefon raqami bilan qayta urinib koʻring")
+                  NotAcceptable(
+                    "Telefon allaqachon ishlatilmoqda. Boshqa telefon raqami bilan qayta urinib koʻring"
+                  )
               case valCodeError: ValidationCodeIncorrect =>
                 logger.error(s"Validation code is wrong. Error: ${valCodeError.code.value}") >>
                   NotAcceptable("Tasdiqlash kodi noto'g'ri. Iltimos, yana bir bor urinib ko'ring")
               case error =>
                 logger.error(error)("Error occurred creating user!") >>
-                  BadRequest("Foydalanuvchini yaratishda xatolik yuz berdi. Iltimos, yana bir bor urinib ko'ring!")
+                  BadRequest(
+                    "Foydalanuvchini yaratishda xatolik yuz berdi. Iltimos, yana bir bor urinib ko'ring!"
+                  )
             }
         }
 

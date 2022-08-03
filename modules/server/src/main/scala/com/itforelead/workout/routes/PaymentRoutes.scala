@@ -55,7 +55,9 @@ final class PaymentRoutes[F[_]: JsonDecoder: MonadThrow](
               BadRequest("Bu a'zo ma'lumotlar bazasidan topilmadi.")
           case error =>
             logger.error(error)("Error occurred creating payment!") >>
-              BadRequest("Toʻlovni yaratishda xatolik yuz berdi. Iltimos, yana bir bor urinib ko'ring!")
+              BadRequest(
+                "Toʻlovni yaratishda xatolik yuz berdi. Iltimos, yana bir bor urinib ko'ring!"
+              )
         }
   }
 

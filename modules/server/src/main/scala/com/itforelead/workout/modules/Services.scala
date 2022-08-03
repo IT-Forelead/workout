@@ -20,12 +20,12 @@ object Services {
       session: Resource[F, Session[F]]
     ): Services[F] = {
     val messageBroker = MessageBroker[F](httpClient, brokerConfig)
-    val messages = Messages[F](redisClient, messageBroker, Users[F](redisClient))
+    val messages = Messages[F](redisClient, messageBroker)
     val members = Members[F](redisClient)
     val userSetting = UserSettings[F]
 
     new Services[F](
-      users = Users[F](redisClient),
+      users = Users[F](redisClient, messages, messageBroker),
       members = members,
       payments = Payments[F](userSetting, members),
       arrivalService = ArrivalService[F],

@@ -15,7 +15,8 @@ import java.time.LocalDateTime
 object MessagesSQL {
   val messageId: Codec[MessageId] = identity[MessageId]
 
-  private val Columns = messageId ~ userId ~ memberId.opt ~ tel ~ messageText ~ timestamp ~ messageType ~ deliveryStatus
+  private val Columns =
+    messageId ~ userId ~ memberId.opt ~ tel ~ messageText ~ timestamp ~ messageType ~ deliveryStatus
 
   val encoder: Encoder[Message] =
     Columns.contramap(m =>
