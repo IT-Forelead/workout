@@ -40,7 +40,7 @@ trait Payments[F[_]] {
 object Payments {
   def apply[F[_]: GenUUID: Sync](
       userSettings: UserSettings[F],
-      members: Members[F]
+      members: Members[F],
     )(implicit
       session: Resource[F, Session[F]]
     ): Payments[F] = new Payments[F] with SkunkHelper[F] {
@@ -56,14 +56,14 @@ object Payments {
           now <- Sync[F].delay(LocalDateTime.now())
           payment <- prepQueryUnique(
             insert,
-            ,Payment(
+            Payment(
               id = id,
               userId = userId,
               memberId = payment.memberId,
               paymentType = payment.paymentType,
               cost = cost,
               createdAt = now,
-            )
+            ),
           )
           _ <- members.updateActiveTime(payment.memberId, activeTime)
         } yield payment
@@ -95,7 +95,7 @@ object Payments {
     override def getPaymentsWithTotal(
         userId: UserId,
         filter: PaymentFilter,
-        page: Int
+        page: Int,
       ): F[PaymentWithTotal] =
       for {
         fr <- selectPaymentWithTotal(userId, filter, page).pure[F]

@@ -32,10 +32,8 @@ final class MemberRoutes[F[_]: Async](
       _ <- body.through(s3Client.putObject(filePath(key.value)))
     } yield key
 
-  private[this] val privateRoutes: AuthedRoutes[User, F] = }
-AuthedRoutes.of
-    /** EndMarker */
-    {
+  private[this] val privateRoutes: AuthedRoutes[User, F] =
+    AuthedRoutes.of {
 
       case ar @ POST -> Root / IntVar(page) as user =>
         ar.req.decodeR[MemberFilter] { filter =>
@@ -101,70 +99,7 @@ AuthedRoutes.of
                   BadRequest("Error occurred creating member. Please try again!")
             }
         }
-    } {
-
-    case ar @ POST -> Root / IntVar(page) as user =>
-      ar.req.decodeR[MemberFilter] { filter =>
-        members.membersWithTotal(user.id, filter, page).flatMap(Ok(_))
-      }
-
-    case GET -> Root as user =>
-      members.get(user.id).flatMap(Ok(_))
-
-    case GET -> Root / "active-time" as user =>
-      members.getWeekLeftOnAT(user.id).flatMap(Ok(_))
-
-    case aR @ PUT -> Root as user =>
-      aR.req.decode[Multipart[F]] { multipart =>
-        def createMember(form: CreateMember): F[Unit] =
-          fs2
-            .Stream
-            .fromIterator(
-              multipart
-                .parts
-                .fileParts
-                .flatMap { p =>
-                  p.filename.filter(_.nonEmpty).map(f => (FileName.unsafeFrom(f), p.body)).toVector
-                }
-                .iterator,
-              100,
-            )
-            .flatMap {
-              case (filename, body) =>
-                body.through(uploadToS3(filename))
-            }
-            .evalMap { key =>
-              members.validateAndCreate(user.id, form, key)
-            }
-            .compile
-            .drain
-
-        (for {
-          form <- multipart.parts.convert[CreateMember]
-          response <-
-            if (multipart.parts.isFilePartExists)
-              createMember(form).flatMap(Created(_))
-            else BadRequest("File part isn't defined")
-        } yield response)
-          .recoverWith {
-            case codeExpiredError: ValidationCodeExpired =>
-              logger.error(s"Validation code expired. Error: ${codeExpiredError.phone.value}") >>
-                NotAcceptable("Validation code expired. Please try again")
-            case phoneInUseError: PhoneInUse =>
-              logger.error(s"Phone is already in use. Error: ${phoneInUseError.phone.value}") >>
-                NotAcceptable("Phone is already in use. Please try again with other phone number")
-            case valCodeError: ValidationCodeIncorrect =>
-              logger.error(s"Validation code is wrong. Error: ${valCodeError.code.value}") >>
-                NotAcceptable("Validation code is wrong. Please try again")
-            case error: MultipartDecodeError =>
-              logger.error(s"Error occurred while parse multipart. Error: ${error.cause}") >>
-                BadRequest(s"Bad form data. ${error.cause}")
-            case error =>
-              logger.error(error)("Error occurred creating member!") >>
-                BadRequest("Error occurred creating member. Please try again!")
-          }
-      }
-  }
+    }
 
   private val publicRoutes: HttpRoutes[F] = HttpRoutes.of[F] {
     case GET -> Root / "image" / imageUrl =>

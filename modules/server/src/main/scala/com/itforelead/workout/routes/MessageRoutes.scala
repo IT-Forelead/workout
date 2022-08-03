@@ -15,38 +15,14 @@ final class MessageRoutes[F[_]: Async](messages: Messages[F])(implicit redis: Re
     extends Http4sDsl[F] {
   private[routes] val prefixPath = "/message"
 
-  private[this] val privateRoutes: AuthedRoutes[User, F] = }
-AuthedRoutes.of
-    /** EndMarker */
-    {
-
-      case GET -> Root as user =>
-        messages.get(user.id).flatMap(Ok(_))
-
-      case ar @ POST -> Root / IntVar(page) as user =>
-        ar.req.decodeR[MessagesFilter] { filter =>
-          messages.getMessagesWithTotal(user.id, filter, page).flatMap(Ok(_))
-        }
-
-      case aR @ POST -> Root / "sent-code" as user =>
-        aR.req.checkIp() {
-          aR.req.decodeR[Validation] { validationPhone =>
-            messages.sendValidationCode(user.id.some, validationPhone.phone).flatMap(Ok(_))
-          }
-        }
-    } {
+  private[this] val privateRoutes: AuthedRoutes[User, F] = AuthedRoutes.of {
 
     case GET -> Root as user =>
       messages.get(user.id).flatMap(Ok(_))
 
     case ar @ POST -> Root / IntVar(page) as user =>
-      ar.req
-        .decodeR[MessagesFilter]
-        /** EndMarker */
-        { filter =>
-          messages.getMessagesWithTotal(user.id, filter, page).flatMap(Ok(_))
-        } { filter =>
-          messages.getMessagesWithTotal(user.id, filter, page).flatMap(Ok(_))
+      ar.req.decodeR[MessagesFilter] { filter =>
+        messages.getMessagesWithTotal(user.id, filter, page).flatMap(Ok(_))
       }
 
     case aR @ POST -> Root / "sent-code" as user =>

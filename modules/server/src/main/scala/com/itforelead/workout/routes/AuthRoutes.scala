@@ -24,95 +24,42 @@ final case class AuthRoutes[F[_]: Monad: JsonDecoder: MonadThrow](
   ) extends Http4sDsl[F] {
   private[routes] val prefixPath = "/auth"
 
-  private val publicRoutes: HttpRoutes[F] = }
-HttpRoutes.of[F]
-  /** EndMarker */
-  {
-    case req @ POST -> Root / "login" =>
-      req.decodeR[domain.Credentials] { credentials =>
-        auth
-          .login(credentials)
-          .flatMap(Ok(_))
-          .recoverWith {
-            case UserNotFound(_) | InvalidPassword(_) =>
-              Forbidden()
-            case UserNotActivated => NotAcceptable("User not activated!")
-          }
-      }
+  private val publicRoutes: HttpRoutes[F] =
+    HttpRoutes.of[F] {
+      case req @ POST -> Root / "login" =>
+        req.decodeR[domain.Credentials] { credentials =>
+          auth
+            .login(credentials)
+            .flatMap(Ok(_))
+            .recoverWith {
+              case UserNotFound(_) | InvalidPassword(_) =>
+                Forbidden()
+              case UserNotActivated => NotAcceptable("User not activated!")
+            }
+        }
 
-    case req @ POST -> Root / "user" =>
-      req.decodeR[CreateClient] { createClient =>
-        auth
-          .newUser(createClient)
-          .flatMap(Created(_))
-          .recoverWith {
-            case codeExpiredError: ValidationCodeExpired =>
-              logger.error(s"Validation code expired. Error: ${codeExpiredError.phone.value}") >>
-                NotAcceptable("Validation code expired. Please try again")
-            case phoneInUseError: PhoneInUse =>
-              logger.error(s"Phone is already in use. Error: ${phoneInUseError.phone.value}") >>
-                NotAcceptable("Phone is already in use. Please try again with other phone number")
-            case valCodeError: ValidationCodeIncorrect =>
-              logger.error(s"Validation code is wrong. Error: ${valCodeError.code.value}") >>
-                NotAcceptable("Validation code is wrong. Please try again")
-            case error =>
-              logger.error(error)("Error occurred creating user!") >>
-                BadRequest("Error occurred creating user. Please try again!")
-          }
-      }
+      case req @ POST -> Root / "user" =>
+        req.decodeR[CreateClient] { createClient =>
+          auth
+            .newUser(createClient)
+            .flatMap(Created(_))
+            .recoverWith {
+              case codeExpiredError: ValidationCodeExpired =>
+                logger.error(s"Validation code expired. Error: ${codeExpiredError.phone.value}") >>
+                  NotAcceptable("Validation code expired. Please try again")
+              case phoneInUseError: PhoneInUse =>
+                logger.error(s"Phone is already in use. Error: ${phoneInUseError.phone.value}") >>
+                  NotAcceptable("Phone is already in use. Please try again with other phone number")
+              case valCodeError: ValidationCodeIncorrect =>
+                logger.error(s"Validation code is wrong. Error: ${valCodeError.code.value}") >>
+                  NotAcceptable("Validation code is wrong. Please try again")
+              case error =>
+                logger.error(error)("Error occurred creating user!") >>
+                  BadRequest("Error occurred creating user. Please try again!")
+            }
+        }
 
-  } {
-    case req @ POST -> Root / "login" =>
-      req.decodeR[domain.Credentials]
-      /** EndMarker */
-      { credentials =>
-        auth
-          .login(credentials)
-          .flatMap(Ok(_))
-          .recoverWith {
-            case UserNotFound(_) | InvalidPassword(_) =>
-              Forbidden()
-            case UserNotActivated => NotAcceptable("User not activated!")
-          }
-      } { credentials =>
-        auth
-          .login(credentials)
-          .flatMap(Ok(_))
-          .recoverWith
-          /** EndMarker */
-          {
-            case UserNotFound(_) | InvalidPassword(_) =>
-              Forbidden()
-            case UserNotActivated => NotAcceptable("User not activated!")
-          } {
-            case UserNotFound(_) | InvalidPassword(_) =>
-              Forbidden()
-            case UserNotActivated => NotAcceptable("User not activated!")
-          }
-      }
-
-    case req @ POST -> Root / "user" =>
-      req.decodeR[CreateClient] { createClient =>
-        auth
-          .newUser(createClient)
-          .flatMap(Created(_))
-          .recoverWith {
-            case codeExpiredError: ValidationCodeExpired =>
-              logger.error(s"Validation code expired. Error: ${codeExpiredError.phone.value}") >>
-                NotAcceptable("Validation code expired. Please try again")
-            case phoneInUseError: PhoneInUse =>
-              logger.error(s"Phone is already in use. Error: ${phoneInUseError.phone.value}") >>
-                NotAcceptable("Phone is already in use. Please try again with other phone number")
-            case valCodeError: ValidationCodeIncorrect =>
-              logger.error(s"Validation code is wrong. Error: ${valCodeError.code.value}") >>
-                NotAcceptable("Validation code is wrong. Please try again")
-            case error =>
-              logger.error(error)("Error occurred creating user!") >>
-                BadRequest("Error occurred creating user. Please try again!")
-          }
-      }
-
-  }
+    }
 
   private[this] val privateRoutes: AuthedRoutes[User, F] = AuthedRoutes.of {
     case ar @ GET -> Root / "logout" as user =>

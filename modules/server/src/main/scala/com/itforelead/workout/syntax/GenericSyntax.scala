@@ -20,15 +20,6 @@ final class GenericTypeOps[A](private val obj: A) {
     obj
       .asJsonObject
       .toVector
-      /** EndMarker */
-      .map {
-        case k -> v =>
-          k -> v.asString
-      }
-      .collect {
-        case k -> Some(v) =>
-          Part.formData[F](k, v)
-      }
       .map {
         case k -> v =>
           k -> v.asString
